@@ -1,0 +1,32 @@
+{
+	"author": "Jacob Waller <jacob@krawaller.se> (http://blog.krawaller.se)",
+	"name": "kranium",
+	"description": "Brains for Titanium",
+	"version": "0.0.0",
+	"homepage": "http://www.kraniumjs.com",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/krawaller/kraniumjs.git"
+	},
+	"main": "kranium",
+	"bin": {
+		"kranium": "./kranium.js"
+	},
+	"scripts": {
+		"test": "kraniumtest"
+	},
+	"engines": {
+		"node": "v0.4.0"
+	},
+	"dependencies": {
+		"nomnom": ">= 0.4.1"
+	},
+	"devDependencies": {},
+	"bugs": {
+		"web": "http://github.com/krawaller/kraniumjs/issues"
+	},
+	"licenses": [{
+		"type": "MIT",
+		"url": "http://github.com/krawaller/kraniumjs/raw/master/LICENSE"
+	}]
+}
