@@ -1,16 +1,28 @@
 #!/usr/bin/env node
+var nomnom = require('nomnom'),
+	parser = nomnom(),
+	fs = require('fs');
 
-var options = require('nomnom').opts({
-  command: {
-    position: 0,
-    help: "either 'test', 'run', or 'xpi'" 
-  },
-  config: {
-    string: '-c FILE, --config=FILE',
-    help: 'json file with tests to run',
-  },
-  debug: {
-    string: '-d, --debug',
-    help: 'use debug mode'
-  }
-}).parseArgs();
+function autoload(str){
+	return function(opts){
+		var fn = require(str);
+		//fn.apply(fn, arguments);
+		new fn(opts);
+	};
+};
+
+parser.globalOpts({
+	version: {
+		string: '-v, --version',
+		help: 'print version and exit',
+		callback: function() {
+			return JSON.parse(fs.readFileSync('package.json')).version;
+		}
+	}
+});
+
+parser.command('init').opts({
+	
+}).callback(autoload('./lib/init'));
+
+parser.parseArgs();
