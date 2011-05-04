@@ -22,7 +22,25 @@ parser.globalOpts({
 });
 
 parser.command('init').opts({
+	debug: {
+		string: '-d, --debug',
+		help: 'set app to debug mode'
+	},
 	
+	test: {
+		string: '-t, --test',
+		help: 'activate app tests'
+	},
+	
+	ip: {
+		string: '-i, --ip',
+		help: 'ip to bind to'
+	},
+	
+	port: {
+		string: '-p, --port',
+		help: 'port to bind to'
+	},
 }).callback(autoload('./lib/init'));
 
 parser.parseArgs();
