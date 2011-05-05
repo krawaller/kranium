@@ -64,7 +64,7 @@ var nomnom = require('nomnom'),
 			help: 'port to bind to',
 			"default": defaults.port
 		},
-	}).callback(autoload('./lib/init'));
+	}).callback(autoload('./lib/command/init'));
 
 	parser.command('watch').opts({
 		debug: {
@@ -83,7 +83,7 @@ var nomnom = require('nomnom'),
 			help: 'port to bind to',
 			"default": defaults.port
 		},
-	}).callback(autoload('./lib/watch'));
+	}).callback(autoload('./lib/command/watch'));
 
 	parser.parseArgs();
 

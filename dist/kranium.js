@@ -1,4 +1,513 @@
 /*** CORE ***/
+K.isFunc = function(obj){ return toString.call(obj) === "[object Function]"; };
+
+K.get = function(str){ return JSON.parse(Ti.App.Properties.getString(str)); };
+K.set = function(str, val){ return Ti.App.Properties.setString(str, JSON.stringify(val)); };
+
+K.alert = function(message, title){
+	Ti.UI.createAlertDialog({
+        title: title || 'Obs!',
+        message: message
+    }).show();
+};
+
+K.log = function(a, b){
+	Ti.API.log("Kranium", b ? Array.prototype.slice.call(arguments) : a);
+};
+
+K.loadify = function(el, fn){
+	var p = el||GLOBAL.win||Ti.UI.currentWindow,
+		done;
+		
+	if(!p){ return; } 
+	
+	if(p && !p._loader){
+		p._loader = K.createActivityIndicator({
+			className: 'loader',
+		});
+				
+		p.add(p._loader);
+	}
+	
+	p._loader.show();
+	
+	if(fn){ // Test if func
+		done = function(){ K.doneify(el); };
+		if(typeof fn(done) !== 'undefined'){
+			done();
+		}
+	}
+};
+
+K.doneify = function(el){
+	var p = el||GLOBAL.win||Ti.UI.currentWindow;	
+	p && p._loader && setTimeout(p._loader.hide, 500);
+};
+
+K.parseJSON = JSON.parse;
+
+function singleExtend(destination, source){
+	var property;
+	for (property in source) { destination[property] = source[property]; }
+	return destination;
+}
+/**
+ * Merge any number of objects where the rightmost has precedence
+ * @param obj... Object to be merged
+ * @return Object with all arguments merged
+ */
+var extend = K.extend = function(obj1, obj2, obj3){
+	if(!obj3){
+		return singleExtend(obj1, obj2);
+	} else {
+		var args = Array.prototype.slice.call(arguments),
+			obj = args.shift();
+		while(args.length){ obj = singleExtend.apply(null, [obj, args.shift()]); }
+		return obj;
+	}
+};
+
+if(!Object.prototype.extend){
+	Object.defineProperty(Object.prototype, "extend", {
+	    enumerable: false,
+	    value: function(from) {
+	        var dest = this;
+			for(var prop in from){
+				dest[prop] = from[prop];
+			}
+	        return this;
+	    }
+	});
+}
+
+if(!Object.prototype.clone){
+	Object.defineProperty(Object.prototype, "clone", {
+	    enumerable: false,
+	    value: function() {
+	        return ({}).extend(this);
+	    }
+	});
+}
+
+if(!Object.prototype.sanitize){
+	Object.defineProperty(Object.prototype, "sanitize", {
+	    enumerable: false,
+	    value: function(props) {
+			var me = this.clone();
+			(props||[]).forEach(function(prop){
+				delete me[prop];
+			});
+	        return me;
+	    }
+	});
+}
+
+if(!Object.prototype.or){
+	Object.defineProperty(Object.prototype, "or", {
+	    enumerable: false,
+	    value: function(val) {
+	        return Array.isArray(this) ? (this.length === 0 ? val : this) : (JSON.stringify(this) === '{}' ? val: this);
+	    }
+	});
+}
+
+if(!Object.prototype.arrayify){
+	Object.defineProperty(Object.prototype, "arrayify", {
+	    enumerable: false,
+	    value: function() {
+	        return Array.isArray(this) ? this : [this];
+	    }
+	});
+}
+
+if(!Object.prototype.defer){
+	Object.defineProperty(Function.prototype, "defer", {
+	    enumerable: false,
+	    value: function(ms, _scope) {
+			var fn = this; 
+			return function(){
+				var scope = (_scope && this === arguments.callee) ? _scope : this,
+					args = Array.prototype.slice.call(arguments);
+				
+				setTimeout(function(){ fn.apply(scope||fn, args); }, ms);
+			};
+	    }
+	});
+}
+
+Number.prototype.round = function(n){
+	var n = n || 0, pow = Math.pow(10, n);
+	return (Math.round(this * pow) / pow).toFixed(n >= 0 ? n : 0);
+};
+
+if (!Array.prototype.remove) {
+    Array.prototype.remove = function(elem, max) {
+        var index, i = 0;
+        while((index = this.indexOf(elem)) != -1 && (!max || i < max)) {
+            this.splice(index, 1);
+            i++;
+        }
+        return this;
+    };
+}	
+
+/*
+ * Bind a function to a context
+ * @param ctx Context to run the function in
+ * @return Function applying new scope to original function
+ */
+var slice = Array.prototype.slice;
+Function.prototype.bind = function(ctx){ 
+	var fn = this;
+	return function(){ 
+		fn.apply(ctx || fn, slice.call(arguments)); 
+	}; 
+};
+
+/**
+ * Convert camelCase to dashed notation
+ * @return String with uppercase letters converted to dashed notation
+ */
+String.prototype.toDash = function(){
+	return this.replace(/([A-Z])/g, function($1){return "-"+$1.toLowerCase();});
+};
+
+/**
+ * Convert dashed notation to camelCase
+ * @return String with dashed notation converted to camelCase
+ */
+String.prototype.toCamel = function(){
+	return this.replace(/(\-[a-z])/g, function($1){return $1.toUpperCase().replace('-','');});
+};
+
+/**
+ * Trim a string of leading and trailing whitespace
+ * @return String trimmed of whitespace
+ */
+var rtrim = /^\s+|\s+$/g;
+String.prototype.trim = function(){
+	return this.replace(rtrim, "");	
+};
+
+/*** UTILS ***/
+/**
+ * "mini" Selector Engine
+ * Copyright (c) 2009 James Padolsey
+ * -------------------------------------------------------
+ * Dual licensed under the MIT and GPL licenses.
+ *    - http://www.opensource.org/licenses/mit-license.php
+ *    - http://www.gnu.org/copyleft/gpl.html
+ * -------------------------------------------------------
+ * Version: 0.01 (BETA)
+ */
+
+$.qsa = $$ = (function(document, global){
+	
+	var me = document;
+	[
+		{ fn: "getElementsByClassName", arrName: "elsByClassName" },
+		{ fn: "getElementsByTagName", arrName: "elsByName" },
+		{ fn: "getElementById", arrName: "elsById" }
+	].forEach(function(o){
+		var name = o.fn, 
+			arrName = o.arrName,
+			singular = (o.fn == "getElementById"), 
+			a, 
+			res;
+
+		me[name] = global[name] = function(s, context){
+			var arr = K[arrName],
+				res = null;
+
+			if((a = arr[s]) && (a = (Array.isArray(a) ? a : [a]))){
+				if(context){
+					res = a.filter(function(el){
+						do {
+							if(el._uuid === context._uuid){ return true; }
+						} while((el = (el.getParent()) ));
+						return false;
+					});
+				} else {
+					res = a;
+				}
+			}
+
+			return singular ? Array.isArray(res) && res[0] : res;
+		};
+	});
+	
+	
+    var snack = /(?:[\w\-\\.#]+)+(?:\[\w+?=([\'"])?(?:\\\1|.)+?\1\])?|\*|>/ig,
+        exprClassName = /^(?:[\w\-_]+)?\.([\w\-_]+)/,
+        exprId = /^(?:[\w\-_]+)?#([\w\-_]+)/,
+        exprNodeName = /^([\w\*\-_]+)/,
+        na = [null,null];
+
+    function _find(selector, context) {
+        /**
+         * This is what you call via x()
+         * Starts everything off...
+         */
+        var simple = /^[\w\-_#]+$/.test(selector);
+		
+        if (selector.indexOf(',') > -1) {
+            var split = selector.split(/,/g), ret = [], sIndex = 0, len = split.length;
+            for(; sIndex < len; ++sIndex) {
+                ret = ret.concat( _find(split[sIndex], context) );
+            }
+            return unique(ret);
+        }
+
+        var parts = selector.match(snack),
+            part = parts.pop(),
+            id = (part.match(exprId) || na)[1],
+            className = !id && (part.match(exprClassName) || na)[1],
+            nodeName = !id && (part.match(exprNodeName) || na)[1],
+            collection,
+			el;
+
+        if (className && !nodeName) {
+            collection = realArray(getElementsByClassName(className, context));
+        } else {
+            collection = !id && realArray(getElementsByTagName(nodeName||'*', context));
+			if (className) {
+                collection = filterByAttr(collection, 'className', RegExp('(^|\\s)' + className + '(\\s|$)'));
+            }
+            if (id) {
+                return (el = getElementById(id, context)) ? [el] : [];
+            }
+        }
+		
+		var ret = parts[0] && collection[0] ? filterParents(parts, collection, false, context) : collection;
+		return ret;
+    }
+
+    function realArray(c) { return Array.prototype.slice.call(c); }
+
+    function filterParents(selectorParts, collection, direct, context) {
+        /**
+         * This is where the magic happens.
+         * Parents are stepped through (upwards) to
+         * see if they comply with the selector.
+         */
+
+        var parentSelector = selectorParts.pop()||'';
+        if (parentSelector === '>') { return filterParents(selectorParts, collection, true, context); }
+
+        var ret = [],
+            r = -1,
+            id = (parentSelector.match(exprId) || na)[1],
+            className = !id && (parentSelector.match(exprClassName) || na)[1],
+            nodeName = !id && (parentSelector.match(exprNodeName) || na)[1],
+            cIndex = -1,
+            node, parent,
+            matches;
+
+        while ( (node = collection[++cIndex]) ) {
+            if(context){
+				if(node.getParent()._uuid == context._uuid){
+					ret[++r] = node;
+				}
+			} else {
+				parent = node.getParent();
+	            do {
+	                matches = !nodeName || nodeName === '*' || nodeName === parent._type;
+	                matches = matches && (!id || parent._id === id);
+	                matches = matches && (!className || RegExp('(^|\\s)' + className + '(\\s|$)').test(parent.className));
+	                if (direct || matches) { break; }
+	            } while ( (parent = parent.getParent()) );
+	            if (matches) { ret[++r] = node; }
+			}
+			
+        }
+        return selectorParts[0] && ret[0] ? filterParents(selectorParts, ret) : ret;
+    }
+
+
+    var unique = (function() {
+		var uid = +new Date(),
+			data = (function() {
+
+			var n = 1;
+			return function(elem) {
+				var cacheIndex = elem[uid],
+					nextCacheIndex = n++;
+
+				if (!cacheIndex) {
+					elem[uid] = nextCacheIndex;
+					return true;
+				}
+				return false;
+			};
+
+		})();
+
+		return function(arr) {
+			/**
+			 * Returns a unique array
+			 */
+			var length = arr.length,
+				ret = [],
+				r = -1,
+				i = 0,
+				item;
+
+			for (; i < length; ++i) {
+				item = arr[i];
+				if (data(item)) { ret[++r] = item; }
+			}
+
+			uid += 1;
+			return ret;
+		};
+	})();
+
+    function filterByAttr(collection, attr, regex) {
+        /**
+         * Filters a collection by an attribute.
+         */
+        var i = -1, node, r = -1, ret = [];
+        while ( (node = collection[++i]) ) {
+            if (regex.test(node[attr])) {
+                ret[++r] = node;
+            }
+        }
+        return ret;
+    }
+    return _find;
+
+})(this, this);
+
+/*** QSA ***/
+/* Simple JavaScript Inheritance
+ * By John Resig http://ejohn.org/
+ * MIT Licensed.
+ */
+// Inspired by base2 and Prototype
+(function(global){
+	
+	K.classes = {};
+	K.loadClass = function(name, liveKlass){
+		var klass, cls;
+		if(global.DEBUG || liveKlass || !(klass = K.classes[name])){
+			klass = liveKlass||(require('kui/' + name)||{}).Class;
+			cls = klass.prototype.className;
+			klass.prototype.className = cls ? cls + ' ' + name : name;
+			klass.prototype._klass = name;
+			if(!liveKlass){ K.loadStyle(name); }
+			K.classes[name] = klass;
+		}
+		return klass;
+	};
+
+
+	var initializing = false,
+		fnTest = /xyz/.test(function() {xyz;}) ? /\b_super\b/ : /.*/;
+
+	// The base Class implementation (does nothing)
+	this.Class = function() {};
+
+	// Create a new Class that inherits from this class
+	Class.extend = function(prop, o) {
+		// Extended with autoloading
+		if (typeof prop === 'string' && o) {
+			return K.loadClass(prop).extend(o);
+		}
+
+		var _super = this.prototype;
+
+		// Instantiate a base class (but only create the instance,
+		// don't run the init constructor)
+		initializing = true;
+		var prototype = new this();
+		initializing = false;
+
+		// Copy the properties over onto the new prototype
+		for (var name in prop) {
+			// Check if we're overwriting an existing function
+			prototype[name] = typeof prop[name] == "function" && typeof _super[name] == "function" && fnTest.test(prop[name]) ? (function(name, fn) {
+				return function() {
+					var tmp = this._super;
+
+					// Add a new ._super() method that is the same method
+					// but on the super-class
+					this._super = _super[name];
+
+					// The method only need to be bound temporarily, so we
+					// remove it when we're done executing
+					var ret = fn.apply(this, arguments);
+					this._super = tmp;
+
+					return ret;
+				};
+			})(name, prop[name]) : prop[name];
+		}
+
+		// The dummy class constructor
+		// Slight modification to set init return value to default el
+		var el;
+
+
+		function Class(o) {
+			// All construction is actually done in the init method
+			if (!initializing && this.init) {
+				o && K.extend(this, o);
+				(el = this.init.apply(this, arguments)) && !this.el && (this.el = el);
+			}
+		}
+
+		// Populate our constructed prototype object
+		Class.prototype = prototype;
+
+		// Enforce the constructor to be what we expect
+		Class.constructor = Class;
+
+		// And make this class extendable
+		Class.extend = arguments.callee;
+
+		return Class;
+	};
+
+})(this);
+
+/*** KLASS ***/
+(function(){
+	
+	var pathMap = {
+		res: Ti.Filesystem.resourcesDirectory,
+		resources: Ti.Filesystem.resourcesDirectory,
+		tmp: Ti.Filesystem.tempDirectory,
+		temp: Ti.Filesystem.tempDirectory,
+		app: Ti.Filesystem.applicationDirectory,
+		data: Ti.Filesystem.applicationDataDirectory,
+		support: Ti.Filesystem.applicationSupportDirectory
+	};
+
+	K.file = function(file){
+		var parts = file.match(/((\w+):\/\/)?(.*?\.?)(\w+)$/),
+			dir = pathMap[parts[2]||'res']||pathMap.res,
+			path = parts[3]+parts[4];
+		
+		
+		var f = Ti.Filesystem.getFile(dir, path), res = f;
+	
+		try {
+			switch(parts[4]){
+				case 'txt':
+				case 'js':
+				case 'kss':
+				case 'html':
+				case 'css':
+					res = f.exists() ? f.read().text : false;
+					break;
+			}
+		} catch(e){ Ti.API.error(e); }
+		return res;
+	};
+
+})();
+
+/*** FILE ***/
 (function(global){
 
 global.GLOBAL = global;
@@ -321,515 +830,6 @@ var reTiObject = /^\[object Ti/,
 
 
 
-
-/*** UTILS ***/
-K.isFunc = function(obj){ return toString.call(obj) === "[object Function]"; };
-
-K.get = function(str){ return JSON.parse(Ti.App.Properties.getString(str)); };
-K.set = function(str, val){ return Ti.App.Properties.setString(str, JSON.stringify(val)); };
-
-K.alert = function(message, title){
-	Ti.UI.createAlertDialog({
-        title: title || 'Obs!',
-        message: message
-    }).show();
-};
-
-K.log = function(a, b){
-	Ti.API.log("Kranium", b ? Array.prototype.slice.call(arguments) : a);
-};
-
-K.loadify = function(el, fn){
-	var p = el||GLOBAL.win||Ti.UI.currentWindow,
-		done;
-		
-	if(!p){ return; } 
-	
-	if(p && !p._loader){
-		p._loader = K.createActivityIndicator({
-			className: 'loader',
-		});
-				
-		p.add(p._loader);
-	}
-	
-	p._loader.show();
-	
-	if(fn){ // Test if func
-		done = function(){ K.doneify(el); };
-		if(typeof fn(done) !== 'undefined'){
-			done();
-		}
-	}
-};
-
-K.doneify = function(el){
-	var p = el||GLOBAL.win||Ti.UI.currentWindow;	
-	p && p._loader && setTimeout(p._loader.hide, 500);
-};
-
-K.parseJSON = JSON.parse;
-
-function singleExtend(destination, source){
-	var property;
-	for (property in source) { destination[property] = source[property]; }
-	return destination;
-}
-/**
- * Merge any number of objects where the rightmost has precedence
- * @param obj... Object to be merged
- * @return Object with all arguments merged
- */
-var extend = K.extend = function(obj1, obj2, obj3){
-	if(!obj3){
-		return singleExtend(obj1, obj2);
-	} else {
-		var args = Array.prototype.slice.call(arguments),
-			obj = args.shift();
-		while(args.length){ obj = singleExtend.apply(null, [obj, args.shift()]); }
-		return obj;
-	}
-};
-
-if(!Object.prototype.extend){
-	Object.defineProperty(Object.prototype, "extend", {
-	    enumerable: false,
-	    value: function(from) {
-	        var dest = this;
-			for(var prop in from){
-				dest[prop] = from[prop];
-			}
-	        return this;
-	    }
-	});
-}
-
-if(!Object.prototype.clone){
-	Object.defineProperty(Object.prototype, "clone", {
-	    enumerable: false,
-	    value: function() {
-	        return ({}).extend(this);
-	    }
-	});
-}
-
-if(!Object.prototype.sanitize){
-	Object.defineProperty(Object.prototype, "sanitize", {
-	    enumerable: false,
-	    value: function(props) {
-			var me = this.clone();
-			(props||[]).forEach(function(prop){
-				delete me[prop];
-			});
-	        return me;
-	    }
-	});
-}
-
-if(!Object.prototype.or){
-	Object.defineProperty(Object.prototype, "or", {
-	    enumerable: false,
-	    value: function(val) {
-	        return Array.isArray(this) ? (this.length === 0 ? val : this) : (JSON.stringify(this) === '{}' ? val: this);
-	    }
-	});
-}
-
-if(!Object.prototype.arrayify){
-	Object.defineProperty(Object.prototype, "arrayify", {
-	    enumerable: false,
-	    value: function() {
-	        return Array.isArray(this) ? this : [this];
-	    }
-	});
-}
-
-if(!Object.prototype.defer){
-	Object.defineProperty(Function.prototype, "defer", {
-	    enumerable: false,
-	    value: function(ms, _scope) {
-			var fn = this; 
-			return function(){
-				var scope = (_scope && this === arguments.callee) ? _scope : this,
-					args = Array.prototype.slice.call(arguments);
-				
-				setTimeout(function(){ fn.apply(scope||fn, args); }, ms);
-			};
-	    }
-	});
-}
-
-Number.prototype.round = function(n){
-	var n = n || 0, pow = Math.pow(10, n);
-	return (Math.round(this * pow) / pow).toFixed(n >= 0 ? n : 0);
-};
-
-if (!Array.prototype.remove) {
-    Array.prototype.remove = function(elem, max) {
-        var index, i = 0;
-        while((index = this.indexOf(elem)) != -1 && (!max || i < max)) {
-            this.splice(index, 1);
-            i++;
-        }
-        return this;
-    };
-}	
-
-/*
- * Bind a function to a context
- * @param ctx Context to run the function in
- * @return Function applying new scope to original function
- */
-var slice = Array.prototype.slice;
-Function.prototype.bind = function(ctx){ 
-	var fn = this;
-	return function(){ 
-		fn.apply(ctx || fn, slice.call(arguments)); 
-	}; 
-};
-
-/**
- * Convert camelCase to dashed notation
- * @return String with uppercase letters converted to dashed notation
- */
-String.prototype.toDash = function(){
-	return this.replace(/([A-Z])/g, function($1){return "-"+$1.toLowerCase();});
-};
-
-/**
- * Convert dashed notation to camelCase
- * @return String with dashed notation converted to camelCase
- */
-String.prototype.toCamel = function(){
-	return this.replace(/(\-[a-z])/g, function($1){return $1.toUpperCase().replace('-','');});
-};
-
-/**
- * Trim a string of leading and trailing whitespace
- * @return String trimmed of whitespace
- */
-var rtrim = /^\s+|\s+$/g;
-String.prototype.trim = function(){
-	return this.replace(rtrim, "");	
-};
-
-/*** QSA ***/
-/**
- * "mini" Selector Engine
- * Copyright (c) 2009 James Padolsey
- * -------------------------------------------------------
- * Dual licensed under the MIT and GPL licenses.
- *    - http://www.opensource.org/licenses/mit-license.php
- *    - http://www.gnu.org/copyleft/gpl.html
- * -------------------------------------------------------
- * Version: 0.01 (BETA)
- */
-
-$.qsa = $$ = (function(document, global){
-	
-	var me = document;
-	[
-		{ fn: "getElementsByClassName", arrName: "elsByClassName" },
-		{ fn: "getElementsByTagName", arrName: "elsByName" },
-		{ fn: "getElementById", arrName: "elsById" }
-	].forEach(function(o){
-		var name = o.fn, 
-			arrName = o.arrName,
-			singular = (o.fn == "getElementById"), 
-			a, 
-			res;
-
-		me[name] = global[name] = function(s, context){
-			var arr = K[arrName],
-				res = null;
-
-			if((a = arr[s]) && (a = (Array.isArray(a) ? a : [a]))){
-				if(context){
-					res = a.filter(function(el){
-						do {
-							if(el._uuid === context._uuid){ return true; }
-						} while((el = (el.getParent()) ));
-						return false;
-					});
-				} else {
-					res = a;
-				}
-			}
-
-			return singular ? Array.isArray(res) && res[0] : res;
-		};
-	});
-	
-	
-    var snack = /(?:[\w\-\\.#]+)+(?:\[\w+?=([\'"])?(?:\\\1|.)+?\1\])?|\*|>/ig,
-        exprClassName = /^(?:[\w\-_]+)?\.([\w\-_]+)/,
-        exprId = /^(?:[\w\-_]+)?#([\w\-_]+)/,
-        exprNodeName = /^([\w\*\-_]+)/,
-        na = [null,null];
-
-    function _find(selector, context) {
-        /**
-         * This is what you call via x()
-         * Starts everything off...
-         */
-        var simple = /^[\w\-_#]+$/.test(selector);
-		
-        if (selector.indexOf(',') > -1) {
-            var split = selector.split(/,/g), ret = [], sIndex = 0, len = split.length;
-            for(; sIndex < len; ++sIndex) {
-                ret = ret.concat( _find(split[sIndex], context) );
-            }
-            return unique(ret);
-        }
-
-        var parts = selector.match(snack),
-            part = parts.pop(),
-            id = (part.match(exprId) || na)[1],
-            className = !id && (part.match(exprClassName) || na)[1],
-            nodeName = !id && (part.match(exprNodeName) || na)[1],
-            collection,
-			el;
-
-        if (className && !nodeName) {
-            collection = realArray(getElementsByClassName(className, context));
-        } else {
-            collection = !id && realArray(getElementsByTagName(nodeName||'*', context));
-			if (className) {
-                collection = filterByAttr(collection, 'className', RegExp('(^|\\s)' + className + '(\\s|$)'));
-            }
-            if (id) {
-                return (el = getElementById(id, context)) ? [el] : [];
-            }
-        }
-		
-		var ret = parts[0] && collection[0] ? filterParents(parts, collection, false, context) : collection;
-		return ret;
-    }
-
-    function realArray(c) { return Array.prototype.slice.call(c); }
-
-    function filterParents(selectorParts, collection, direct, context) {
-        /**
-         * This is where the magic happens.
-         * Parents are stepped through (upwards) to
-         * see if they comply with the selector.
-         */
-
-        var parentSelector = selectorParts.pop()||'';
-        if (parentSelector === '>') { return filterParents(selectorParts, collection, true, context); }
-
-        var ret = [],
-            r = -1,
-            id = (parentSelector.match(exprId) || na)[1],
-            className = !id && (parentSelector.match(exprClassName) || na)[1],
-            nodeName = !id && (parentSelector.match(exprNodeName) || na)[1],
-            cIndex = -1,
-            node, parent,
-            matches;
-
-        while ( (node = collection[++cIndex]) ) {
-            if(context){
-				if(node.getParent()._uuid == context._uuid){
-					ret[++r] = node;
-				}
-			} else {
-				parent = node.getParent();
-	            do {
-	                matches = !nodeName || nodeName === '*' || nodeName === parent._type;
-	                matches = matches && (!id || parent._id === id);
-	                matches = matches && (!className || RegExp('(^|\\s)' + className + '(\\s|$)').test(parent.className));
-	                if (direct || matches) { break; }
-	            } while ( (parent = parent.getParent()) );
-	            if (matches) { ret[++r] = node; }
-			}
-			
-        }
-        return selectorParts[0] && ret[0] ? filterParents(selectorParts, ret) : ret;
-    }
-
-
-    var unique = (function() {
-		var uid = +new Date(),
-			data = (function() {
-
-			var n = 1;
-			return function(elem) {
-				var cacheIndex = elem[uid],
-					nextCacheIndex = n++;
-
-				if (!cacheIndex) {
-					elem[uid] = nextCacheIndex;
-					return true;
-				}
-				return false;
-			};
-
-		})();
-
-		return function(arr) {
-			/**
-			 * Returns a unique array
-			 */
-			var length = arr.length,
-				ret = [],
-				r = -1,
-				i = 0,
-				item;
-
-			for (; i < length; ++i) {
-				item = arr[i];
-				if (data(item)) { ret[++r] = item; }
-			}
-
-			uid += 1;
-			return ret;
-		};
-	})();
-
-    function filterByAttr(collection, attr, regex) {
-        /**
-         * Filters a collection by an attribute.
-         */
-        var i = -1, node, r = -1, ret = [];
-        while ( (node = collection[++i]) ) {
-            if (regex.test(node[attr])) {
-                ret[++r] = node;
-            }
-        }
-        return ret;
-    }
-    return _find;
-
-})(this, this);
-
-/*** KLASS ***/
-/* Simple JavaScript Inheritance
- * By John Resig http://ejohn.org/
- * MIT Licensed.
- */
-// Inspired by base2 and Prototype
-(function(global){
-	
-	K.classes = {};
-	K.loadClass = function(name, liveKlass){
-		var klass, cls;
-		if(global.DEBUG || liveKlass || !(klass = K.classes[name])){
-			klass = liveKlass||(require('kui/' + name)||{}).Class;
-			cls = klass.prototype.className;
-			klass.prototype.className = cls ? cls + ' ' + name : name;
-			klass.prototype._klass = name;
-			if(!liveKlass){ K.loadStyle(name); }
-			K.classes[name] = klass;
-		}
-		return klass;
-	};
-
-
-	var initializing = false,
-		fnTest = /xyz/.test(function() {xyz;}) ? /\b_super\b/ : /.*/;
-
-	// The base Class implementation (does nothing)
-	this.Class = function() {};
-
-	// Create a new Class that inherits from this class
-	Class.extend = function(prop, o) {
-		// Extended with autoloading
-		if (typeof prop === 'string' && o) {
-			return K.loadClass(prop).extend(o);
-		}
-
-		var _super = this.prototype;
-
-		// Instantiate a base class (but only create the instance,
-		// don't run the init constructor)
-		initializing = true;
-		var prototype = new this();
-		initializing = false;
-
-		// Copy the properties over onto the new prototype
-		for (var name in prop) {
-			// Check if we're overwriting an existing function
-			prototype[name] = typeof prop[name] == "function" && typeof _super[name] == "function" && fnTest.test(prop[name]) ? (function(name, fn) {
-				return function() {
-					var tmp = this._super;
-
-					// Add a new ._super() method that is the same method
-					// but on the super-class
-					this._super = _super[name];
-
-					// The method only need to be bound temporarily, so we
-					// remove it when we're done executing
-					var ret = fn.apply(this, arguments);
-					this._super = tmp;
-
-					return ret;
-				};
-			})(name, prop[name]) : prop[name];
-		}
-
-		// The dummy class constructor
-		// Slight modification to set init return value to default el
-		var el;
-
-
-		function Class(o) {
-			// All construction is actually done in the init method
-			if (!initializing && this.init) {
-				o && K.extend(this, o);
-				(el = this.init.apply(this, arguments)) && !this.el && (this.el = el);
-			}
-		}
-
-		// Populate our constructed prototype object
-		Class.prototype = prototype;
-
-		// Enforce the constructor to be what we expect
-		Class.constructor = Class;
-
-		// And make this class extendable
-		Class.extend = arguments.callee;
-
-		return Class;
-	};
-
-})(this);
-
-/*** FILE ***/
-(function(){
-	
-	var pathMap = {
-		res: Ti.Filesystem.resourcesDirectory,
-		resources: Ti.Filesystem.resourcesDirectory,
-		tmp: Ti.Filesystem.tempDirectory,
-		temp: Ti.Filesystem.tempDirectory,
-		app: Ti.Filesystem.applicationDirectory,
-		data: Ti.Filesystem.applicationDataDirectory,
-		support: Ti.Filesystem.applicationSupportDirectory
-	};
-
-	K.file = function(file){
-		var parts = file.match(/((\w+):\/\/)?(.*?\.?)(\w+)$/),
-			dir = pathMap[parts[2]||'res']||pathMap.res,
-			path = parts[3]+parts[4];
-		
-		
-		var f = Ti.Filesystem.getFile(dir, path), res = f;
-	
-		try {
-			switch(parts[4]){
-				case 'txt':
-				case 'js':
-				case 'kss':
-				case 'html':
-				case 'css':
-					res = f.exists() ? f.read().text : false;
-					break;
-			}
-		} catch(e){ Ti.API.error(e); }
-		return res;
-	};
-
-})();
 
 /*** STYLE ***/
 (function(global){
@@ -1733,6 +1733,10 @@ $.qsa = $$ = (function(document, global){
 		socket.addEventListener('read', function(e) {
 			//Ti.API.log('inserting into frame', e.data.text);
 			framer.next(e.data.text).forEach(parseFrame);
+		});
+		
+		socket.addEventListener('close', function(e) {
+			K.log('socket closed');
 		});
 
 		Ti.App.addEventListener('close', function(e) {
