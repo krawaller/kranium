@@ -42,7 +42,7 @@ function watch(fn, params){
 				});
 			}
 		}, 100);
-		console.log('=> Watching for changes to build catalog...');
+		console.log('=> Watching for changes to src catalog...');
 	
 	});
 }
@@ -54,7 +54,7 @@ task('build', [], function(params) {
 			var contents = res.map(function(b, i){ return ('/*** ' + parts[i].toUpperCase() + ' ***/\n') + b.toString() }).join("\n\n");
 			console.log('updating!');
 				
-			fs.writeFileSync('../../k2.js', contents);
+			fs.writeFileSync('../dist/kranium.js', contents);
 			
 			/*var ast = uglify.parser.parse(contents);
 			ast = uglify.uglify.ast_mangle(ast);
