@@ -281,7 +281,6 @@ var reTiObject = /^\[object Ti/,
 			return this;
 		},
 		text: function(text) {
-			Ti.API.log('text', {t: this, t0: this[0], t0title: this[0].title, t0text: this[0].text});
 			return text === undefined ? (this.length > 0 ? (this[0].text||this[0].title) : null) : this.each(function() {
 				this.text = this.title = text;
 			});
@@ -1621,7 +1620,7 @@ $.qsa = $$ = (function(document, global){
 						}
 						socket.write(JSON.stringify({
 							action: 'res',
-							res: cleanse(stringify(res))
+							res: cleanse(K.stringify(res))
 						}));
 						break;
 
@@ -1755,6 +1754,18 @@ $.qsa = $$ = (function(document, global){
 		
 		global.socketwrite = function(msg, type){ socket.write(JSON.stringify({ action: type, msg: msg })); };
 		global.customsocketwrite = function(o){ if(!o.action){ return; } socket.write(JSON.stringify(o)); };
+		
+		var log = K.log;
+		K.log = function(){
+			var args = Array.prototype.slice.call(arguments);
+			log.apply(log, args);
+			try {
+				socket.write(JSON.stringify({
+					action: 'res',
+					res: cleanse(K.stringify(args.length === 1 ? args[0] : args))
+				}));
+			} catch(e){ Ti.API.error(e); }
+		};
 	};
 
 })(this);
@@ -1762,7 +1773,7 @@ $.qsa = $$ = (function(document, global){
 
 /*** STRINGIFY ***/
 (function(global){
-
+	var reTiObject = /^\[object Ti/;
 	// From jsconsole by @rem
 	function sortci(a, b) {
 	  return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
@@ -1831,12 +1842,6 @@ $.qsa = $$ = (function(document, global){
 
 /*** END ***/
 (function(global){
-	Ti.include('/kranium-generated-bootstrap.js');
-})(this);
-
-
-/*** TESTER ***/
-(function(global){
 	if(global.TEST){
 		K.log('Testing activated! :-O');
 		Ti.App.addEventListener('filechange', test);
@@ -1871,4 +1876,9 @@ $.qsa = $$ = (function(document, global){
 		}
 		test();
 	}
+})(this);
+
+/*** TESTER ***/
+(function(global){
+	Ti.include('/kranium-generated-bootstrap.js');
 })(this);
