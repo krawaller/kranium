@@ -1,6 +1,6 @@
 (function(global){
-	Ti.include('/k-generated-bootstrap.js');
+	Ti.include('/kranium-generated-bootstrap.js');
 	if(global.TEST){
-		Ti.include('/k-generated-tester.js');
+		Ti.include('/kranium-generated-tester.js');
 	}
 })(this);

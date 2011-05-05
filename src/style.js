@@ -137,7 +137,7 @@
 
 	K.loadStyle = function(filename){
 		var contents, tmp, path = 'kss/' + filename + '.kss';
-		Ti.API.log('Loading styles for', filename);
+		K.log('Loading styles for ' + filename);
 		if( (contents = K.file('res://'+path)) ){
 			K.style(null, contents);
 		}

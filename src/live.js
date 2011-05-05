@@ -44,6 +44,7 @@
 	 */
 	Ti.App.Properties.setBool('_watching', false);
 	K.watch = function(host, port) {
+		K.log('starting livetanium');
 		// Only open one connection, preferrably from app.js
 		if (Ti.App.Properties.getBool('_watching')) {
 			return false;
