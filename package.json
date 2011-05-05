@@ -19,7 +19,16 @@
 		"node" : "0.4 || 0.5", "npm" : "1"
 	},
 	"dependencies": {
-		"nomnom": ">= 0.4.1"
+		"nomnom": ">= 0.4.1",
+		"connect": ">= 1.4.0",
+		"socket.io": ">= 0.6.17",
+		"stylus": ">= 0.12.2",
+		"less": ">= 1.0.41",
+		"coffee-script": ">= 1.1.0",
+		"async": ">= 0.1.9",
+		"growl": ">= 1.1.0",
+		"nimble": ">= 0.0.2",
+		"colors": ">= 0.5.0"
 	},
 	"devDependencies": {},
 	"bugs": {
