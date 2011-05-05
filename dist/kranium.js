@@ -1159,9 +1159,12 @@ $.qsa = $$ = (function(document, global){
 			opts = opts||{};
 			if(opts._type){ return opts; }
 			if(opts.silent === true){ _silent = true; }
+			var o = extend(K.getStyle(opts, type), opts), 
+				silent = (silent||o.silent), 
+				children, 
+				cls, 
+				id;
 
-			var o = extend(K.getStyle(opts, type), opts), silent = (silent||o.silent), children, cls, id;
-						
 			if(o.children){
 				if(K.isFunc(o.children)){ children = o.children(); } 
 				else { children = o.children; }
@@ -1180,7 +1183,7 @@ $.qsa = $$ = (function(document, global){
 					
 				case 'tableviewrow':
 					if(o.leftImage && /^http/.test(o.leftImage)){
-						(children=children||[]).push({ type: 'imageView', image: o.leftImage, className: 'leftImage' });
+						(children||[]).push({ type: 'imageView', image: o.leftImage, className: 'leftImage' });
 						delete o.leftImage;
 					}
 					break;
@@ -1188,6 +1191,7 @@ $.qsa = $$ = (function(document, global){
 				case 'tableview':
 					//o.data = K.create(o.data||[]);
 					o.data = K.create(o.data, { type: 'row' });
+					
 					if(o.footerView){ o.footerView = K.createView(o.footerView); }
 					if(o.headerView){ o.headerView = K.createView(o.headerView); }
 					if(o.search){ o.search = K.createSearchBar(o.search); }
@@ -1377,7 +1381,7 @@ $.qsa = $$ = (function(document, global){
 			o = { type: o.toLowerCase() };
 		}
 		if(def && typeof def === 'object'){
-			o = K.extend(def, o);
+			o = K.extend({}, def, o);
 		}
 		
 		var type = o&&o.type, 
@@ -1639,7 +1643,7 @@ $.qsa = $$ = (function(document, global){
 						switch (m && m[0]) {
 							case 'kss':
 							case 'jss':
-								Ti.API.log('Applying live styles from', o.file);
+								K.log('Applying live styles from: "' + o.file + '"');
 								
 								K.style(null, o.content, true);
 								
@@ -1657,17 +1661,13 @@ $.qsa = $$ = (function(document, global){
 								break;
 
 							case 'js':
-								Ti.API.log('skip js reloading for now');
-								break;
-								
-								Ti.API.log('Reloading', o.file);
 								if (/kui\//.test(o.file)) {
-									var req = eval('try { var exports = {}; ' + o.content + '} catch(e){ Ti.API.error(e); }'),
+									var req = eval('try { var exports = {}; ' + o.content + '; exports.Class; } catch(e){ Ti.API.error(e); }'),
 										type;
-
+									
+									K.log('Trying to live update "'+o.file+'". If this explodes, run "kranium watch --nolivejs" instead')
 									if (req && (type = (o.file.match(/([^\/]+)\.js$/) || [false, false])[1])) {
 										var klass = K.classes[type] = K.loadClass(type, req);
-										
 										K('.' + type).each(function() {
 											//Ti.API.log('oldprops', this._props);
 											
@@ -1688,7 +1688,7 @@ $.qsa = $$ = (function(document, global){
 												K(n.children).each(function() {
 													$old.append(this);
 												});
-												Ti.API.log('children', n.children);
+												//Ti.API.log('children', n.children);
 											} else {
 												var parent = old.getParent();
 												K(old).remove();
@@ -1699,7 +1699,7 @@ $.qsa = $$ = (function(document, global){
 
 												K(parent).append(n);
 											}
-											Ti.API.log('n', n);
+											//Ti.API.log('n', n);
 										});
 									}
 								}

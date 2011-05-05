@@ -103,9 +103,12 @@
 			opts = opts||{};
 			if(opts._type){ return opts; }
 			if(opts.silent === true){ _silent = true; }
+			var o = extend(K.getStyle(opts, type), opts), 
+				silent = (silent||o.silent), 
+				children, 
+				cls, 
+				id;
 
-			var o = extend(K.getStyle(opts, type), opts), silent = (silent||o.silent), children, cls, id;
-						
 			if(o.children){
 				if(K.isFunc(o.children)){ children = o.children(); } 
 				else { children = o.children; }
@@ -124,7 +127,7 @@
 					
 				case 'tableviewrow':
 					if(o.leftImage && /^http/.test(o.leftImage)){
-						(children=children||[]).push({ type: 'imageView', image: o.leftImage, className: 'leftImage' });
+						(children||[]).push({ type: 'imageView', image: o.leftImage, className: 'leftImage' });
 						delete o.leftImage;
 					}
 					break;
@@ -132,6 +135,7 @@
 				case 'tableview':
 					//o.data = K.create(o.data||[]);
 					o.data = K.create(o.data, { type: 'row' });
+					
 					if(o.footerView){ o.footerView = K.createView(o.footerView); }
 					if(o.headerView){ o.headerView = K.createView(o.headerView); }
 					if(o.search){ o.search = K.createSearchBar(o.search); }
@@ -321,7 +325,7 @@
 			o = { type: o.toLowerCase() };
 		}
 		if(def && typeof def === 'object'){
-			o = K.extend(def, o);
+			o = K.extend({}, def, o);
 		}
 		
 		var type = o&&o.type, 

@@ -107,7 +107,7 @@
 						switch (m && m[0]) {
 							case 'kss':
 							case 'jss':
-								Ti.API.log('Applying live styles from', o.file);
+								K.log('Applying live styles from: "' + o.file + '"');
 								
 								K.style(null, o.content, true);
 								
@@ -125,17 +125,13 @@
 								break;
 
 							case 'js':
-								Ti.API.log('skip js reloading for now');
-								break;
-								
-								Ti.API.log('Reloading', o.file);
 								if (/kui\//.test(o.file)) {
-									var req = eval('try { var exports = {}; ' + o.content + '} catch(e){ Ti.API.error(e); }'),
+									var req = eval('try { var exports = {}; ' + o.content + '; exports.Class; } catch(e){ Ti.API.error(e); }'),
 										type;
-
+									
+									K.log('Trying to live update "'+o.file+'". If this explodes, run "kranium watch --nolivejs" instead')
 									if (req && (type = (o.file.match(/([^\/]+)\.js$/) || [false, false])[1])) {
 										var klass = K.classes[type] = K.loadClass(type, req);
-										
 										K('.' + type).each(function() {
 											//Ti.API.log('oldprops', this._props);
 											
@@ -156,7 +152,7 @@
 												K(n.children).each(function() {
 													$old.append(this);
 												});
-												Ti.API.log('children', n.children);
+												//Ti.API.log('children', n.children);
 											} else {
 												var parent = old.getParent();
 												K(old).remove();
@@ -167,7 +163,7 @@
 
 												K(parent).append(n);
 											}
-											Ti.API.log('n', n);
+											//Ti.API.log('n', n);
 										});
 									}
 								}
