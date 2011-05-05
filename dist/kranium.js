@@ -281,6 +281,7 @@ var reTiObject = /^\[object Ti/,
 			return this;
 		},
 		text: function(text) {
+			Ti.API.log('text', {t: this, t0: this[0], t0title: this[0].title, t0text: this[0].text});
 			return text === undefined ? (this.length > 0 ? (this[0].text||this[0].title) : null) : this.each(function() {
 				this.text = this.title = text;
 			});
@@ -1856,7 +1857,16 @@ $.qsa = $$ = (function(document, global){
 			};
 
 			// Include all the test files
-			Ti.include('/test/demo.js');
+			//Ti.include('/test/demo.js');
+			
+			var testDir = Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory, 'test');
+			testDir.getDirectoryListing().forEach(function(file){
+				if(file !== 'lib'){
+					Ti.include('/test/' + file);
+				}
+			});
+			
+			
 			jasmine.getEnv().execute();
 		}
 		test();

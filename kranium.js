@@ -2,6 +2,7 @@
 var nomnom = require('nomnom'),
 	parser = nomnom(),
 	path = require('path'),
+	utils = require('./lib/utils'),
 	fs = require('fs');
 
 (function(){
