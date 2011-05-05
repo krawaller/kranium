@@ -10,6 +10,9 @@ K.alert = function(message, title){
     }).show();
 };
 
+K.log = function(a, b){
+	Ti.API.log("Kranium", b ? Array.prototype.slice.call(arguments) : a);
+};
 
 K.loadify = function(el, fn){
 	var p = el||GLOBAL.win||Ti.UI.currentWindow,
