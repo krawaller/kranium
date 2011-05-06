@@ -1853,7 +1853,7 @@ $.qsa = $$ = (function(document, global){
 
 /*** END ***/
 (function(global){
-	Ti.include('/kranium-generated-bootstrap.js');
+	Ti.include('/kranium/kranium-generated-bootstrap.js');
 })(this);
 
 
@@ -1863,8 +1863,8 @@ $.qsa = $$ = (function(document, global){
 		K.log('Testing activated! :-O');
 		Ti.App.addEventListener('filechange', test);
 
-		Ti.include('/test/lib/jasmine-1.0.2.js');
-		Ti.include('/test/lib/jasmine-titanium-node.js');
+		Ti.include('/kranium/lib/test/jasmine-1.0.2.js');
+		Ti.include('/kranium/lib/test/jasmine-titanium-node.js');
 
 		function test(){
 			jasmine.currentEnv_ = null;
