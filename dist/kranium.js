@@ -287,7 +287,7 @@ var reTiObject = /^\[object Ti/,
 		},
 		animate: function(opts, cb){
 			return this.each(function(i){
-				this.animate(opts, (i == 0 ? cb : noop));
+				this.animate(opts, (i == 0 ? cb||noop : noop));
 			});
 		},
 		
@@ -485,6 +485,14 @@ Function.prototype.bind = function(ctx){
 	var fn = this;
 	return function(){ 
 		fn.apply(ctx || fn, slice.call(arguments)); 
+	}; 
+};
+
+var slice = Array.prototype.slice;
+Function.prototype.once = function(ctx){ 
+	var fn = this, i = 0;
+	return function(){ 
+		return ++i <= 1 && fn.apply(ctx || fn, slice.call(arguments)); 
 	}; 
 };
 
@@ -1190,7 +1198,7 @@ $.qsa = $$ = (function(document, global){
 
 				case 'tableview':
 					//o.data = K.create(o.data||[]);
-					o.data = K.create(o.data, { type: 'row' });
+					o.data = o.data ? K.create(o.data, { type: 'row' }) : [];
 					
 					if(o.footerView){ o.footerView = K.createView(o.footerView); }
 					if(o.headerView){ o.headerView = K.createView(o.headerView); }
@@ -1309,10 +1317,12 @@ $.qsa = $$ = (function(document, global){
 				//els.push(el);
 			}
 
+			o.events && (o.events = o.events.clone()); // Hmm... must treat input objects as immutable
 			if((fn = o.click)){
 				(tmp = (o.events = o.events||{})).click ? ((Array.isArray(tmp.click) ? tmp.click.push(fn) : (tmp.click = [tmp.click, fn]) )) : (tmp.click = fn);				
 			}
 			if(o.events){
+				K.log('events', o.events);
 				var scope = o.events.scope||el, fn, name, toName, to, m, events = {};
 				delete o.events.scope;
 				var appEvents = o.events.app;
@@ -1404,7 +1414,7 @@ $.qsa = $$ = (function(document, global){
 		}
 
 		if(type && !K.creators[type]){
-			K.loadStyle(type);
+			//K.loadStyle(type);
 
 			(function(){
 				//Ti.API.log('requiring in creator', type);
@@ -1455,7 +1465,6 @@ $.qsa = $$ = (function(document, global){
 		};
 
 	K.ajax = function(inOpts){
-		Ti.API.log('opts', inOpts);
 		var opts = K.extend(K.extend({}, ajaxDefaults), inOpts), 
 			xhr = Ti.Network.createHTTPClient(opts), 
 			data = K.extend(opts.data, opts.extendData || {}),
@@ -1802,6 +1811,10 @@ $.qsa = $$ = (function(document, global){
 	    }
 	    json += parts.join(', ') + ']';
 	    json;
+	  } else if (o === null) {
+	    json = 'null';
+	  } else if (o === undefined) {
+	    json = 'undefined';
 	  } else if (ownType && reTiObject.test(ownType)) {
 		json += '"' + (o._type||'')+(o._id||'')+((o.className||'').split(/\s+/).map(function(cls){ return cls && ('.'+cls); })).join("")+(o.text||o.title?' <'+(o.text||o.title)+'>':'') +'"';
 	  } else if (type == '[object Object]') {
@@ -1820,10 +1833,6 @@ $.qsa = $$ = (function(document, global){
 	    json = o ? 'true' : 'false';
 	  } else if (type == '[object Function]') {
 	    json = o.toString();
-	  } else if (o === null) {
-	    json = 'null';
-	  } else if (o === undefined) {
-	    json = 'undefined';
 	  } else if (simple == undefined) {
 	    json = type + '{\n';
 	    for (i in o) {
@@ -1850,6 +1859,144 @@ $.qsa = $$ = (function(document, global){
 	
 	
 })(this);
+
+/*** BACKBONEINTEGRATION ***/
+(function(global){
+	try {
+		Ti.include('/kranium/lib/backbone/kranium-underscore.js');
+		Ti.include('/kranium/lib/backbone/kranium-backbone.js');
+		Ti.include('/kranium/lib/backbone/kranium-backbone-couchconnector.js');
+		Ti.include('/kranium/lib/backbone/kranium-jquery.couch.js');
+		
+		var eventSplitter = /^(\w+)\s*(.*)$/;
+		_.extend(Backbone.View.prototype, Backbone.Events, {
+			tagName: 'view',
+	
+			make: function(tagName, attributes, content){
+				Ti.API.log('making', [tagName, attributes, content]);
+				return K.create({ type: tagName, attr: attributes, content: content });
+			},
+	
+			delegateEvents: function(events) {
+				Ti.API.log('delegately', [events, this.events]);
+				if (! (events || (events = this.events))) return;
+				$(this.el).unbind();
+				for (var key in events) {
+					var methodName = events[key];
+					var match = key.match(eventSplitter);
+					var eventName = match[1],
+						selector = match[2];
+					var method = _.bind(this[methodName], this);
+					Ti.API.log('bindly', [eventName, selector]);
+					if (selector === '') {
+						$(this.el).bind(eventName, method);
+					} else {
+						$(this.el).delegate(selector, eventName, method);
+					}
+				}
+			}
+
+		});
+
+		global.BackboneView = View.extend({
+			renderCollection: function(collection){
+				var data = collection.map(function(model){
+					return (model.el = K.creators[model.type](K.extend({ _modelId: model.id }, model.attributes)));
+				});
+				
+				this.el.setData(data);
+			},
+			renderModel: function(model) {
+				var el = model.el, key;
+
+				var recreate = false,
+					changed = model.changedAttributes();
+
+				if(el){
+					for(key in changed){
+						if(typeof el[key] === 'undefined'){
+							recreate = true;
+						}
+					}
+					//K.log('renderModel', changed, el)
+					if(!recreate){
+						for(key in changed){
+							el[key] = changed[key];
+						}
+					} else {
+						var $el = K(el);
+						$el.children().remove();
+						$el.append((model.el = K.creators[model.type](model.attributes)));
+					}
+				} else {
+					model.el = K.creators[model.type](model.attributes)
+				}
+				
+
+				this.collection && this.collection.sort();
+				return this;
+			},
+			
+			onAdd: function(model){
+				this.renderModel(model).el.insertRowBefore(0, model.el);
+			},
+			
+			// Titanium's row handling is BORKEN
+			/*updateOrder: function(model){
+				//K.log('updateOrder', model.get('order'));
+				//K.log(this.collection.pluck('order'));
+				var order = model.get('order'),
+					$el = K('#' + model.get('id')),
+					row = $el[0],
+					rows = this.el.data[0].rows;
+					
+				K.log('rows', rows);	
+				for(var i = 0, r; r = rows[i]; i++){
+					K.log('comp', [r.order, order, r.order > order])
+					if(r.order > order){
+						break;
+					}
+				}
+				i > 0 && i--;
+				
+				if(i == 0){
+					K.log('insertbefore', 0);
+					this.el.insertRowBefore(0, row);
+				} else {
+					K.log('insertafter', i);
+					this.el.insertRowAfter(i, row);
+				}
+					
+				K.log('going to', i);	
+			},*/
+
+			template: function(o){
+				return K.extend({}, this._props, o, { type: this._klass });
+			},
+
+			init: function(){
+				this.el = this._super.apply(this, arguments);
+				this.model && this.model.bind('change', this.renderModel.bind(this));
+				if(this.collection){
+					this.renderCollection(this.collection);
+
+					this.collection.bind('refresh', this.renderCollection.once(this));
+					this.collection.bind('change', this.renderModel.bind(this));
+					//this.collection.bind('change:order', this.updateOrder.bind(this));
+					this.collection.bind('add', this.onAdd.bind(this));
+					this.collection.bind('all', function(ev, model){
+						//K.log(ev, model.attributes);
+					});
+
+				}
+				return this.el;
+			}
+
+		});
+	} catch (e){ Ti.API.error(e); }
+})(this);
+
+
 
 /*** END ***/
 (function(global){

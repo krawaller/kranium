@@ -57,7 +57,7 @@
   } else {
     root._ = _;
   }
-  try{ exports._ = _; } catch(e){ Ti.API.log(e); }
+  //try{ exports._ = _; } catch(e){ Ti.API.log(e); }
 
   // Current version.
   _.VERSION = '1.1.4';

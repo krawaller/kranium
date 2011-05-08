@@ -11,7 +11,8 @@ var nomnom = require('nomnom'),
 		port: 8128,
 		ip: '127.0.0.1',
 		test: false,
-		debug: false
+		debug: false,
+		backbone: false
 	};
 
 	function autoload(str){
@@ -53,6 +54,12 @@ var nomnom = require('nomnom'),
 			string: '-t, --test',
 			help: 'activate app tests',
 			"default": defaults.test
+		},
+		
+		backbone: {
+			string: '-b, --backbone',
+			help: 'activate backbone for app',
+			"default": defaults.backbone
 		},
 	
 		ip: {

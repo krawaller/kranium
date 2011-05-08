@@ -8,17 +8,18 @@
 // I added the connector to the Backbone object.
 Backbone.couchConnector = {
 	// Name of the Database.
-	databaseName : "test1",
+	databaseName : "k",
 	// Name of the design document that contains the views.
 	ddocName : "backbone",
 	// Name of the view.
 	viewName : "byCollection",
 	// Enable updates via the couchdb _changes feed
-	enableChanges : false,
+	enableChanges : true,
 	// If `baseUrl` is set, the default uri of jquery.couch.js will be overridden.
 	// This is useful if you want to access a couch on another server e.g. `http://127.0.0.1:5984`
 	// Important: Be aware of the Cross-Origin Policy. 
-	baseUrl : null,
+	//baseUrl : "http://10.66.22.62:5984/",
+	baseUrl : "http://127.0.0.1:5984/",
 	// A simple lookup table for collections that should be synched.
 	_watchList : [],
 	getCollectionFromModel : function(model){
@@ -74,9 +75,9 @@ Backbone.couchConnector = {
 							model.id = curr.id;
 						arr.push(model);
 					}
-					_success(arr);
+					_success && _success(arr);
 				}else{
-					_success(null);
+					_success && _success(null);
 				}
 			},
 			error: _error
@@ -227,7 +228,14 @@ Backbone.couchConnector = {
 
 // Override the standard sync method.
 Backbone.sync = Backbone._sync = function(method, model, options) {
-	Ti.API.log('COUCHSYNC');
+	//K.log('COUCHSYNC', options);
+	if(_.isFunction(options)){
+		options = {
+			success: options,
+			error: K.log
+		};
+	}
+	
 	if(method == "create" || method == "update"){
 		Backbone.couchConnector.create(model, options.success, options.error);
 	}else if(method == "read"){
