@@ -521,6 +521,12 @@ String.prototype.trim = function(){
 	return this.replace(rtrim, "");	
 };
 
+String.prototype.esc = function(obj, func){
+    return this.replace(/#\{([A-Za-z_]+)\}/g, function($0, $1){
+        return typeof obj[$1] != "undefined" ? (func ? func(obj[$1]) : obj[$1]) : $0;
+    });
+};
+
 /*** QSA ***/
 /**
  * "mini" Selector Engine
@@ -896,6 +902,58 @@ $.qsa = $$ = (function(document, global){
 		});	
 	};
 
+	K.parseRule = function(prop, obj){
+		var m, val, camelized, obj = obj || {};
+		
+		m = prop.value.match(rEvalProp);
+		value = prop.value;
+		property = prop.property.trim();
+		
+		//Ti.API.log('property', { property: property, hascamel: !!property.toCamel })
+	
+		//Ti.API.log('rule', ['>'+value+'<', '>'+property+'<', m]);
+
+		if(m && m[0]){
+			//Ti.API.log('rule', ['>'+value+'<', '>'+property+'<', eval('('+value.substring((m[1] && m[1].length) || 0)+')')]);
+			obj[property] = eval('('+value.substring((m[1] && m[1].length) || 0)+')');
+		} else {
+			switch((camelized = property.toCamel())){
+				case 'shadowOffsetX':
+					(obj.shadowOffset = obj.shadowOffset || {}).x = parseFloat(value);
+					break;
+				case 'shadowOffsetY':
+					(obj.shadowOffset = obj.shadowOffset || {}).y = parseFloat(value);
+					break;
+				
+				case 'fontFamily':
+				case 'fontWeight':
+				case 'fontSize':
+					obj.font = obj.font || {};
+					obj.font[camelized] = value;
+					break;
+				
+				case 'backgroundGradient':
+					var parts = value.match(/(\w+)-gradient\((\w+)\s?(\w+)?\s*,\s*(.*)\)/),
+						gradientType = parts[1],
+						gradientStartX = parts[2],
+						gradientStartY = parts[3],
+						colors = parts[4].split(",").map(function(c){ var p = c.match(/(\w+)\s+([\d.]+)/); return p && {color: '#'+p[1], position: p[2]}; });
+					
+						obj.backgroundGradient = { type: gradientType, colors:colors };
+						//Ti.API.log('grad', JSON.stringify(obj.backgroundGradient));
+						//Ti.API.log('OBJ', [gradientType, colors]);
+					break;	
+				
+				default:
+					if(camelized == 'backgroundImage'){ Ti.API.log('info', JSON.stringify(value)); }
+					obj[camelized] = value;
+					break; 
+			}
+		}
+		
+		return obj;
+	};
+
 	/**
 	 * Parse and apply styles found in specified file or in call
 	 * @param file Filename containing styles. Optional
@@ -914,53 +972,10 @@ $.qsa = $$ = (function(document, global){
 			var selectors = K.buildSelectorTree(str), m, val, prop, camelized;
 			(selectors || []).forEach(function(sel){
 				var obj = styles[sel.selector] = styles[sel.selector] || {};
-				sel.properties.forEach(function(prop){
-					m = prop.value.match(rEvalProp);
-					value = prop.value;
-					property = prop.property.trim();
-					
-					//Ti.API.log('property', { property: property, hascamel: !!property.toCamel })
-				
-					//Ti.API.log('rule', ['>'+value+'<', '>'+property+'<', m]);
-
-					if(m && m[0]){
-						//Ti.API.log('rule', ['>'+value+'<', '>'+property+'<', eval('('+value.substring((m[1] && m[1].length) || 0)+')')]);
-						obj[property] = eval('('+value.substring((m[1] && m[1].length) || 0)+')');
-					} else {
-						switch((camelized = property.toCamel())){
-							case 'shadowOffsetX':
-								(obj.shadowOffset = obj.shadowOffset || {}).x = parseFloat(value);
-								break;
-							case 'shadowOffsetY':
-								(obj.shadowOffset = obj.shadowOffset || {}).y = parseFloat(value);
-								break;
-							
-							case 'fontFamily':
-							case 'fontWeight':
-							case 'fontSize':
-								obj.font = obj.font || {};
-								obj.font[camelized] = value;
-								break;
-							
-							case 'backgroundGradient':
-								var parts = value.match(/(\w+)-gradient\((\w+)\s?(\w+)?\s*,\s*(.*)\)/),
-									gradientType = parts[1],
-									gradientStartX = parts[2],
-									gradientStartY = parts[3],
-									colors = parts[4].split(",").map(function(c){ var p = c.match(/(\w+)\s+([\d.]+)/); return p && {color: '#'+p[1], position: p[2]}; });
-								
-									obj.backgroundGradient = { type: gradientType, colors:colors };
-									Ti.API.log('grad', JSON.stringify(obj.backgroundGradient));
-									//Ti.API.log('OBJ', [gradientType, colors]);
-								break;	
-							
-							default:
-								if(camelized == 'backgroundImage'){ Ti.API.log('info', JSON.stringify(value)); }
-								obj[camelized] = value;
-								break; 
-						}
-					}
-				});
+				for(var i = 0, len = sel.properties.length; i < len; i++){
+					K.parseRule(sel.properties[i], obj);
+				}
+				//sel.properties.forEach(K.parseRule);
 				
 				if(applyStyles){
 					K(sel.selector).each(function() {
@@ -1230,7 +1245,7 @@ $.qsa = $$ = (function(document, global){
 					break;
 
 				case 'tab':
-					o.window = K.createWindow(o.window);
+					o.window = K.create(o.window, { type: 'window' });
 					break;
 
 				case 'tabgroup':
@@ -1322,7 +1337,6 @@ $.qsa = $$ = (function(document, global){
 				(tmp = (o.events = o.events||{})).click ? ((Array.isArray(tmp.click) ? tmp.click.push(fn) : (tmp.click = [tmp.click, fn]) )) : (tmp.click = fn);				
 			}
 			if(o.events){
-				K.log('events', o.events);
 				var scope = o.events.scope||el, fn, name, toName, to, m, events = {};
 				delete o.events.scope;
 				var appEvents = o.events.app;
@@ -1550,6 +1564,19 @@ $.qsa = $$ = (function(document, global){
 	};
 
 	K.ajaxSetup = function(opts){ K.merge(ajaxDefaults, opts); };
+
+	var yqlStart = 'http://query.yahooapis.com/v1/public/yql',
+		yqlEnd = '&format=json&callback=';
+		
+	K.yql = function(opts){
+		opts.url = yqlStart;
+		opts.data = ('format=json&callback=&diagnostics=true&q=' + opts.q).esc(opts.params, encodeURIComponent).toString();
+		opts.type = 'POST';
+		opts.headers = {
+			"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+		};
+		return K.ajax(opts);
+	};
 
 })(this);
 
