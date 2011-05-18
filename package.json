@@ -28,7 +28,9 @@
 		"async": ">= 0.1.9",
 		"growl": ">= 1.1.0",
 		"nimble": ">= 0.0.2",
-		"colors": ">= 0.5.0"
+		"colors": ">= 0.5.0",
+		"jake": ">= 0.1.12",
+		"uglify-js": ">= 1.0.1"
 	},
 	"devDependencies": {},
 	"bugs": {

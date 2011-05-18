@@ -261,7 +261,7 @@ var reTiObject = /^\[object Ti/,
 							
 							var tab = ((tmp = ((o&&o.tab)||o) ) && (typeof tmp === 'string') ? $$(tmp)[0] : tmp) || ((tmp = $$('tabgroup')) && tmp[0] && tmp[0].activeTab);
 							(tab||Ti.UI.currentTab).open(el, o);
-						} else if((parent && parent._type ? parent : (parent = $$(parent)[0])) && ['navigationgroup', 'tabgroup'].indexOf(parent._type) !== -1) {
+						} else if(parent && (parent && parent._type ? parent : (parent = $$(parent)[0])) && ['navigationgroup', 'tabgroup'].indexOf(parent._type) !== -1) {
 							parent.open(el, o);
 						} else {
 							el.open();
@@ -391,6 +391,29 @@ var extend = K.extend = function(obj1, obj2, obj3){
 	}
 };
 
+function singleDeepExtend(destination, source){	
+	for (var property in source) {
+		if (source[property] && source[property].constructor && source[property].constructor === Object) {
+			destination[property] = destination[property] || {};
+			singleDeepExtend(destination[property], source[property]);
+		} else {
+			destination[property] = source[property];
+		}
+	}
+	return destination;
+}
+
+K.deepExtend = function(obj1, obj2, obj3) {
+	if(!obj3){
+		return singleDeepExtend(obj1, obj2);
+	} else {
+		var args = Array.prototype.slice.call(arguments),
+			obj = args.shift();
+		while(args.length){ obj = singleDeepExtend.apply(null, [obj, args.shift()]); }
+		return obj;
+	}
+};
+
 if(!Object.prototype.extend){
 	Object.defineProperty(Object.prototype, "extend", {
 	    enumerable: false,
@@ -403,6 +426,7 @@ if(!Object.prototype.extend){
 	    }
 	});
 }
+
 
 if(!Object.prototype.clone){
 	Object.defineProperty(Object.prototype, "clone", {
@@ -728,11 +752,13 @@ $.qsa = $$ = (function(document, global){
 	K.loadClass = function(name, liveKlass){
 		var klass, cls;
 		if(global.DEBUG || liveKlass || !(klass = K.classes[name])){
+			if(!liveKlass){ K.loadStyle(name); }
+			
 			klass = liveKlass||(require('kui/' + name)||{}).Class;
 			cls = klass.prototype.className;
 			klass.prototype.className = cls ? cls + ' ' + name : name;
 			klass.prototype._klass = name;
-			if(!liveKlass){ K.loadStyle(name); }
+			
 			K.classes[name] = klass;
 		}
 		return klass;
