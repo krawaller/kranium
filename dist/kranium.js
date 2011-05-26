@@ -318,6 +318,11 @@ var reTiObject = /^\[object Ti/,
 	Z.prototype = $.fn;
 	global.$ = global.K = global.jQuery = global.Zepto = $;
 	
+	var platform = Ti.Platform.osname;
+	$.is = {
+		android: platform === 'android',
+		ios: platform === 'iphone'
+	};
 	
 })(this);
 
