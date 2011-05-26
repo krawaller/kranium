@@ -146,8 +146,10 @@ var reTiObject = /^\[object Ti/,
 		hide: function(){ return this.each(function(){ this.hide(); }); },
 		prev: function(){}, //TODO: implement me
 		next: function(){}, //TODO: implement me
-		val: function(){
-			return this[0] && this[0].value;
+		val: function(val){
+			return val === undefined ? (this.length > 0 ? this[0].value : null) : this.each(function() {
+				this.value = val;
+			});
 		}, //TODO: implement me
 		offset: function(){}, //TODO: implement me
 		css: function(property, value) {
@@ -260,9 +262,9 @@ var reTiObject = /^\[object Ti/,
 							K.currentWindow = el;
 							
 							var tab = ((tmp = ((o&&o.tab)||o) ) && (typeof tmp === 'string') ? $$(tmp)[0] : tmp) || ((tmp = $$('tabgroup')) && tmp[0] && tmp[0].activeTab);
-							(tab||Ti.UI.currentTab).open(el, o);
+							(tab||Ti.UI.currentTab).open(el, o||{});
 						} else if(parent && (parent && parent._type ? parent : (parent = $$(parent)[0])) && ['navigationgroup', 'tabgroup'].indexOf(parent._type) !== -1) {
-							parent.open(el, o);
+							parent.open(el, o||{});
 						} else {
 							el.open();
 						}
@@ -323,6 +325,8 @@ var reTiObject = /^\[object Ti/,
 
 
 /*** UTILS ***/
+//(function(global){
+
 K.isFunc = function(obj){ return toString.call(obj) === "[object Function]"; };
 
 K.get = function(str){ return JSON.parse(Ti.App.Properties.getString(str)); };
@@ -335,8 +339,10 @@ K.alert = function(message, title){
     }).show();
 };
 
+var android = Ti.Platform.osname === 'android';
 K.log = function(a, b){
-	Ti.API.log("Kranium", b ? Array.prototype.slice.call(arguments) : a);
+	var out = (b ? Array.prototype.slice.call(arguments) : a);
+	Ti.API.log("Kranium", android ? JSON.stringify(out) : out);
 };
 
 K.loadify = function(el, fn){
@@ -414,8 +420,8 @@ K.deepExtend = function(obj1, obj2, obj3) {
 	}
 };
 
-if(!Object.prototype.extend){
-	Object.defineProperty(Object.prototype, "extend", {
+if(!Object.prototype.ext){
+	Object.defineProperty(Object.prototype, "ext", {
 	    enumerable: false,
 	    value: function(from) {
 	        var dest = this;
@@ -432,7 +438,7 @@ if(!Object.prototype.clone){
 	Object.defineProperty(Object.prototype, "clone", {
 	    enumerable: false,
 	    value: function() {
-	        return ({}).extend(this);
+	        return ({}).ext(this);
 	    }
 	});
 }
@@ -550,6 +556,8 @@ String.prototype.esc = function(obj, func){
         return typeof obj[$1] != "undefined" ? (func ? func(obj[$1]) : obj[$1]) : $0;
     });
 };
+
+//})(this);
 
 /*** QSA ***/
 /**
@@ -753,8 +761,7 @@ $.qsa = $$ = (function(document, global){
 		var klass, cls;
 		if(global.DEBUG || liveKlass || !(klass = K.classes[name])){
 			if(!liveKlass){ K.loadStyle(name); }
-			
-			klass = liveKlass||(require('kui/' + name)||{}).Class;
+			klass = liveKlass||(exports = {}, Ti.include('kui/' + name + '.js'), exports.Class);
 			cls = klass.prototype.className;
 			klass.prototype.className = cls ? cls + ' ' + name : name;
 			klass.prototype._klass = name;
@@ -873,8 +880,10 @@ $.qsa = $$ = (function(document, global){
 
 /*** STYLE ***/
 (function(global){
-
-	var styles = K.styles = {};
+	
+	var styles = K.styles = {},
+		extend = K.extend;
+		
 	K.extendStyle = K.addStyle = function(opts){
 		K.extend(styles, opts || {});
 	};
@@ -1057,48 +1066,68 @@ $.qsa = $$ = (function(document, global){
 		NULL = null,
 		UNDEFINED = undefined;
 
-	K.buildSelectorTree = function(text) {
-		var rules = [], ruletext, rule,
-			match, selector, proptext, splitprop, properties, sidx, prop, val;
+		var psuedoMatchers = {
+			android: Ti.Platform.osname === 'android',
+			ios: Ti.Platform.osname === 'iphone'
+		};
+		K.buildSelectorTree = function(text) {
+			var rules = [], ruletext, rule,
+				match, selector, psuedo, pidx, proptext, splitprop, properties, sidx, prop, val;
 
-		// Tabs, Returns
-		text = text.replace(WHITESPACE_CHARACTERS, EMPTY_STRING);
-		// Leading / Trailing Whitespace
-		text = text.replace(/\s?(\{|\:|\})\s?/g, PLACEHOLDER_STRING);
-		//Ti.API.log('t1', text);
-		ruletext = text.split(END_MUSTACHE);
-		//Ti.API.log('t2', ruletext);
-		forEach(ruletext, function (i, text) {
-			if (text) {
-				rule = [text, END_MUSTACHE].join(EMPTY_STRING);
-				match = (/(.*)\{(.*)\}/).exec(rule);
+			// Tabs, Returns
+			text = text.replace(WHITESPACE_CHARACTERS, EMPTY_STRING);
+			// Leading / Trailing Whitespace
+			text = text.replace(/\s?(\{|\:|\})\s?/g, PLACEHOLDER_STRING);
+			//Ti.API.log('t1', text);
+			ruletext = text.split(END_MUSTACHE);
+			//Ti.API.log('t2', ruletext);
+			forEach(ruletext, function (i, text) {
+				if (text) {
+					rule = [text, END_MUSTACHE].join(EMPTY_STRING);
+					match = (/(.*)\{(.*)\}/).exec(rule);
 
-				if (match && match.length && match[2]) {
-					selector = match[1];
-					proptext = match[2].split(";");
-					properties = [];
+					if (match && match.length && match[2]) {
+						selector = match[1];
 
-					forEach(proptext, function (i, x) {
-						sidx = x.indexOf(":");
-						prop = x.substring(0, sidx).trim();
-						val = x.substring(sidx+1).trim();
-					
-						if (prop) {
-							properties.push({ property : prop, value : val });
+						proptext = match[2].split(";");
+						properties = [];
+
+						forEach(proptext, function (i, x) {
+							sidx = x.indexOf(":");
+							prop = x.substring(0, sidx).trim();
+							val = x.substring(sidx+1).trim();
+
+							if (prop) {
+								properties.push({ property : prop, value : val });
+							}
+						});
+
+
+						if (
+							selector && 
+							properties.length && 
+
+							(pidx = selector.indexOf(":")) === -1 ? 
+								true : 
+								(
+									(psuedo = selector.match(/:[^:]+/g)) && 
+									(selector = selector.substring(0, pidx)) && 
+									(psuedo.filter(function(p){ 
+										return psuedoMatchers[p.substring(1)]; 
+									}).length === psuedo.length)
+								)
+
+						) {
+							rules.push({ selector : selector, properties : properties });
 						}
-					});
-
-					if (selector && properties.length) {
-						rules.push({ selector : selector, properties : properties });
 					}
 				}
-			}
-		});
+			});
 
-		return rules;
-	};
+			return rules;
+		};
 
-	K.loadStyle('app');
+		K.loadStyle('app');
 
 })(this);
 
@@ -1192,6 +1221,7 @@ $.qsa = $$ = (function(document, global){
 		}
 	}
 	
+	var extend = K.extend;
 	["2DMatrix", "3DMatrix", "ActivityIndicator", "AlertDialog", "Animation", "Annotation", "Button", "ButtonBar", "CoverFlowView", "DashboardItem", "DashboardView", "EmailDialog", "ImageView", "Label", "MapView", "MaskedImage", "NavigationGroup", "OptionDialog", "Picker", "PickerColumn", "PickerRow", "Popover", "ProgressBar", "ScrollView", "ScrollableView", "SearchBar", "Slider", "SplitWindow", "Switch", "Tab", "TabGroup", "TabbedBar", "TableView", "TableViewRow", "TableViewSection", "TextArea", "TextField", "Toolbar", "View", "WebView", "Window"].forEach(function(t){
 		var type = t.toLowerCase(),
 			module = moduleByType[type]||Ti.UI,
@@ -1275,10 +1305,11 @@ $.qsa = $$ = (function(document, global){
 					break;
 
 				case 'tabgroup':
-					//o.window = K.createWindow(o.window);
-					if(o.tabs){ o.tabs = K.create(o.tabs, { type: 'tab' }); }
-					//o._tabs = o.tabs;
-					//delete o.tabs;
+					K.log('create tabgroup', o.tabs);
+					//if(o.tabs){ o.tabs = K.create(o.tabs, { type: 'tab' }); }
+
+					o._tabs = o.tabs;
+					delete o.tabs;
 					break;
 					
 				case 'splitwindow':
@@ -1312,10 +1343,12 @@ $.qsa = $$ = (function(document, global){
 					el.show();
 					break;
 
-				case 'tabGroup':
-					/*o._tabs.map(function(tab){
-						el.addTab(K.createTab(tab));
-					});*/
+				case 'tabgroup':
+					if(o._tabs){ 
+						o._tabs.forEach(function(tab){
+							el.addTab(K.createTab(tab));
+						});
+					}
 					break;
 					
 				case 'picker':
@@ -1693,7 +1726,7 @@ $.qsa = $$ = (function(document, global){
 						}
 						socket.write(JSON.stringify({
 							action: 'res',
-							res: cleanse(K.stringify(res))
+							res: cleanse(K.stringify(res)).replace(/[\u007F-\uFFFF]/g, function(a){ return '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4) })
 						}));
 						break;
 
@@ -1869,7 +1902,17 @@ $.qsa = $$ = (function(document, global){
 	  } else if (o === undefined) {
 	    json = 'undefined';
 	  } else if (ownType && reTiObject.test(ownType)) {
-		json += '"' + (o._type||'')+(o._id||'')+((o.className||'').split(/\s+/).map(function(cls){ return cls && ('.'+cls); })).join("")+(o.text||o.title?' <'+(o.text||o.title)+'>':'') +'"';
+		json += [
+			'"',
+			"<",
+			(o._type||'unknown'),
+			(o._id ? " id='"+o._id+"'" : ""),
+			o.className ? " class='"+o.className+"'" : "",
+			">",
+			((tmp = (o.text||o.title||""))? tmp :''),
+			"</" + (o._type||'unknown') + ">",
+			'"'
+		].join("");
 	  } else if (type == '[object Object]') {
 	    json = '{';
 	    for (i in o) {
@@ -1906,150 +1949,6 @@ $.qsa = $$ = (function(document, global){
 	K.stringify = stringify;
 
 })(this);
-
-/*** LIBS ***/
-(function(global){
-	
-	
-})(this);
-
-/*** BACKBONEINTEGRATION ***/
-(function(global){
-	try {
-		Ti.include('/kranium/lib/backbone/kranium-underscore.js');
-		Ti.include('/kranium/lib/backbone/kranium-backbone.js');
-		Ti.include('/kranium/lib/backbone/kranium-backbone-couchconnector.js');
-		Ti.include('/kranium/lib/backbone/kranium-jquery.couch.js');
-		
-		var eventSplitter = /^(\w+)\s*(.*)$/;
-		_.extend(Backbone.View.prototype, Backbone.Events, {
-			tagName: 'view',
-	
-			make: function(tagName, attributes, content){
-				Ti.API.log('making', [tagName, attributes, content]);
-				return K.create({ type: tagName, attr: attributes, content: content });
-			},
-	
-			delegateEvents: function(events) {
-				Ti.API.log('delegately', [events, this.events]);
-				if (! (events || (events = this.events))) return;
-				$(this.el).unbind();
-				for (var key in events) {
-					var methodName = events[key];
-					var match = key.match(eventSplitter);
-					var eventName = match[1],
-						selector = match[2];
-					var method = _.bind(this[methodName], this);
-					Ti.API.log('bindly', [eventName, selector]);
-					if (selector === '') {
-						$(this.el).bind(eventName, method);
-					} else {
-						$(this.el).delegate(selector, eventName, method);
-					}
-				}
-			}
-
-		});
-
-		global.BackboneView = View.extend({
-			renderCollection: function(collection){
-				var data = collection.map(function(model){
-					return (model.el = K.creators[model.type](K.extend({ _modelId: model.id }, model.attributes)));
-				});
-				
-				this.el.setData(data);
-			},
-			renderModel: function(model) {
-				var el = model.el, key;
-
-				var recreate = false,
-					changed = model.changedAttributes();
-
-				if(el){
-					for(key in changed){
-						if(typeof el[key] === 'undefined'){
-							recreate = true;
-						}
-					}
-					//K.log('renderModel', changed, el)
-					if(!recreate){
-						for(key in changed){
-							el[key] = changed[key];
-						}
-					} else {
-						var $el = K(el);
-						$el.children().remove();
-						$el.append((model.el = K.creators[model.type](model.attributes)));
-					}
-				} else {
-					model.el = K.creators[model.type](model.attributes)
-				}
-				
-
-				this.collection && this.collection.sort();
-				return this;
-			},
-			
-			onAdd: function(model){
-				this.renderModel(model).el.insertRowBefore(0, model.el);
-			},
-			
-			// Titanium's row handling is BORKEN
-			/*updateOrder: function(model){
-				//K.log('updateOrder', model.get('order'));
-				//K.log(this.collection.pluck('order'));
-				var order = model.get('order'),
-					$el = K('#' + model.get('id')),
-					row = $el[0],
-					rows = this.el.data[0].rows;
-					
-				K.log('rows', rows);	
-				for(var i = 0, r; r = rows[i]; i++){
-					K.log('comp', [r.order, order, r.order > order])
-					if(r.order > order){
-						break;
-					}
-				}
-				i > 0 && i--;
-				
-				if(i == 0){
-					K.log('insertbefore', 0);
-					this.el.insertRowBefore(0, row);
-				} else {
-					K.log('insertafter', i);
-					this.el.insertRowAfter(i, row);
-				}
-					
-				K.log('going to', i);	
-			},*/
-
-			template: function(o){
-				return K.extend({}, this._props, o, { type: this._klass });
-			},
-
-			init: function(){
-				this.el = this._super.apply(this, arguments);
-				this.model && this.model.bind('change', this.renderModel.bind(this));
-				if(this.collection){
-					this.renderCollection(this.collection);
-
-					this.collection.bind('refresh', this.renderCollection.once(this));
-					this.collection.bind('change', this.renderModel.bind(this));
-					//this.collection.bind('change:order', this.updateOrder.bind(this));
-					this.collection.bind('add', this.onAdd.bind(this));
-					this.collection.bind('all', function(ev, model){
-						//K.log(ev, model.attributes);
-					});
-
-				}
-				return this.el;
-			}
-
-		});
-	} catch (e){ Ti.API.error(e); }
-})(this);
-
-
 
 /*** END ***/
 (function(global){
