@@ -37,9 +37,9 @@
 	  };
 
 	  if (color) {
-	    sys.print("\u001B[" + colors[color] + "m")
+	    sys.print("\033[" + colors[color] + "m")
 	  } else {
-	    sys.print("\u001B[0m")
+	    sys.print("\033[0m")
 	  }
 	};
 

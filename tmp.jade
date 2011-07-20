@@ -1,0 +1,15 @@
+- var title = "Things"
+label= title
+view
+  label hej
+  label hopp
+  view
+    label korv
+tableview#users
+  view start
+  - each user, name in users
+    - if (user.isA == "ferret")
+      li(class='user-' + name) #{name} is just a ferret
+    - else
+      li(class='user-' + name) #{name} #{user.email}
+  view end

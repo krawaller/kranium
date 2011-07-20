@@ -1,0 +1,143 @@
+function anonymous(locals) {
+var __ = { lineno: 1, input: "- var title = \"Things\"\nh1= title\nul#users\n  - each user, name in users\n    - if (user.isA == \"ferret\")\n      li(class: 'user-' + name) #{name} is just a ferret\n    - else\n      li(class: 'user-' + name) #{name} #{user.email}", filename: undefined };
+function rethrow(err, str, filename, lineno){
+  var context = 3
+    , lines = str.split('\n')
+    , start = Math.max(lineno - context, 0)
+    , end = Math.min(lines.length, lineno + context); 
+
+  // Error context
+  var context = lines.slice(start, end).map(function(line, i){
+    var curr = i + start + 1;
+    return (curr == lineno ? '  > ' : '    ')
+      + curr
+      + '| '
+      + line;
+  }).join('\n');
+
+  // Alter exception message
+  err.path = filename;
+  err.message = (filename || 'Jade') + ':' + lineno 
+    + '\n' + context + '\n\n' + err.message;
+  throw err;
+}
+try {
+function attrs(obj){
+  var buf = []
+    , terse = obj.terse;
+  delete obj.terse;
+  var keys = Object.keys(obj)
+    , len = keys.length;
+  if (len) {
+    buf.push('');
+    for (var i = 0; i < len; ++i) {
+      var key = keys[i]
+        , val = obj[key];
+      if ('boolean' == typeof val || null == val) {
+        if (val) {
+          terse
+            ? buf.push(key)
+            : buf.push(key + '="' + key + '"');
+        }
+      } else if ('class' == key && Array.isArray(val)) {
+        buf.push(key + '="' + escape(val.join(' ')) + '"');
+      } else {
+        buf.push(key + '="' + escape(val) + '"');
+      }
+    }
+  }
+  return buf.join(' ');
+}
+
+function escape(html){
+  return String(html)
+    .replace(/&(?!\w+;)/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+var buf = [];
+with (locals || {}) {__.lineno = 1;
+__.lineno = 1;
+ var title = "Things"
+__.lineno = 2;
+buf.push('<h1>');
+var __val__ = title
+buf.push(escape(null == __val__ ? "" : __val__));
+__.lineno = undefined;
+buf.push('</h1>');
+__.lineno = 3;
+buf.push('<ul');
+buf.push(attrs({ 'id':('users') }));
+buf.push('>');
+__.lineno = undefined;
+__.lineno = 8;
+// iterate users
+(function(){
+  if ('number' == typeof users.length) {
+    for (var name = 0, $$l = users.length; name < $$l; name++) {
+      var user = users[name];
+
+__.lineno = 4;
+__.lineno = 5;
+ if (user.isA == "ferret")
+{
+__.lineno = 6;
+__.lineno = 6;
+buf.push('<li');
+buf.push(attrs({ '"class": user- + name':(true) }));
+buf.push('>');
+buf.push('' + escape((interp = name) == null ? '' : interp) + ' is just a ferret');
+__.lineno = undefined;
+buf.push('</li>');
+}
+ else
+{
+__.lineno = 8;
+__.lineno = 8;
+buf.push('<li');
+buf.push(attrs({ '"class": user- + name':(true) }));
+buf.push('>');
+buf.push('' + escape((interp = name) == null ? '' : interp) + ' ' + escape((interp = user.email) == null ? '' : interp) + '');
+__.lineno = undefined;
+buf.push('</li>');
+}
+    }
+  } else {
+    for (var name in users) {
+      var user = users[name];
+
+__.lineno = 4;
+__.lineno = 5;
+ if (user.isA == "ferret")
+{
+__.lineno = 6;
+__.lineno = 6;
+buf.push('<li');
+buf.push(attrs({ '"class": user- + name':(true) }));
+buf.push('>');
+buf.push('' + escape((interp = name) == null ? '' : interp) + ' is just a ferret');
+__.lineno = undefined;
+buf.push('</li>');
+}
+ else
+{
+__.lineno = 8;
+__.lineno = 8;
+buf.push('<li');
+buf.push(attrs({ '"class": user- + name':(true) }));
+buf.push('>');
+buf.push('' + escape((interp = name) == null ? '' : interp) + ' ' + escape((interp = user.email) == null ? '' : interp) + '');
+__.lineno = undefined;
+buf.push('</li>');
+}
+   }
+  }
+}).call(this);
+
+buf.push('</ul>');}return buf.join("");
+} catch (err) {
+  rethrow(err, __.input, __.filename, __.lineno);
+}
+}
