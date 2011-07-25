@@ -1508,7 +1508,9 @@ $.qsa = $$ = (function(document, global){
 		
 		var obj;
 		if(typeof o === 'string'){
-			var jadeStr;
+			return K.jade(o);
+			
+			/*var jadeStr;
 			if( (/\.jade$/.test(o) && (jadeStr = K.file('jade/' + o)) ) || (jadeStr = (o.match(jadeMatcher)||[false,false])[1]) && jadeStr){
 
 				obj = K.jade(jadeStr)();
@@ -1518,34 +1520,32 @@ $.qsa = $$ = (function(document, global){
 				obj = K.create(obj);
 			} else {
 				o = { type: o.toLowerCase() };
-			}			
+			}*/			
 		}
 		
-		if(!obj){
-			if(def && typeof def === 'object'){
-				o = K.extend({}, def, o);
-			}
+		if(def && typeof def === 'object'){
+			o = K.extend({}, def, o);
+		}
 
-			var type = o&&o.type;
+		var type = o&&o.type;
 
-			if(!type){
-				Ti.API.log('Missing type', [o, type]);
-				return K.createLabel({ text:'mtype' });
-			}
+		if(!type){
+			Ti.API.log('Missing type', [o, type]);
+			return K.createLabel({ text:'mtype' });
+		}
 
-			if(type && !K.creators[type]){
-				//K.loadStyle(type);
+		if(type && !K.creators[type]){
+			//K.loadStyle(type);
 
-				(function(){
-					//Ti.API.log('requiring in creator', type);
-					var creator = K.loadClass(type)||function(){ Ti.API.error(type + ' not available'); };
-					K.classes[type] = creator;
-					//obj = (K.creators[type] = wrapCustomCreator(creator, type))(m||o);
-					obj = K._wrapCustomCreator(creator, type)(o);
-				})();
-			} else {
-				obj = (K.creators[type])(o);
-			}
+			(function(){
+				//Ti.API.log('requiring in creator', type);
+				var creator = K.loadClass(type)||function(){ Ti.API.error(type + ' not available'); };
+				K.classes[type] = creator;
+				//obj = (K.creators[type] = wrapCustomCreator(creator, type))(m||o);
+				obj = K._wrapCustomCreator(creator, type)(o);
+			})();
+		} else {
+			obj = (K.creators[type])(o);
 		}
 
 		return obj.el||obj;
@@ -2046,7 +2046,7 @@ $.qsa = $$ = (function(document, global){
 /*** JADE-LOADER ***/
 (function(){
 	K.jade = function(jadeStr, o){
-		Ti.include('/kranium/lib/jade.js');
+		Ti.include('/kranium/lib/kranium-jade.js');
 		if(K.jade.isLoader){
 			throw 'something went wrong while loading jade';
 		}

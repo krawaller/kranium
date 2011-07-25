@@ -9,7 +9,7 @@ var jadeFile = /\.jade$/,
 	jadeCache = {};
 	
 K.jade = function(jadeStr, o){
-	var fn, cacheName;
+	var fn, cacheName, arr;
 	if(!(fn = jadeCache[jadeStr])){
 		if(jadeFile.test(jadeStr)){
 			cacheName = jadeStr; 
@@ -20,7 +20,7 @@ K.jade = function(jadeStr, o){
 		jadeCache[cacheName] = (fn = jade.compile(jadeStr));
 	}
 	
-	return fn(o);
+	return K.create((arr = fn(o)).length === 1 ? arr[0] : arr);
 };
 
 })();
