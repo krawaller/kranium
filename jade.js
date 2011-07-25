@@ -7,7 +7,7 @@ var jade = require('ti-jade'),
 
 var fn = jade.compile(str);
 //require('fs').writeFileSync('out.jade', fn.toString());
-//console.log(fn.toString());
+console.log(fn.toString());
 
 setTimeout(function() {},
 60 * 60 * 1000);

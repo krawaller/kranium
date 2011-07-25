@@ -5,6 +5,7 @@ global.GLOBAL = global;
 win = global.win||Ti.UI.currentWindow||{};
 
 var reTiObject = /^\[object Ti/,
+	reJadeStr = /(\.jade$|^\s*<)/,
 	ArrayProp = Array.prototype,
 	slice = ArrayProp.slice, 
 	toString = Object.prototype.toString,
@@ -29,9 +30,10 @@ var reTiObject = /^\[object Ti/,
 		else {
 			var dom, tmp;
 			if (typeof selector === 'undefined' || selector === null || selector === '#' || selector === '') dom = [];
+			//else if (typeof selector === 'string' && /\.jade/)
 			else if (Array.isArray(selector)){ dom = K.create(selector); }
 			else if (selector && selector.toString && reTiObject.test(selector.toString())) dom = [selector];
-			else if (toString.call(selector) == '[object Object]') dom = [K.create(selector)];
+			else if (toString.call(selector) == '[object Object]' || (typeof selector === 'string' && reJadeStr.test(selector) )) dom = [K.create(selector)];
 			else dom = Array.isArray((tmp = $$(selector, null))) ? tmp : [tmp];			
 			return Z(dom, selector);
 		}
@@ -53,7 +55,7 @@ var reTiObject = /^\[object Ti/,
 		set: function(prop, val){
 			var props = (typeof prop === 'string') ? [{ key: prop, val: val }] : Object.keys(prop).map(function(key){ return { key: key, val: prop[key] }; }),
 				i, o;
-			this.each(function(){
+			return this.each(function(){
 				i = props.length;
 				while((o = props[--i])){
 					this[o.key] = o.val;
@@ -317,6 +319,9 @@ var reTiObject = /^\[object Ti/,
 
 	Z.prototype = $.fn;
 	global.$ = global.K = global.jQuery = global.Zepto = $;
+	global.J = function(jadeStr, o){
+		return K(K.jade(jadeStr, o));
+	};
 	
 	var platform = Ti.Platform.osname;
 	$.is = {
@@ -569,99 +574,6 @@ String.prototype.esc = function(obj, func){
 //})(this);
 
 /*** QSA ***/
-/* Simple JavaScript Inheritance
- * By John Resig http://ejohn.org/
- * MIT Licensed.
- */
-// Inspired by base2 and Prototype
-(function(global){
-	
-	K.classes = {};
-	K.loadClass = function(name, liveKlass){
-		var klass, cls;
-		if(global.DEBUG || liveKlass || !(klass = K.classes[name])){
-			if(!liveKlass){ K.loadStyle(name); }
-			klass = liveKlass||(exports = {}, Ti.include('kui/' + name + '.js'), exports.Class);
-			cls = klass.prototype.className;
-			klass.prototype.className = cls ? cls + ' ' + name : name;
-			klass.prototype._klass = name;
-			
-			K.classes[name] = klass;
-		}
-		return klass;
-	};
-
-
-	var initializing = false,
-		fnTest = /xyz/.test(function() {xyz;}) ? /\b_super\b/ : /.*/;
-
-	// The base Class implementation (does nothing)
-	this.Class = function() {};
-
-	// Create a new Class that inherits from this class
-	Class.extend = function(prop, o) {
-		// Extended with autoloading
-		if (typeof prop === 'string' && o) {
-			return K.loadClass(prop).extend(o);
-		}
-
-		var _super = this.prototype;
-
-		// Instantiate a base class (but only create the instance,
-		// don't run the init constructor)
-		initializing = true;
-		var prototype = new this();
-		initializing = false;
-
-		// Copy the properties over onto the new prototype
-		for (var name in prop) {
-			// Check if we're overwriting an existing function
-			prototype[name] = typeof prop[name] == "function" && typeof _super[name] == "function" && fnTest.test(prop[name]) ? (function(name, fn) {
-				return function() {
-					var tmp = this._super;
-
-					// Add a new ._super() method that is the same method
-					// but on the super-class
-					this._super = _super[name];
-
-					// The method only need to be bound temporarily, so we
-					// remove it when we're done executing
-					var ret = fn.apply(this, arguments);
-					this._super = tmp;
-
-					return ret;
-				};
-			})(name, prop[name]) : prop[name];
-		}
-
-		// The dummy class constructor
-		// Slight modification to set init return value to default el
-		var el;
-
-
-		function Class(o) {
-			// All construction is actually done in the init method
-			if (!initializing && this.init) {
-				o && K.extend(this, o);
-				(el = this.init.apply(this, arguments)) && !this.el && (this.el = el);
-			}
-		}
-
-		// Populate our constructed prototype object
-		Class.prototype = prototype;
-
-		// Enforce the constructor to be what we expect
-		Class.constructor = Class;
-
-		// And make this class extendable
-		Class.extend = arguments.callee;
-
-		return Class;
-	};
-
-})(this);
-
-/*** KLASS ***/
 /**
  * "mini" Selector Engine
  * Copyright (c) 2009 James Padolsey
@@ -850,6 +762,99 @@ $.qsa = $$ = (function(document, global){
 
 })(this, this);
 
+/*** KLASS ***/
+/* Simple JavaScript Inheritance
+ * By John Resig http://ejohn.org/
+ * MIT Licensed.
+ */
+// Inspired by base2 and Prototype
+(function(global){
+	
+	K.classes = {};
+	K.loadClass = function(name, liveKlass){
+		var klass, cls;
+		if(global.DEBUG || liveKlass || !(klass = K.classes[name])){
+			if(!liveKlass){ K.loadStyle(name); }
+			klass = liveKlass||(exports = {}, Ti.include('kui/' + name + '.js'), exports.Class);
+			cls = klass.prototype.className;
+			klass.prototype.className = cls ? cls + ' ' + name : name;
+			klass.prototype._klass = name;
+			
+			K.classes[name] = klass;
+		}
+		return klass;
+	};
+
+
+	var initializing = false,
+		fnTest = /xyz/.test(function() {xyz;}) ? /\b_super\b/ : /.*/;
+
+	// The base Class implementation (does nothing)
+	this.Class = function() {};
+
+	// Create a new Class that inherits from this class
+	Class.extend = function(prop, o) {
+		// Extended with autoloading
+		if (typeof prop === 'string' && o) {
+			return K.loadClass(prop).extend(o);
+		}
+
+		var _super = this.prototype;
+
+		// Instantiate a base class (but only create the instance,
+		// don't run the init constructor)
+		initializing = true;
+		var prototype = new this();
+		initializing = false;
+
+		// Copy the properties over onto the new prototype
+		for (var name in prop) {
+			// Check if we're overwriting an existing function
+			prototype[name] = typeof prop[name] == "function" && typeof _super[name] == "function" && fnTest.test(prop[name]) ? (function(name, fn) {
+				return function() {
+					var tmp = this._super;
+
+					// Add a new ._super() method that is the same method
+					// but on the super-class
+					this._super = _super[name];
+
+					// The method only need to be bound temporarily, so we
+					// remove it when we're done executing
+					var ret = fn.apply(this, arguments);
+					this._super = tmp;
+
+					return ret;
+				};
+			})(name, prop[name]) : prop[name];
+		}
+
+		// The dummy class constructor
+		// Slight modification to set init return value to default el
+		var el;
+
+
+		function Class(o) {
+			// All construction is actually done in the init method
+			if (!initializing && this.init) {
+				o && K.extend(this, o);
+				(el = this.init.apply(this, arguments)) && !this.el && (this.el = el);
+			}
+		}
+
+		// Populate our constructed prototype object
+		Class.prototype = prototype;
+
+		// Enforce the constructor to be what we expect
+		Class.constructor = Class;
+
+		// And make this class extendable
+		Class.extend = arguments.callee;
+
+		return Class;
+	};
+
+})(this);
+
 /*** FILE ***/
 (function(){
 	
@@ -878,6 +883,7 @@ $.qsa = $$ = (function(document, global){
 				case 'kss':
 				case 'html':
 				case 'css':
+				case 'jade':
 					res = f.exists() ? f.read().text : false;
 					break;
 			}
@@ -1315,11 +1321,12 @@ $.qsa = $$ = (function(document, global){
 					break;
 
 				case 'tabgroup':
-					K.log('create tabgroup', o.tabs);
-					//if(o.tabs){ o.tabs = K.create(o.tabs, { type: 'tab' }); }
-
-					o._tabs = o.tabs;
-					delete o.tabs;
+					if(K.is.ios){
+						o.tabs = K.create(o.tabs, { type: 'tab' });
+					} else {
+						o._tabs = o.tabs;
+						delete o.tabs;
+					}
 					break;
 					
 				case 'splitwindow':
@@ -1493,38 +1500,52 @@ $.qsa = $$ = (function(document, global){
 			return obj;
 		}
 	}
-
+	
+	var jadeMatcher = /^\s*<([^$]+?)>?\s*$/;
 	K.create = function(o, def){
 		if(o instanceof Array){ return o.map(function(el){ return K.create(el, def); }); }
 		if(o && o._type){ return o; }
 		
+		var obj;
 		if(typeof o === 'string'){
-			o = { type: o.toLowerCase() };
-		}
-		if(def && typeof def === 'object'){
-			o = K.extend({}, def, o);
+			var jadeStr;
+			if( (/\.jade$/.test(o) && (jadeStr = K.file('jade/' + o)) ) || (jadeStr = (o.match(jadeMatcher)||[false,false])[1]) && jadeStr){
+
+				obj = K.jade(jadeStr)();
+				if(obj && obj.length === 1){
+					obj = obj[0];
+				}
+				obj = K.create(obj);
+			} else {
+				o = { type: o.toLowerCase() };
+			}			
 		}
 		
-		var type = o&&o.type, 
-			obj;
+		if(!obj){
+			if(def && typeof def === 'object'){
+				o = K.extend({}, def, o);
+			}
 
-		if(!type){
-			Ti.API.log('Missing type', [o, type]);
-			return K.createLabel({ text:'mtype' });
-		}
+			var type = o&&o.type;
 
-		if(type && !K.creators[type]){
-			//K.loadStyle(type);
+			if(!type){
+				Ti.API.log('Missing type', [o, type]);
+				return K.createLabel({ text:'mtype' });
+			}
 
-			(function(){
-				//Ti.API.log('requiring in creator', type);
-				var creator = K.loadClass(type)||function(){ Ti.API.error(type + ' not available'); };
-				K.classes[type] = creator;
-				//obj = (K.creators[type] = wrapCustomCreator(creator, type))(m||o);
-				obj = K._wrapCustomCreator(creator, type)(o);
-			})();
-		} else {
-			obj = (K.creators[type])(o);
+			if(type && !K.creators[type]){
+				//K.loadStyle(type);
+
+				(function(){
+					//Ti.API.log('requiring in creator', type);
+					var creator = K.loadClass(type)||function(){ Ti.API.error(type + ' not available'); };
+					K.classes[type] = creator;
+					//obj = (K.creators[type] = wrapCustomCreator(creator, type))(m||o);
+					obj = K._wrapCustomCreator(creator, type)(o);
+				})();
+			} else {
+				obj = (K.creators[type])(o);
+			}
 		}
 
 		return obj.el||obj;
@@ -2021,3 +2042,15 @@ $.qsa = $$ = (function(document, global){
 		test();
 	}
 })(this);
+
+/*** JADE-LOADER ***/
+(function(){
+	K.jade = function(jadeStr, o){
+		Ti.include('/kranium/lib/jade.js');
+		if(K.jade.isLoader){
+			throw 'something went wrong while loading jade';
+		}
+		return K.jade(jadeStr, o);
+	};
+	K.jade.isLoader = true;
+})();
