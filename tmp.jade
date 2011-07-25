@@ -9,7 +9,8 @@ tableview#users
   view start
   - each user, name in users
     - if (user.isA == "ferret")
-      li(class='user-' + name) #{name} is just a ferret
+      view(class='user-' + name) #{name} is just a ferret
     - else
-      li(class='user-' + name) #{name} #{user.email}
+      view(class='user-' + name) #{name} #{user.email}
   view end
+  
