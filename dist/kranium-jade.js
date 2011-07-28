@@ -2216,7 +2216,7 @@ K.jade = function(jadeStr, o){
 	var fn, cacheName, arr;
 	if(!(fn = jadeCache[jadeStr])){
 		if(jadeFile.test(jadeStr)){
-			cacheName = jadeStr; 
+			cacheName = jadeStr;
 			jadeStr = K.file('jade/' + jadeStr);
 		} else {
 			cacheName = jadeStr;
