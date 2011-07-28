@@ -1,6 +1,6 @@
 #Kranium
 
-__Kranium has enough brains to let yours focus on the crucial stuff while developing Titanium apps.__ Kranium transfers some well known practices and techniques from web development to Titanium development. It's both spiritually and physically the lovechild of the following great web tech:
+__Kranium has enough brains to let yours focus on the crucial stuff while developing Titanium Mobile apps.__ Kranium transfers some well known practices and techniques from web development to Titanium Mobile development. It's both spiritually and physically the lovechild of the following great web tech:
 
 * [jQuery](http://www.jquery.com) / [Zepto](http://zeptojs.com)
 * [Backbone](http://documentcloud.github.com/backbone/)
@@ -13,29 +13,37 @@ __Kranium has enough brains to let yours focus on the crucial stuff while develo
 
 Kranium tries to abstract the hell out of everything painful in the standard Titanium API:s. Kranium believes these main pains to be __UI creation__, __low-level API:s__, __styling__ and __code structuring__. Kranium helps you with your __KISS__:ing and keeps you __DRY__. 
 
-Spine is tiny, the library comes in at around 500 lines of JavaScript, that's about 2K minified & compressed. However, it's not about size, it's how you use it, and Spine certainly packs a punch! 
+Kranium isn't super tiny. The core library currently weighs in at 31 kb uglified. It also lazy loads other libraries when needed. For example a variant of Jade is bundled with a compiler outputting Kranium-friendly templates. This file 19 kb uglified, but only loaded if needed.
 
-__Latest version:__ [0.0.4](spine.js) ([minified](spine.min.js)).
-Or check out the [source code](http://github.com/maccman/spine).
+Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do tell us. 
+
+
+__Latest version:__ [0.1.0](kranium.js) ([minified](kranium.min.js)).
+Or check out the [source code](http://github.com/krawaller/kranium).
 
 #Overview
 
-So, what's so special about Spine, how does it stand out from the crowd?
+So, what does Kranium give you?
 
-* Class library with __real__ prototypal inheritance
-* Lightweight __controller__ implementation, based on Backbone's API
-* Full __model__ layer and ORM
-* Ajax and HTML5 Local Storage adapters baked in
-* Asynchronous server communication
-* Works in __all major browsers__ (Chrome, Safari, Firefox, IE >= 7)
-* Simple and lightweight
-* Thorough documentation
+* Simple UI creation
+* Extendable UI modules 
+* Live updating of UI modules
+* Jade templates
+* CSS-like stylesheets
+* Live updating of styles
+* Live compiling of Stylus/SASS/Less
+* Simple selector engine
+* jQuery-like manipulation library
+* jQuery-like Ajax API
+* Realtime Jasmine testing
+* Beautiful two-way console
+* Peace in your heart
 
 But don't take my word for it. Take a look at the source of the example applications below, and decide for yourself. 
 
 #Tutorials
 
-Spine has a growing __[set of tutorials](http://maccman.github.com/spine.tutorials/)__, from layouts, tabs and sidebars to forms, updating records and validation.
+Kranium has a growing __[set of tutorials](http://maccman.github.com/spine.tutorials/)__, from layouts, tabs and sidebars to forms, updating records and validation.
 
 #Examples
 
@@ -51,14 +59,16 @@ Spine contacts is a simple address book, allowing users to CRUD contacts. The fu
 Holla is the most advanced example, and [can be found on GitHub](http://github.com/maccman/holla). Holla is a group chat application, and uses a combination of [Rails](http://rubyonrails.org), [Juggernaut](http://github.com/maccman/juggernaut) and Spine to let users chat in realtime. *WebKit only*. [[Demo]](http://maccman-holla.heroku.com)
 ![Holla](https://lh4.googleusercontent.com/_IH1OempnqUc/TZF1gMnidmI/AAAAAAAABKE/b9rp9RdtA3o/s500/Screen%20shot%202011-03-29%20at%2018.58.12.png)
  
-#Setup
+#Installation
 
-Using Spine is very straightforward, simply include the library in the page.
+Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running `npm install kranium -g` in your terminal.
 
-    <script src="spine.js" type="text/javascript" charset="utf-8"></script>
-    
-Spine has no prerequisites, but is optimized to work with [jQuery](http://jquery.com) or [Zepto](http://zeptojs.com).
-Certain extensions to Spine, such as the Ajax and Local Storage model persistence, require additional files located inside the [lib](https://github.com/maccman/spine/tree/master/lib) folder.
+If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found [here](http://example.com).
+
+
+#Using Kranium
+
+When you've installed it as above, you're good to go. Open your terminal and `cd` somewhere into your Titanium project folder and run `kranium init`. This will make Kranium setup the folder structure in your project, copying all dependencies and inject a `Ti.include`-clause into app.js.
     
 #Classes
 

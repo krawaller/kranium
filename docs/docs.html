@@ -17,7 +17,7 @@ hljs.initHighlightingOnLoad();
 <body>
 <div id="container"><h1>Kranium</h1>
 
-<p><strong>Kranium has enough brains to let yours focus on the crucial stuff while developing Titanium apps.</strong> Kranium transfers some well known practices and techniques from web development to Titanium development. It's both spiritually and physically the lovechild of the following great web tech:</p>
+<p><strong>Kranium has enough brains to let yours focus on the crucial stuff while developing Titanium Mobile apps.</strong> Kranium transfers some well known practices and techniques from web development to Titanium Mobile development. It's both spiritually and physically the lovechild of the following great web tech:</p>
 
 <ul>
 <li><a href="http://www.jquery.com">jQuery</a> / <a href="http://zeptojs.com">Zepto</a></li>
@@ -32,30 +32,37 @@ hljs.initHighlightingOnLoad();
 
 <p>Kranium tries to abstract the hell out of everything painful in the standard Titanium API:s. Kranium believes these main pains to be <strong>UI creation</strong>, <strong>low-level API:s</strong>, <strong>styling</strong> and <strong>code structuring</strong>. Kranium helps you with your <strong>KISS</strong>:ing and keeps you <strong>DRY</strong>. </p>
 
-<p>Spine is tiny, the library comes in at around 500 lines of JavaScript, that's about 2K minified &amp; compressed. However, it's not about size, it's how you use it, and Spine certainly packs a punch! </p>
+<p>Kranium isn't super tiny. The core library currently weighs in at 31 kb uglified. It also lazy loads other libraries when needed. For example a variant of Jade is bundled with a compiler outputting Kranium-friendly templates. This file 19 kb uglified, but only loaded if needed.</p>
 
-<p><strong>Latest version:</strong> <a href="spine.js">0.0.4</a> (<a href="spine.min.js">minified</a>).<br />Or check out the <a href="http://github.com/maccman/spine">source code</a>.</p>
+<p>Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do tell us. </p>
+
+<p><strong>Latest version:</strong> <a href="kranium.js">0.1.0</a> (<a href="kranium.min.js">minified</a>).<br />Or check out the <a href="http://github.com/krawaller/kranium">source code</a>.</p>
 
 <h1>Overview</h1>
 
-<p>So, what's so special about Spine, how does it stand out from the crowd?</p>
+<p>So, what does Kranium give you?</p>
 
 <ul>
-<li>Class library with <strong>real</strong> prototypal inheritance</li>
-<li>Lightweight <strong>controller</strong> implementation, based on Backbone's API</li>
-<li>Full <strong>model</strong> layer and ORM</li>
-<li>Ajax and HTML5 Local Storage adapters baked in</li>
-<li>Asynchronous server communication</li>
-<li>Works in <strong>all major browsers</strong> (Chrome, Safari, Firefox, IE >= 7)</li>
-<li>Simple and lightweight</li>
-<li>Thorough documentation</li>
+<li>Simple UI creation</li>
+<li>Extendable UI modules </li>
+<li>Live updating of UI modules</li>
+<li>Jade templates</li>
+<li>CSS-like stylesheets</li>
+<li>Live updating of styles</li>
+<li>Live compiling of Stylus/SASS/Less</li>
+<li>Simple selector engine</li>
+<li>jQuery-like manipulation library</li>
+<li>jQuery-like Ajax API</li>
+<li>Realtime Jasmine testing</li>
+<li>Beautiful two-way console</li>
+<li>Peace in your heart</li>
 </ul>
 
 <p>But don't take my word for it. Take a look at the source of the example applications below, and decide for yourself. </p>
 
 <h1>Tutorials</h1>
 
-<p>Spine has a growing <strong><a href="http://maccman.github.com/spine.tutorials/">set of tutorials</a></strong>, from layouts, tabs and sidebars to forms, updating records and validation.</p>
+<p>Kranium has a growing <strong><a href="http://maccman.github.com/spine.tutorials/">set of tutorials</a></strong>, from layouts, tabs and sidebars to forms, updating records and validation.</p>
 
 <h1>Examples</h1>
 
@@ -67,14 +74,15 @@ hljs.initHighlightingOnLoad();
 
 <p>Holla is the most advanced example, and <a href="http://github.com/maccman/holla">can be found on GitHub</a>. Holla is a group chat application, and uses a combination of <a href="http://rubyonrails.org">Rails</a>, <a href="http://github.com/maccman/juggernaut">Juggernaut</a> and Spine to let users chat in realtime. <em>WebKit only</em>. <a href="http://maccman-holla.heroku.com">[Demo]</a><br /><img src="https://lh4.googleusercontent.com/_IH1OempnqUc/TZF1gMnidmI/AAAAAAAABKE/b9rp9RdtA3o/s500/Screen%20shot%202011-03-29%20at%2018.58.12.png" alt="Holla" title="" /></p>
 
-<h1>Setup</h1>
+<h1>Installation</h1>
 
-<p>Using Spine is very straightforward, simply include the library in the page.</p>
+<p>Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running <code>npm install kranium -g</code> in your terminal.</p>
 
-<pre><code>&lt;script src="spine.js" type="text/javascript" charset="utf-8"&gt;&lt;/script&gt;
-</code></pre>
+<p>If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found <a href="http://example.com">here</a>.</p>
 
-<p>Spine has no prerequisites, but is optimized to work with <a href="http://jquery.com">jQuery</a> or <a href="http://zeptojs.com">Zepto</a>.<br />Certain extensions to Spine, such as the Ajax and Local Storage model persistence, require additional files located inside the <a href="https://github.com/maccman/spine/tree/master/lib">lib</a> folder.</p>
+<h1>Using Kranium</h1>
+
+<p>When you've installed it as above, you're good to go. Open your terminal and <code>cd</code> somewhere into your Titanium project folder and run <code>kranium init</code>. This will make Kranium setup the folder structure in your project, copying all dependencies and inject a <code>Ti.include</code>-clause into app.js.</p>
 
 <h1>Classes</h1>
 
