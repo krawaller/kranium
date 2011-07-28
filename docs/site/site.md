@@ -1,8 +1,17 @@
 #Kranium
 
-__Spine is a lightweight framework for building JavaScript web applications.__ Spine gives you a MVC structure and then gets out of your way,  allowing you to concentrate on the fun stuff, building awesome web applications. 
+__Kranium has enough brains to let yours focus on the crucial stuff while developing Titanium apps.__ Kranium transfers some well known practices and techniques from web development to Titanium development. It's both spiritually and physically the lovechild of the following great web tech:
 
-Spine is opinionated and, although at first glance it might look similar to other frameworks like Backbone, it actually has quite a different take on things. 
+* [jQuery](http://www.jquery.com) / [Zepto](http://zeptojs.com)
+* [Backbone](http://documentcloud.github.com/backbone/)
+* [Jade](http://www.jade-lang.com)
+* [Livetanium](http://blog.krawaller.se/livetanium) / [Livereload](http://livereload.com/)
+* [Sizzle](http://sizzlejs.com/) / [mini.js](https://github.com/jamespadolsey/mini)
+* [Jasmine](http://pivotal.github.com/jasmine/)
+* [JSS](http://wiki.appcelerator.org/display/guides/Designing+the+User+Interface#DesigningtheUserInterface-CrossplatformlayoutusingJSS) / [Stylus](http://learnboost.github.com/stylus/) / [Sass](http://sass-lang.com/) / [LESS](http://lesscss.org/)
+* [JSConsole](http://jsconsole.com/) / [Weinre](http://phonegap.github.com/weinre/)
+
+Kranium tries to abstract the hell out of everything painful in the standard Titanium API:s. Kranium believes these main pains to be __UI creation__, __low-level API:s__, __styling__ and __code structuring__. Kranium helps you with your __KISS__:ing and keeps you __DRY__. 
 
 Spine is tiny, the library comes in at around 500 lines of JavaScript, that's about 2K minified & compressed. However, it's not about size, it's how you use it, and Spine certainly packs a punch! 
 
