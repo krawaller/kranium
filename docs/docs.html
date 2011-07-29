@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="site/highlight.css" type="text/css" charset="utf-8">
 <script src="site/jquery.js" type="text/javascript" charset="utf-8"></script>      
 <script src="spine.js" type="text/javascript" charset="utf-8"></script>      
-<script src="site/highlight.js" type="text/javascript" charset="utf-8"></script>
+<script src="site/highlight.pack.js" type="text/javascript" charset="utf-8"></script>
 <script type="text/javascript" charset="utf-8">
 hljs.initHighlightingOnLoad();
 </script>
@@ -81,6 +81,87 @@ hljs.initHighlightingOnLoad();
 <li><p><strong>kui</strong> is the home of all your fancy Kranium UI modules. These can extend the basic types <code>window</code>, <code>label</code>, <code>view</code> etc. or any of your own modules. Styles are pulled in from the <strong>kss</strong> folder and applied accordingly.</p></li>
 <li><p><strong>test</strong> hosts all your Jasmine unit tests. If your run <code>kranium init --test</code> from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-runned whenever a test definition or source file changes. </p></li>
 </ul>
+
+<h1>Simple UI creation</h1>
+
+<p>As we mentioned in the overview, one of Kranium's main goals is to simplify everyday Titanium Mobile life by easing your UI creation burden. Lets first have a look at a classic tabgroup using vanilla Titanium Mobile API:s:</p>
+
+<pre><code>var tabGroup = Ti.UI.createTabGroup(),
+
+    win1 = Ti.UI.createWindow({
+        backgroundColor: '#ccc',
+        barColor: '#00a',
+        title: 'My window'
+    }),
+
+    tab1 = Ti.UI.createTab({
+        icon: 'path/to/my/icon',
+        title: 'My tab',
+        window: win1
+    }),
+
+label1 = Ti.UI.createLabel({
+    text: 'Hello world!',
+    textAlign: 'center',
+    color: '#333',
+    shadowColor: '#fff',
+    shadowOffset: { 
+        y: -1, 
+        x: 0
+    },
+    font: {
+        fontSize: 20,
+        fontWeight: 'bold'
+    }
+});
+
+win1.add(label1);
+label1.addEventListener('click', function(e){
+    alert('You clicked me!');
+});
+
+tabGroup.addTab(tab1);
+tabGroup.open();
+</code></pre>
+
+<p>That was kinda verbose, don't you think? And you don't see the resulting UI structure straight away since you have to keep references to stuff and manually adding them to the correct parent. The same use case when using Kranium looks like this:</p>
+
+<pre><code>K({
+    type: 'tabgroup',
+    tabs: [{
+        cls: 'myTab',
+        window: {
+            cls: 'myWindow',
+            children: [{
+                text: 'Hello world!',
+                cls: 'mylabel',
+                click: function(){
+                    alert('You clicked me!');
+                }
+            }]
+        }
+    }]
+}).open();
+</code></pre>
+
+<p>It's easy to visualize the resulting structure, and events can be defined on elements upon creation. But aren't we cheating here - where is all the styling? Kranium practices separation of concerns, so the styles are meant to be loaded from the <code>kss</code> folder, so our <code>app.kss</code> should look like follows to correspond to the previous example:</p>
+
+<pre><code>.myTab { 
+    icon: path/to/my/icon; 
+}
+window {
+    background-color: #ccc;
+    bar-color: #00a;
+}
+.myLabel {
+    text-align: center;
+    color: #333;
+    shadow-color: #fff;
+    shadow-offset-y: -1;
+    font-size: 20;
+    font-weight: bold;
+}
+</code></pre>
 
 <h1>Classes</h1>
 

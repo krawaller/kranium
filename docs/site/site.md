@@ -67,6 +67,83 @@ So what's what here? Let's walk through the generated folders from the top:
 
 * __test__ hosts all your Jasmine unit tests. If your run `kranium init --test` from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-runned whenever a test definition or source file changes. 
     
+#Simple UI creation
+As we mentioned in the overview, one of Kranium's main goals is to simplify everyday Titanium Mobile life by easing your UI creation burden. Lets first have a look at a classic tabgroup using vanilla Titanium Mobile API:s:
+
+	var tabGroup = Ti.UI.createTabGroup(),
+
+	    win1 = Ti.UI.createWindow({
+	        backgroundColor: '#ccc',
+	        barColor: '#00a',
+	        title: 'My window'
+	    }),
+    
+	    tab1 = Ti.UI.createTab({
+	        icon: 'path/to/my/icon',
+	        title: 'My tab',
+	        window: win1
+	    }),
+    
+	label1 = Ti.UI.createLabel({
+	    text: 'Hello world!',
+	    textAlign: 'center',
+	    color: '#333',
+	    shadowColor: '#fff',
+	    shadowOffset: { 
+	        y: -1, 
+	        x: 0
+	    },
+	    font: {
+	        fontSize: 20,
+	        fontWeight: 'bold'
+	    }
+	});
+
+	win1.add(label1);
+	label1.addEventListener('click', function(e){
+	    alert('You clicked me!');
+	});
+
+	tabGroup.addTab(tab1);
+	tabGroup.open();
+
+That was kinda verbose, don't you think? And you don't see the resulting UI structure straight away since you have to keep references to stuff and manually adding them to the correct parent. The same use case when using Kranium looks like this:
+
+	K({
+	    type: 'tabgroup',
+	    tabs: [{
+	        cls: 'myTab',
+	        window: {
+	            cls: 'myWindow',
+	            children: [{
+	                text: 'Hello world!',
+	                cls: 'mylabel',
+	                click: function(){
+	                    alert('You clicked me!');
+	                }
+	            }]
+	        }
+	    }]
+	}).open();
+
+It's easy to visualize the resulting structure, and events can be defined on elements upon creation. But aren't we cheating here - where is all the styling? Kranium practices separation of concerns, so the styles are meant to be loaded from the `kss` folder, so our `app.kss` should look like follows to correspond to the previous example:
+
+	.myTab { 
+	    icon: path/to/my/icon; 
+	}
+	window {
+	    background-color: #ccc;
+	    bar-color: #00a;
+	}
+	.myLabel {
+	    text-align: center;
+	    color: #333;
+	    shadow-color: #fff;
+	    shadow-offset-y: -1;
+	    font-size: 20;
+	    font-weight: bold;
+	}
+
 #Classes
 
 Spine's class implementation is one of its features that makes it stand out from the crowd. Rather than copying properties to emulate inheritance, as most libraries, Spine uses JavaScript's native prototypal inheritance. This is how inheritance should be done, and means it's dynamic, properties are resolved at runtime.
