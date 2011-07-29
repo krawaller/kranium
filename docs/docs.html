@@ -202,6 +202,8 @@ window {
 
 <p>If <code>K.create</code> comes across a <code>type</code> which is not a standard Titanium Mobile UI type, it will look in your <code>kui</code> folder and try to autoload the module from a file with the same name. Huh?! Example time!</p>
 
+<h2>Example</h2>
+
 <pre><code>K.create({
     type: "loginstatus"
 });
@@ -210,21 +212,118 @@ window {
 <p>This will make Kranium look for the file <code>kui/loginstatus.js</code> and try to require it and create an instance of it. The code in the file would look something like:</p>
 
 <pre><code>exports.Class = Label.extend({
-    init: function(){
+    init: function(opts){
         this.events = {
             app: {
-                authchange: function(){
-
-                }
+                authchange: this.updateStatus.bind(this)
             }
-        }
+        };
+
+        this.updateStatus();
+        this._super.call(this, opts);
     },
 
-    updateStatus: function(){
-
+    updateStatus: function(e){
+        this.text = "Logged " + (e &amp;&amp; e.loggedIn ? "in" : "out");
     }
 });
 </code></pre>
+
+<p>Here we extend the basic type <code>Label</code> and gives it some special abilities. The <code>init</code> function runs upon initialization. It binds an app-wide event, updates the label and calls the <code>this._super</code> function which creates the actual element. Now we can create any number of instances of this module, and they will all update whenever the <code>authchange</code> event fires. This module could then be extended again if you'd like.</p>
+
+<h2>API</h2>
+
+<p>...</p>
+
+<h1>Live updating UI modules</h1>
+
+<p>Kranium builds upon our previous work on <a href="http://blog.krawaller.se/livetanium">Livetanium</a>. This means that you'll see your changes in the <strong>simulator</strong> or on the <strong>device</strong> as sone as you save a <code>kss</code>-file (iOS only at the moment). This is a true painkiller for your styling needs. This only works if you have <code>kranium init</code> or <code>kranium watch</code> running in your terminal. This will start a script watching for changes of your project files. So whenever something changes, it will be piped to the app over a socket in realtime, and applied to all relevant elements.</p>
+
+<p>As if just live updating of your style changes weren't enough, we have experimental support for live updating of the UI modules themselves. So if we were to change the <code>updateStatus</code> function in the module definition in <code>kui/loginstatus.js</code> above to:</p>
+
+<pre><code>updateStatus: function(e){
+    this.text = "Thou are logged " + (e &amp;&amp; e.loggedIn ? "in" : "out");
+}
+</code></pre>
+
+<p>all instances of the module would be updated with this new behaviour. <strong>Caveat</strong> behind the scenes a new instance of the updated module is created with the same options as its predecessor and the new instance then takes its place in the view hierarchy. This might, quite frankly, fuck things up, so if you don't want to risk anything you can turn it off.</p>
+
+<h1>Jade templates</h1>
+
+<p>Kranium lets you use <a href="http://www.jade-lang.com">Jade</a> to create elements. You can do this through the function</p>
+
+<pre><code>K.jade(jadeString || jadeFilename, [opts])
+</code></pre>
+
+<p>As you see, this function can either take a plain string of Jade goodness, or a filename (ending in .jade) which will then be pulled in from the <code>jade</code> folder and executed. The second parameter is the options object which will be used to populate the data in the Jade template. There is also an equivalent of the <code>K</code> function which takes Jade strings or filenames, and it is of course called <code>J</code>. </p>
+
+<pre><code>J(jadeString || filename, { options: "here" }).appendTo("window");
+</code></pre>
+
+<p>This is actually only a shortcut for <code>K(K.jade(jadeString, opts))</code> but quite convenient nonetheless.</p>
+
+<p>However, the Jade integration is deeper than that. If <code>K.create</code> comes across a plain string where it normally expects a <code>Ti Object</code> or a <code>{ type: ... }</code> declaration, it will treat it as a Jade template and try to instantiate it. In practice, this means you can do the following:</p>
+
+<pre><code>K.create("label.myLabel hello!");
+
+K.createView({
+    children: [
+        "image.myImage",
+        "label Cool!"
+    ]
+});
+</code></pre>
+
+<h1>CSS-like stylesheets</h1>
+
+<p>When Appcelerator announced JSS support, we were truly stoked. However, we soon found out that the implementation was somewhat lacking in speed, stability and power. Instead of just braking down and cry, we decided to roll our own stylesheet engine. This is the reason we can do live style updates, and also the reason we can make it so damn pleasant to use.</p>
+
+<p>You place your stylesheets in the <code>kss</code> folder. The <code>app.kss</code> file is the global stylesheet which is autoloaded when the app starts. Whenever you load a custom module for the first time, Kranium looks for a stylesheet with a corresponding name in the <code>kss</code> folder.</p>
+
+<h1>Live compiling of CoffeeScript, Stylus, SASS and Less</h1>
+
+<p>The command line tool also compiles <code>CoffeeScript</code>, <code>Stylus</code>, <code>SASS</code> and <code>Less</code> on the fly. This means you can use these techniques seamlessly. For now, this means your source and style folders will contain both the original and the compiled files. We might want to refactor this behaviour to output the generated files into another folder. Maybe you can help us with a pull request?!</p>
+
+<h1>Simple selector engine</h1>
+
+<p>Kranium also bundles a variant of James Padolsey's excellent mini.js selector engine. It's not as powerful as <code>Sizzle</code> or <code>document.querySelectorAll</code>, but it hopefully fulfills your basic needs. It supports the following selectors (and variations):</p>
+
+<ul>
+<li>view</li>
+<li>.example</li>
+<li>view label</li>
+<li>view, label</li>
+<li>view, label, .example</li>
+<li>view > label</li>
+<li>view.example</li>
+<li>view .example</li>
+<li>#title</li>
+<li>label#title</li>
+<li>view #title</li>
+</ul>
+
+<p>If you only want the selector engine, it's available through <code>$$(selector, context)</code>:</p>
+
+<pre><code>$$("label")[0].text = "nice!";
+</code></pre>
+
+<p>But stay tuned, because the real beauty comes in the next section.</p>
+
+<h1>jQuery-like manipulation library</h1>
+
+<p>Kranium tries to take the immense success and simplicity of jQuery and apply it to Titanium Mobile development.  </p>
+
+<h1>jQuery-like Ajax API</h1>
+
+<p>YTBD</p>
+
+<h1>Realtime Jasmine testing</h1>
+
+<p>YTBD</p>
+
+<h1>Beautiful two-way console</h1>
+
+<p>YTBD</p>
 
 <h1>Classes</h1>
 
