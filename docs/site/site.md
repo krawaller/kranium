@@ -41,34 +41,31 @@ So, what does Kranium give you?
 
 But don't take my word for it. Take a look at the source of the example applications below, and decide for yourself. 
 
-#Tutorials
-
-Kranium has a growing __[set of tutorials](http://maccman.github.com/spine.tutorials/)__, from layouts, tabs and sidebars to forms, updating records and validation.
-
-#Examples
-
-Spine includes some great example applications to show you what's possible with the framework, and give you a practical understanding of the library. Although Spine is cross browser, it's worth noting that some of the examples are for WebKit based browsers only (Chrome/Safari), due to browser specific CSS (i.e. they'll just look really ugly in other browsers). 
-
-Todos is a very simple to-do application. Users can CRUD tasks, and mark them as complete.
-The source is [available on GitHub](http://github.com/maccman/spine.todos). [[Demo]](http://maccman.github.com/spine.todos)
-![Spine Todos](https://lh4.googleusercontent.com/_IH1OempnqUc/TZF16JZSTlI/AAAAAAAABKM/ojAu7OBqXp8/s500/Screen%20shot%202011-03-29%20at%2019.01.44.png)
-
-Spine contacts is a simple address book, allowing users to CRUD contacts. The full source is [available on GitHub](http://github.com/maccman/spine.contacts). *WebKit only*. [[Demo]](http://maccman.github.com/spine.contacts)
-![Spine Contacts](https://lh5.googleusercontent.com/_IH1OempnqUc/TZpgYfnlUBI/AAAAAAAABKg/UYLhdmoc15o/s500/contacts.png)
-
-Holla is the most advanced example, and [can be found on GitHub](http://github.com/maccman/holla). Holla is a group chat application, and uses a combination of [Rails](http://rubyonrails.org), [Juggernaut](http://github.com/maccman/juggernaut) and Spine to let users chat in realtime. *WebKit only*. [[Demo]](http://maccman-holla.heroku.com)
-![Holla](https://lh4.googleusercontent.com/_IH1OempnqUc/TZF1gMnidmI/AAAAAAAABKE/b9rp9RdtA3o/s500/Screen%20shot%202011-03-29%20at%2018.58.12.png)
  
 #Installation
 
 Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running `npm install kranium -g` in your terminal.
 
-If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found [here](http://example.com).
+If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found [here](http://example.com) before following the previous paragraph.
 
 
 #Using Kranium
 
-When you've installed it as above, you're good to go. Open your terminal and `cd` somewhere into your Titanium project folder and run `kranium init`. This will make Kranium setup the folder structure in your project, copying all dependencies and inject a `Ti.include`-clause into app.js.
+When you've installed it as above, you're good to go. Open your terminal and `cd` somewhere into your Titanium project folder and run `kranium init`. This will make Kranium setup the folder structure in your project, copy all dependencies and even inject a `Ti.include`-clause into app.js.
+
+![Kranium folder structure](site/images/folderstructure.png)
+
+So what's what here? Let's walk through the generated folders from the top:
+
+* __jade__ is a folder containing your jade templates (surprise!). These can be pulled in and rendered using for example `J(filename, { options: "here" }).appendTo("window")`.
+
+* __kranium__ contains the actual Kranium libraries and the bootstrapper. Most often you don't have to touch anything here.
+
+* __kss__ hosts your CSS-like stylesheets. Any `stylus`, `SASS` or `Less` files will be automatically compiled to `kss` if you have `kranium init` or `kranium watch` running in the terminal. The styles in `app.kss` will be autoloaded when the app starts and affects the global styling. Any other `kss` files will be autoloaded and applied to modules with the same name.
+
+* __kui__ is the home of all your fancy Kranium UI modules. These can extend the basic types `window`, `label`, `view` etc. or any of your own modules. Styles are pulled in from the __kss__ folder and applied accordingly.
+
+* __test__ hosts all your Jasmine unit tests. If your run `kranium init --test` from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-runned whenever a test definition or source file changes. 
     
 #Classes
 

@@ -60,29 +60,27 @@ hljs.initHighlightingOnLoad();
 
 <p>But don't take my word for it. Take a look at the source of the example applications below, and decide for yourself. </p>
 
-<h1>Tutorials</h1>
-
-<p>Kranium has a growing <strong><a href="http://maccman.github.com/spine.tutorials/">set of tutorials</a></strong>, from layouts, tabs and sidebars to forms, updating records and validation.</p>
-
-<h1>Examples</h1>
-
-<p>Spine includes some great example applications to show you what's possible with the framework, and give you a practical understanding of the library. Although Spine is cross browser, it's worth noting that some of the examples are for WebKit based browsers only (Chrome/Safari), due to browser specific CSS (i.e. they'll just look really ugly in other browsers). </p>
-
-<p>Todos is a very simple to-do application. Users can CRUD tasks, and mark them as complete.<br />The source is <a href="http://github.com/maccman/spine.todos">available on GitHub</a>. <a href="http://maccman.github.com/spine.todos">[Demo]</a><br /><img src="https://lh4.googleusercontent.com/_IH1OempnqUc/TZF16JZSTlI/AAAAAAAABKM/ojAu7OBqXp8/s500/Screen%20shot%202011-03-29%20at%2019.01.44.png" alt="Spine Todos" title="" /></p>
-
-<p>Spine contacts is a simple address book, allowing users to CRUD contacts. The full source is <a href="http://github.com/maccman/spine.contacts">available on GitHub</a>. <em>WebKit only</em>. <a href="http://maccman.github.com/spine.contacts">[Demo]</a><br /><img src="https://lh5.googleusercontent.com/_IH1OempnqUc/TZpgYfnlUBI/AAAAAAAABKg/UYLhdmoc15o/s500/contacts.png" alt="Spine Contacts" title="" /></p>
-
-<p>Holla is the most advanced example, and <a href="http://github.com/maccman/holla">can be found on GitHub</a>. Holla is a group chat application, and uses a combination of <a href="http://rubyonrails.org">Rails</a>, <a href="http://github.com/maccman/juggernaut">Juggernaut</a> and Spine to let users chat in realtime. <em>WebKit only</em>. <a href="http://maccman-holla.heroku.com">[Demo]</a><br /><img src="https://lh4.googleusercontent.com/_IH1OempnqUc/TZF1gMnidmI/AAAAAAAABKE/b9rp9RdtA3o/s500/Screen%20shot%202011-03-29%20at%2018.58.12.png" alt="Holla" title="" /></p>
-
 <h1>Installation</h1>
 
 <p>Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running <code>npm install kranium -g</code> in your terminal.</p>
 
-<p>If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found <a href="http://example.com">here</a>.</p>
+<p>If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found <a href="http://example.com">here</a> before following the previous paragraph.</p>
 
 <h1>Using Kranium</h1>
 
-<p>When you've installed it as above, you're good to go. Open your terminal and <code>cd</code> somewhere into your Titanium project folder and run <code>kranium init</code>. This will make Kranium setup the folder structure in your project, copying all dependencies and inject a <code>Ti.include</code>-clause into app.js.</p>
+<p>When you've installed it as above, you're good to go. Open your terminal and <code>cd</code> somewhere into your Titanium project folder and run <code>kranium init</code>. This will make Kranium setup the folder structure in your project, copy all dependencies and even inject a <code>Ti.include</code>-clause into app.js.</p>
+
+<p><img src="site/images/folderstructure.png" alt="Kranium folder structure" title="" /></p>
+
+<p>So what's what here? Let's walk through the generated folders from the top:</p>
+
+<ul>
+<li><p><strong>jade</strong> is a folder containing your jade templates (surprise!). These can be pulled in and rendered using for example <code>J(filename, { options: "here" }).appendTo("window")</code>.</p></li>
+<li><p><strong>kranium</strong> contains the actual Kranium libraries and the bootstrapper. Most often you don't have to touch anything here.</p></li>
+<li><p><strong>kss</strong> hosts your CSS-like stylesheets. Any <code>stylus</code>, <code>SASS</code> or <code>Less</code> files will be automatically compiled to <code>kss</code> if you have <code>kranium init</code> or <code>kranium watch</code> running in the terminal. The styles in <code>app.kss</code> will be autoloaded when the app starts and affects the global styling. Any other <code>kss</code> files will be autoloaded and applied to modules with the same name.</p></li>
+<li><p><strong>kui</strong> is the home of all your fancy Kranium UI modules. These can extend the basic types <code>window</code>, <code>label</code>, <code>view</code> etc. or any of your own modules. Styles are pulled in from the <strong>kss</strong> folder and applied accordingly.</p></li>
+<li><p><strong>test</strong> hosts all your Jasmine unit tests. If your run <code>kranium init --test</code> from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-runned whenever a test definition or source file changes. </p></li>
+</ul>
 
 <h1>Classes</h1>
 
