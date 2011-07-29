@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset=utf-8>
-<title>Spinely!</title>
+<title>Kranium</title>
 <meta name="description" content="Spine is a lightweight MVC framework for building JavaScript applications.">
 <meta name="keywords" content="spine,javascript,mvc,framework,backbone,node,web,app">
 <link rel="stylesheet" href="site/site.css" type="text/css" charset="utf-8">
@@ -84,7 +84,9 @@ hljs.initHighlightingOnLoad();
 
 <h1>Simple UI creation</h1>
 
-<p>As we mentioned in the overview, one of Kranium's main goals is to simplify everyday Titanium Mobile life by easing your UI creation burden. Lets first have a look at a classic tabgroup using vanilla Titanium Mobile API:s:</p>
+<p>As we mentioned in the overview, one of Kranium's main goals is to simplify everyday Titanium Mobile life by easing your UI creation burden. Lets first have a look at a classic tabgroup using vanilla Titanium Mobile API:s.</p>
+
+<h2>Example</h2>
 
 <pre><code>var tabGroup = Ti.UI.createTabGroup(),
 
@@ -144,7 +146,7 @@ tabGroup.open();
 }).open();
 </code></pre>
 
-<p>It's easy to visualize the resulting structure, and events can be defined on elements upon creation. But aren't we cheating here - where is all the styling? Kranium practices separation of concerns, so the styles are meant to be loaded from the <code>kss</code> folder, so our <code>app.kss</code> should look like follows to correspond to the previous example:</p>
+<p>It's easy to visualize the resulting structure, and events can be defined on elements upon creation. But aren't we cheating here - where is all the styling? Kranium practices separation of concerns, so the styles are meant to be loaded from the <code>kss</code> folder. Therefore our <code>app.kss</code> should look like follows to correspond to the previous example:</p>
 
 <pre><code>.myTab { 
     icon: path/to/my/icon; 
@@ -161,6 +163,67 @@ window {
     font-size: 20;
     font-weight: bold;
 }
+</code></pre>
+
+<h2>Usage</h2>
+
+<p>Kranium provides enhanced versions of the same UI Element factory functions found in the plain Titanium Mobile API:s. These are accessible directly from the <code>K</code> object like so:</p>
+
+<pre><code>K.createLabel({ text: "Hello world! "});
+</code></pre>
+
+<p>So how does this function differ from <code>Ti.UI.createLabel</code>?. It is enhanced in two ways:</p>
+
+<ul>
+<li>Styles are applied.</li>
+<li>Children and other special properties are turned into real Ti Objects</li>
+</ul>
+
+<p>The second point means that you can do the following...</p>
+
+<pre><code>K.createView({
+    children: [{
+        type: "image",
+        image: "path/to/image",
+        click: function(){ K.alert("You clicked the image!"); }
+    },
+    {
+        type: "label",
+        "text": "howdy?"
+    }]
+});
+</code></pre>
+
+<p>...and the <code>children</code> array will be automatically turned into an array of Ti Objects and added to the parent view.</p>
+
+<p>There is also a general purpose function called <code>K.create</code> which works pretty much the same way. It can take either a single javascript <code>object</code> with a <code>type</code> property or an <code>array</code> of the same, and turns them into instantiated Ti Objects. However, there is something very special with <code>K.create</code>, detailed below. </p>
+
+<h1>Extendable UI modules</h1>
+
+<p>If <code>K.create</code> comes across a <code>type</code> which is not a standard Titanium Mobile UI type, it will look in your <code>kui</code> folder and try to autoload the module from a file with the same name. Huh?! Example time!</p>
+
+<pre><code>K.create({
+    type: "loginstatus"
+});
+</code></pre>
+
+<p>This will make Kranium look for the file <code>kui/loginstatus.js</code> and try to require it and create an instance of it. The code in the file would look something like:</p>
+
+<pre><code>exports.Class = Label.extend({
+    init: function(){
+        this.events = {
+            app: {
+                authchange: function(){
+
+                }
+            }
+        }
+    },
+
+    updateStatus: function(){
+
+    }
+});
 </code></pre>
 
 <h1>Classes</h1>

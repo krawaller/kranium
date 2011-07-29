@@ -68,7 +68,9 @@ So what's what here? Let's walk through the generated folders from the top:
 * __test__ hosts all your Jasmine unit tests. If your run `kranium init --test` from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-runned whenever a test definition or source file changes. 
     
 #Simple UI creation
-As we mentioned in the overview, one of Kranium's main goals is to simplify everyday Titanium Mobile life by easing your UI creation burden. Lets first have a look at a classic tabgroup using vanilla Titanium Mobile API:s:
+As we mentioned in the overview, one of Kranium's main goals is to simplify everyday Titanium Mobile life by easing your UI creation burden. Lets first have a look at a classic tabgroup using vanilla Titanium Mobile API:s.
+
+##Example
 
 	var tabGroup = Ti.UI.createTabGroup(),
 
@@ -126,7 +128,7 @@ That was kinda verbose, don't you think? And you don't see the resulting UI stru
 	    }]
 	}).open();
 
-It's easy to visualize the resulting structure, and events can be defined on elements upon creation. But aren't we cheating here - where is all the styling? Kranium practices separation of concerns, so the styles are meant to be loaded from the `kss` folder, so our `app.kss` should look like follows to correspond to the previous example:
+It's easy to visualize the resulting structure, and events can be defined on elements upon creation. But aren't we cheating here - where is all the styling? Kranium practices separation of concerns, so the styles are meant to be loaded from the `kss` folder. Therefore our `app.kss` should look like follows to correspond to the previous example:
 
 	.myTab { 
 	    icon: path/to/my/icon; 
@@ -143,6 +145,61 @@ It's easy to visualize the resulting structure, and events can be defined on ele
 	    font-size: 20;
 	    font-weight: bold;
 	}
+
+##Usage
+
+Kranium provides enhanced versions of the same UI Element factory functions found in the plain Titanium Mobile API:s. These are accessible directly from the `K` object like so:
+
+    K.createLabel({ text: "Hello world! "});
+
+So how does this function differ from `Ti.UI.createLabel`?. It is enhanced in two ways:
+
+* Styles are applied.
+* Children and other special properties are turned into real Ti Objects
+
+The second point means that you can do the following...
+
+    K.createView({
+	    children: [{
+		    type: "image",
+		    image: "path/to/image",
+		    click: function(){ K.alert("You clicked the image!"); }
+	    },
+	    {
+		    type: "label",
+		    "text": "howdy?"
+	    }]
+    });
+
+...and the `children` array will be automatically turned into an array of Ti Objects and added to the parent view.
+
+There is also a general purpose function called `K.create` which works pretty much the same way. It can take either a single javascript `object` with a `type` property or an `array` of the same, and turns them into instantiated Ti Objects. However, there is something very special with `K.create`, detailed below. 
+
+#Extendable UI modules
+
+If `K.create` comes across a `type` which is not a standard Titanium Mobile UI type, it will look in your `kui` folder and try to autoload the module from a file with the same name. Huh?! Example time!
+
+	K.create({
+		type: "loginstatus"
+	});
+	
+This will make Kranium look for the file `kui/loginstatus.js` and try to require it and create an instance of it. The code in the file would look something like:
+
+	exports.Class = Label.extend({
+		init: function(){
+			this.events = {
+				app: {
+					authchange: function(){
+						
+					}
+				}
+			}
+		},
+		
+		updateStatus: function(){
+			
+		}
+	});
 
 #Classes
 
