@@ -72,6 +72,7 @@ As we mentioned in the overview, one of Kranium's main goals is to simplify ever
 
 ##Example
 
+	// Vanilla Titanium Mobile 
 	var tabGroup = Ti.UI.createTabGroup(),
 
 	    win1 = Ti.UI.createWindow({
@@ -111,6 +112,7 @@ As we mentioned in the overview, one of Kranium's main goals is to simplify ever
 
 That was kinda verbose, don't you think? And you don't see the resulting UI structure straight away since you have to keep references to stuff and manually adding them to the correct parent. The same use case when using Kranium looks like this:
 
+	// Kranium
 	K({
 	    type: 'tabgroup',
 	    tabs: [{
@@ -309,51 +311,35 @@ Kranium's manipulation library is a port of the beautiful Zepto library, and tri
 
 	remove(): remove element
 
-	html('new html'): set the contents of the element(s)
-	html(function(index, oldhtml){ return ...; }): set the contents of the element(s) from a method
-
-	html(): get first element's .innerHTML
-	text(): get first element's .textContent
+	text(): get first element's .text||.title
 	text('new text'): set the text contents of the element(s)
 	append(), prepend(): like html(), but add html (or a DOM Element or a Zepto object) to element contents
-	before(), after(): add html (or a DOM Element or a Zepto object) before/after the element
 	appendTo(), prependTo(): reverse appending/prepending
-	show(): forces elements to be displayed (only works correctly for block elements right now)
+	show(): forces elements to be displayed
 	hide(): removes a elements from layout
 
-	offset(): get object with top: left: width: height: properties (in px)
 	height(): get first elements height in px
 	width(): get first elements width in px
 
 	attr('attribute'): get element attribute
 	attr('attribute', 'value'): set element attribute
-	attr('attribute', function(index, oldAttr){ return ...; }): set the value of 'attribute' from a method, for each element in collection
 	removeAttr('attribute'): removes an attribute
-	data('name'): gets the HTML5 data attribute value for the element. Shortcut function for $(element).attr('data-<name>')
-	data('name', 'value'): sets the HTML5 data attribute to 'value' for the element
 
 	css('css property', 'value'): set a CSS property
 	css({ property1: value1, property2: value2 }): set multiple CSS properties
-	css('css property'): get this CSS property of the first element, looks at both .style object properties and the computed style
+	css('css property'): get this CSS property of the first element
 
 	addClass('classname'): adds a CSS class name
-	addClass(function(index, existingClasses){ return ...; }): adds a CSS class name from a method
 	removeClass('classname'): removes a CSS class name
-	removeClass(function(index, existingClasses){ return ...; }): removes a CSS class name from a method
 	hasClass('classname'): returns true of first element has a classname set
 	toggleClass('classname'[, switch]): adds/removes class, or adds/removes it when switch == true/false
-	toggleClass(function(index, existingClasses){ return ...; }): adds/removes class from a method
 
 	bind(type, function): add an event listener (see below)
 	one(type, function): add an event listener that only fires once
 	unbind([type [, function]]): remove event listeners
-	delegate(selector, type, function): add an event listener w/ event delegation (see below)
-	undelegate(selector [, type[, function]]): remove event listeners w/ event delegation
-	live(type, function): add an event listener that listens to the selector for current and future elements
 	die([, type[, function]]): remove live listener
 	trigger(type): triggers an event
 
-	submit(): trigger form submit event
 	val(): returns the value of the form element
 	val('value'): sets the value of the form element
 
