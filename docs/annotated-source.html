@@ -225,7 +225,7 @@ code .this { color: #19469D; }</style>
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>String |  | Array |  | TiObject |  | Object</em>  dom</p></li><li><p><strong>param</strong>: <em>String |  | Array |  | TiObject |  | Object</em>  context</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p></li></ul>
+<ul><li><p><strong>param</strong>: <em>String | Array | TiObject | Object</em>  dom</p></li><li><p><strong>param</strong>: <em>String | Array | TiObject | Object</em>  context</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="keyword">var</span> $ = <span class="keyword">function</span>(<span class="variable">selector</span>, <span class="variable">context</span>){
@@ -285,7 +285,7 @@ $.<span class="variable">fn</span> = {
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>String |  | Object</em>  [prop] Prop to set value to, or Object containg key-value-pairs</p></li><li><p><strong>param</strong>: <em>String</em>  [val] Value to set prop to</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
+<ul><li><p><strong>param</strong>: <em>String | Object</em>  [prop] Prop to set value to, or Object containg key-value-pairs</p></li><li><p><strong>param</strong>: <em>String</em>  [val] Value to set prop to</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="variable">set</span>: <span class="keyword">function</span>(<span class="variable">prop</span>, <span class="variable">val</span>){
@@ -439,7 +439,7 @@ $.<span class="variable">fn</span> = {
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>Array |  | TiObject |  | KraniumCollection</em>  els</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
+<ul><li><p><strong>param</strong>: <em>Array | TiObject | KraniumCollection</em>  els</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="variable">add</span>: <span class="keyword">function</span>(<span class="variable">els</span>){
@@ -494,7 +494,7 @@ $.<span class="variable">fn</span> = {
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>String</em>  selector</p></li><li><p><strong>param</strong>: <em>String |  | TiObject</em>  context</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
+<ul><li><p><strong>param</strong>: <em>String</em>  selector</p></li><li><p><strong>param</strong>: <em>String | TiObject</em>  context</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="variable">closest</span>: <span class="keyword">function</span>(<span class="variable">selector</span>, <span class="variable">context</span>){
@@ -615,7 +615,7 @@ $.<span class="variable">fn</span> = {
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>String |  | Object</em>  property Property to get or set value for, or hash map to set</p></li><li><p><strong>param</strong>: <em>String |  | Integer</em>  [value] If specified, set css of elements, otherwise return current value of first element</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
+<ul><li><p><strong>param</strong>: <em>String | Object</em>  property Property to get or set value for, or hash map to set</p></li><li><p><strong>param</strong>: <em>String | Integer</em>  [value] If specified, set css of elements, otherwise return current value of first element</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="variable">css</span>: <span class="keyword">function</span>(<span class="variable">property</span>, <span class="variable">value</span>) {
@@ -716,7 +716,7 @@ $.<span class="variable">fn</span> = {
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>Array |  | TiObject</em>  els</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
+<ul><li><p><strong>param</strong>: <em>Array | TiObject</em>  els</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="variable">append</span>: <span class="keyword">function</span>(<span class="variable">els</span>){
@@ -740,7 +740,7 @@ $.<span class="variable">fn</span> = {
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>Array |  | TiObject |  | Collection</em>  parent</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
+<ul><li><p><strong>param</strong>: <em>Array | TiObject | Collection</em>  parent</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="variable">appendTo</span>: <span class="keyword">function</span>(<span class="variable">parent</span>){
@@ -935,7 +935,7 @@ $.<span class="variable">fn</span> = {
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>TiObject |  | Object</em>  el</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
+<ul><li><p><strong>param</strong>: <em>TiObject | Object</em>  el</p></li><li><p><strong>returns</strong>: <em>Z</em>  Kranium collection</p><p> </p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="variable">replaceWith</span>: <span class="keyword">function</span>(<span class="variable">el</span>){
@@ -969,7 +969,7 @@ $.<span class="variable">fn</span> = {
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>Array |  | Collection</em>  obj</p></li><li><p><strong>param</strong>: <em>Function</em>  iterator</p></li></ul>
+<ul><li><p><strong>param</strong>: <em>Array | Collection</em>  obj</p></li><li><p><strong>param</strong>: <em>Function</em>  iterator</p></li></ul>
 </td>
 <td class="code">
 <pre><code>$.<span class="variable">each</span> = <span class="keyword">function</span>(<span class="variable">obj</span>, <span class="variable">iterator</span>){
@@ -1645,7 +1645,7 @@ MIT Licensed.
 
 <h2></h2>
 
-<ul><li><p><strong>param</strong>: <em>String</em>  file </p></li><li><p><strong>returns</strong>: <em>TiFile |  | String</em> </p></li></ul>
+<ul><li><p><strong>param</strong>: <em>String</em>  file </p></li><li><p><strong>returns</strong>: <em>TiFile | String</em> </p></li></ul>
 </td>
 <td class="code">
 <pre><code><span class="class">K</span>.<span class="variable">file</span> = <span class="keyword">function</span>(<span class="variable">file</span>){
