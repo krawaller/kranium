@@ -1,6 +1,6 @@
 #Kranium
 
-__Kranium has enough brains to let yours focus on the crucial stuff while developing Titanium Mobile apps.__ Kranium transfers some well known practices and techniques from web development to Titanium Mobile development. It's both spiritually and physically the lovechild of the following great web tech:
+__Kranium has enough brains to let your brain focus on the crucial stuff while developing Titanium Mobile apps.__ Kranium transfers some well known practices and techniques from web development to Titanium Mobile development. It's both spiritually and physically the lovechild of the following great web tech:
 
 * [jQuery](http://www.jquery.com) / [Zepto](http://zeptojs.com)
 * [Backbone](http://documentcloud.github.com/backbone/)
@@ -65,7 +65,7 @@ So what's what here? Let's walk through the generated folders from the top:
 
 * __kui__ is the home of all your fancy Kranium UI modules. These can extend the basic types `window`, `label`, `view` etc. or any of your own modules. Styles are pulled in from the __kss__ folder and applied accordingly.
 
-* __test__ hosts all your Jasmine unit tests. If your run `kranium init --test` from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-runned whenever a test definition or source file changes. 
+* __test__ hosts all your Jasmine unit tests. If you run `kranium init --test` from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-run whenever a test definition or source file changes. 
     
 #Simple UI creation
 As we mentioned in the overview, one of Kranium's main goals is to simplify everyday Titanium Mobile life by easing your UI creation burden. Lets first have a look at a classic tabgroup using vanilla Titanium Mobile API:s.
@@ -252,8 +252,7 @@ When Appcelerator announced JSS support, we were truly stoked. However, we soon 
 
 You place your stylesheets in the `kss` folder. The `app.kss` file is the global stylesheet which is autoloaded when the app starts. Whenever you load a custom module for the first time, Kranium looks for a stylesheet with a corresponding name in the `kss` folder.
 
-#Live compiling of CoffeeScript, Stylus, SASS and Less
-
+#Live compiling
 The command line tool also compiles `CoffeeScript`, `Stylus`, `SASS` and `Less` on the fly. This means you can use these techniques seamlessly. For now, this means your source and style folders will contain both the original and the compiled files. We might want to refactor this behaviour to output the generated files into another folder. Maybe you can help us with a pull request?!
 
 #Simple selector engine
@@ -361,36 +360,39 @@ Kranium's manipulation library is a port of the beautiful Zepto library, and tri
 
 #jQuery-like Ajax API
 
-YTBD
+	$.ajax({
+		type: 'POST', // defaults to 'GET'
+		url: '/foo', // no default
+		data: {name: 'Zepto'}, // can be a string or object (objects are automatically serialized to JSON)
+		dataType: 'json', // what response type you accept from the server ('json', 'xml', 'html', or 'text')
+		success: function(body) { ... }, // body is a string (or if dataType is 'json', a parsed JSON object)
+		error: function(xhr, type) { ... } // type is a string ('error' for HTTP errors, 'parsererror' for invalid JSON)
+	})
 
 #Realtime Jasmine testing
 
-YTBD
+Kranium also plays nice with the [Jasmine BDD framework](http://pivotal.github.com/jasmine/). If you run
+
+	kranium init --test
+
+from the terminal, the tests in your `test` folder will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-run whenever a test definition or source file changes.
+
+![Kranium folder structure](site/images/jasmine.png)
 
 #Beautiful two-way console
 
-YTBD
+Kranium integrates [Remy Sharp](http://remysharp.com/)'s excellent JSConsole. This is a simple REPL which lets you do some quick testing. It can be found at http://localhost:3333 if you have the `kranium` tool running in your terminal.
+
+![Kranium folder structure](site/images/console.png)
 
 
 #FAQ
 
-* *Whoah - your API looks really similar to Backbone. Why should I use this instead?*
-  Well, it's true that Spine was inspired by Backbone, an excellent library, and its controller API is very similar. However, the similarities end there. Internally the library works very differently. For example, Spine has no need for `Collections`, which are required for pretty much every model in Backbone. Spine provides a class library, and has very different ideas when it comes to server sync. Lastly, Spine is much simpler and half the size, go and [check out the source](http://github.com/maccman/spine).
+* *Uhm... what questions are frequently asked?*
+  We don't know yet. Please let us know! :-)
   
-* *What's so good about prototypal inheritance?*
-  Let me give you a visual example of what I mean. Take a Spine class instance, you can follow its `__proto__` property through its parents, all the way up to `Object`.
-  ![Inheritance](site/images/inheritance.png)  
-  Classical class libraries just copy properties to achieve inheritance, resulting in overhead when your class is first loaded, and doesn't allow for dynamically resolving properties. 
-  
-* *Doesn't the fact that servers are de-coupled, and clients never wait for a response, cause issues like conflicts?*
-  Nope, certainly not in my experience. Ajax requests to the server are sent serially, requests have to finish before the next one is fired, even if the client UI has already updated. For example, if a contact is created and then immediately destroyed, the create POST will complete before the DELETE request is sent. Certainly, there may be scenarios where you need to disable a UI element while waiting for a server response, but this isn't usually required, and so isn't the default inside Spine. 
-  
-* *I still don't get the advantages of server de-coupling.*
-  Well, it's all about perceived speed - which makes a huge difference to the user experience. Perceived speed is just as important as actual speed since, at the end of the day, this is what users are going to notice. If we take [Holla](http://github.com/maccman/holla) as an example, when a user sends a new chat message, we could wait until the message takes the roundtrip through the server and clients before appending it to the chat log. However, that would introduce a couple of seconds latency between the time a user submitted a new message, and it appearing in their chat log. The application would seem slow, and it would definitely hurt the user experience. 
-
-  Instead, why not create the new message locally, thereby immediately adding it to the chat log. From a user's perspective, it seems like the message has been sent instantly. User's won't know (or care), that the message hasn't yet been delivered to other clients in the chat room. They'll just be happy with a fast and snappy user experience.
-  
-  That's why server de-coupling and perceived speed is important, __it gives a much better user experience__.
+* *Do you like raptors?*
+  No, we quite like being alive.
 
 #Change Log
 

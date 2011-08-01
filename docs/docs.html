@@ -17,7 +17,7 @@ hljs.initHighlightingOnLoad();
 <body>
 <div id="container"><h1>Kranium</h1>
 
-<p><strong>Kranium has enough brains to let yours focus on the crucial stuff while developing Titanium Mobile apps.</strong> Kranium transfers some well known practices and techniques from web development to Titanium Mobile development. It's both spiritually and physically the lovechild of the following great web tech:</p>
+<p><strong>Kranium has enough brains to let your brain focus on the crucial stuff while developing Titanium Mobile apps.</strong> Kranium transfers some well known practices and techniques from web development to Titanium Mobile development. It's both spiritually and physically the lovechild of the following great web tech:</p>
 
 <ul>
 <li><a href="http://www.jquery.com">jQuery</a> / <a href="http://zeptojs.com">Zepto</a></li>
@@ -79,7 +79,7 @@ hljs.initHighlightingOnLoad();
 <li><p><strong>kranium</strong> contains the actual Kranium libraries and the bootstrapper. Most often you don't have to touch anything here.</p></li>
 <li><p><strong>kss</strong> hosts your CSS-like stylesheets. Any <code>stylus</code>, <code>SASS</code> or <code>Less</code> files will be automatically compiled to <code>kss</code> if you have <code>kranium init</code> or <code>kranium watch</code> running in the terminal. The styles in <code>app.kss</code> will be autoloaded when the app starts and affects the global styling. Any other <code>kss</code> files will be autoloaded and applied to modules with the same name.</p></li>
 <li><p><strong>kui</strong> is the home of all your fancy Kranium UI modules. These can extend the basic types <code>window</code>, <code>label</code>, <code>view</code> etc. or any of your own modules. Styles are pulled in from the <strong>kss</strong> folder and applied accordingly.</p></li>
-<li><p><strong>test</strong> hosts all your Jasmine unit tests. If your run <code>kranium init --test</code> from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-runned whenever a test definition or source file changes. </p></li>
+<li><p><strong>test</strong> hosts all your Jasmine unit tests. If you run <code>kranium init --test</code> from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-run whenever a test definition or source file changes. </p></li>
 </ul>
 
 <h1>Simple UI creation</h1>
@@ -280,7 +280,7 @@ K.createView({
 
 <p>You place your stylesheets in the <code>kss</code> folder. The <code>app.kss</code> file is the global stylesheet which is autoloaded when the app starts. Whenever you load a custom module for the first time, Kranium looks for a stylesheet with a corresponding name in the <code>kss</code> folder.</p>
 
-<h1>Live compiling of CoffeeScript, Stylus, SASS and Less</h1>
+<h1>Live compiling</h1>
 
 <p>The command line tool also compiles <code>CoffeeScript</code>, <code>Stylus</code>, <code>SASS</code> and <code>Less</code> on the fly. This means you can use these techniques seamlessly. For now, this means your source and style folders will contain both the original and the compiled files. We might want to refactor this behaviour to output the generated files into another folder. Maybe you can help us with a pull request?!</p>
 
@@ -393,27 +393,38 @@ val('value'): sets the value of the form element
 
 <h1>jQuery-like Ajax API</h1>
 
-<p>YTBD</p>
+<pre><code>$.ajax({
+    type: 'POST', // defaults to 'GET'
+    url: '/foo', // no default
+    data: {name: 'Zepto'}, // can be a string or object (objects are automatically serialized to JSON)
+    dataType: 'json', // what response type you accept from the server ('json', 'xml', 'html', or 'text')
+    success: function(body) { ... }, // body is a string (or if dataType is 'json', a parsed JSON object)
+    error: function(xhr, type) { ... } // type is a string ('error' for HTTP errors, 'parsererror' for invalid JSON)
+})
+</code></pre>
 
 <h1>Realtime Jasmine testing</h1>
 
-<p>YTBD</p>
+<p>Kranium also plays nice with the <a href="http://pivotal.github.com/jasmine/">Jasmine BDD framework</a>. If you run</p>
+
+<pre><code>kranium init --test
+</code></pre>
+
+<p>from the terminal, the tests in your <code>test</code> folder will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-run whenever a test definition or source file changes.</p>
+
+<p><img src="site/images/jasmine.png" alt="Kranium folder structure" title="" /></p>
 
 <h1>Beautiful two-way console</h1>
 
-<p>YTBD</p>
+<p>Kranium integrates <a href="http://remysharp.com/">Remy Sharp</a>'s excellent JSConsole. This is a simple REPL which lets you do some quick testing. It can be found at <a href='http://localhost:3333'>http://localhost:3333</a> if you have the <code>kranium</code> tool running in your terminal.</p>
+
+<p><img src="site/images/console.png" alt="Kranium folder structure" title="" /></p>
 
 <h1>FAQ</h1>
 
 <ul>
-<li><p><em>Whoah - your API looks really similar to Backbone. Why should I use this instead?</em><br />Well, it's true that Spine was inspired by Backbone, an excellent library, and its controller API is very similar. However, the similarities end there. Internally the library works very differently. For example, Spine has no need for <code>Collections</code>, which are required for pretty much every model in Backbone. Spine provides a class library, and has very different ideas when it comes to server sync. Lastly, Spine is much simpler and half the size, go and <a href="http://github.com/maccman/spine">check out the source</a>.</p></li>
-<li><p><em>What's so good about prototypal inheritance?</em><br />Let me give you a visual example of what I mean. Take a Spine class instance, you can follow its <code>__proto__</code> property through its parents, all the way up to <code>Object</code>.<br /><img src="site/images/inheritance.png" alt="Inheritance" title="" /> <br /><br />Classical class libraries just copy properties to achieve inheritance, resulting in overhead when your class is first loaded, and doesn't allow for dynamically resolving properties. </p></li>
-<li><p><em>Doesn't the fact that servers are de-coupled, and clients never wait for a response, cause issues like conflicts?</em><br />Nope, certainly not in my experience. Ajax requests to the server are sent serially, requests have to finish before the next one is fired, even if the client UI has already updated. For example, if a contact is created and then immediately destroyed, the create POST will complete before the DELETE request is sent. Certainly, there may be scenarios where you need to disable a UI element while waiting for a server response, but this isn't usually required, and so isn't the default inside Spine. </p></li>
-<li><p><em>I still don't get the advantages of server de-coupling.</em><br />Well, it's all about perceived speed - which makes a huge difference to the user experience. Perceived speed is just as important as actual speed since, at the end of the day, this is what users are going to notice. If we take <a href="http://github.com/maccman/holla">Holla</a> as an example, when a user sends a new chat message, we could wait until the message takes the roundtrip through the server and clients before appending it to the chat log. However, that would introduce a couple of seconds latency between the time a user submitted a new message, and it appearing in their chat log. The application would seem slow, and it would definitely hurt the user experience. </p>
-
-<p>Instead, why not create the new message locally, thereby immediately adding it to the chat log. From a user's perspective, it seems like the message has been sent instantly. User's won't know (or care), that the message hasn't yet been delivered to other clients in the chat room. They'll just be happy with a fast and snappy user experience.</p>
-
-<p>That's why server de-coupling and perceived speed is important, <strong>it gives a much better user experience</strong>.</p></li>
+<li><p><em>Uhm... what questions are frequently asked?</em><br />We don't know yet. Please let us know! :-)</p></li>
+<li><p><em>Do you like raptors?</em><br />No, we quite like being alive.</p></li>
 </ul>
 
 <h1>Change Log</h1>
