@@ -2216,14 +2216,14 @@ K.jade = function(jadeStr, o){
 	var fn, cacheName, arr;
 	if(!(fn = jadeCache[jadeStr])){
 		if(jadeFile.test(jadeStr)){
-			cacheName = jadeStr;
+			cacheName = jadeStr; 
 			jadeStr = K.file('jade/' + jadeStr);
 		} else {
 			cacheName = jadeStr;
 		}
 		jadeCache[cacheName] = (fn = jade.compile(jadeStr));
 	}
-		
+	
 	return K.create((arr = fn(o)).length === 1 ? arr[0] : arr);
 };
 

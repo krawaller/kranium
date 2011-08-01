@@ -307,6 +307,10 @@ var reTiObject = /^\[object Ti/,
 				K(this).children().remove();
 				this.add(K.create(el));
 			});
+		},
+		
+		stringify: function(){
+			return K.stringify(this);
 		}
 
 	};

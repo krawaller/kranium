@@ -13,9 +13,9 @@ __Kranium has enough brains to let your brain focus on the crucial stuff while d
 
 Kranium tries to abstract the hell out of everything painful in the standard Titanium API:s. Kranium believes these main pains to be __UI creation__, __low-level API:s__, __styling__ and __code structuring__. Kranium helps you with your __KISS__:ing and keeps you __DRY__. 
 
-Kranium isn't super tiny. The core library currently weighs in at 31 kb uglified. It also lazy loads other libraries when needed. For example a variant of Jade is bundled with a compiler outputting Kranium-friendly templates. This file 19 kb uglified, but only loaded if needed.
+Kranium isn't super tiny. The core library currently weighs in at 31 kb uglified. It also lazy loads other libraries when needed. For example a variant of Jade is bundled containing a compiler outputting Kranium-friendly templates. This file 19 kb uglified, but only loaded if needed.
 
-Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do tell us. 
+Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do [tell us](mailto://kranium@krawaller.se). 
 
 
 __Latest version:__ [0.1.0](kranium.js) ([minified](kranium.min.js)).
