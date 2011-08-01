@@ -1,22 +1,74 @@
 /*** CORE ***/
+/**
+ * Define core methods
+ */
+
 (function(global){
 
 global.GLOBAL = global;
 win = global.win||Ti.UI.currentWindow||{};
 
+/**
+ * Cache RegExps
+ */
 var reTiObject = /^\[object Ti/,
 	reJadeStr = /(\.jade$|^\s*<)/,
+	
+	/**
+	 * Inline utility functions
+	 */	
 	ArrayProp = Array.prototype,
 	slice = ArrayProp.slice, 
 	toString = Object.prototype.toString,
 	noop = function(){};
 
+	/**
+	 * Create class-checking function
+	 *
+	 * @param {String} name className
+	 * @returns {Function} Function testing if arg has class
+	 */
 	function classRE(name){ return new RegExp("(^|\\s)" + name + "(\\s|$)"); }
+	
+	/**
+	 * Filter falsy values from array
+	 *
+	 * @param {Array} array
+	 * @returns {Array} clone of array with falsy values filtered out
+	 */
 	function compact(array){ return array.filter(function(item){ return item !== undefined && item !== null; }); }
+	
+	/**
+	 * Flatten array of arrays
+	 *
+	 * @param {Array} array
+	 * @returns {Array} Shallow clone of array
+	 */
 	function flatten(array){ return array.reduce(function(a,b){ return a.concat(b); }, []); }
+	
+	/**
+	 * Camel-case dash-separated string
+	 *
+	 * @param {String} str
+	 * @returns {String} Camel-cased input str
+	 */
 	function camelize(str){ return str.replace(/-+(.)?/g, function(match, chr){ return chr ? chr.toUpperCase() : ''; }); }
+	
+	/**
+	 * Arrayify input
+	 *
+	 * @param {Object} o
+	 * @returns {Array} If input was array, return it, otherwise wrap input in new array
+	 */
 	function arrayify(o){ return Array.isArray(o) ? o : [o]; }
 
+	/**
+	 * Kranium object constructory-thingy
+	 *
+	 * @param {Array} dom
+	 * @param {String} selector
+	 * @returns {Z} Kranium collection
+	 */
 	function Z(dom, selector) {
 		dom = dom||[];
 		dom.__proto__ = Z.prototype;
@@ -24,6 +76,13 @@ var reTiObject = /^\[object Ti/,
 		return dom;
 	}
 	
+	/**
+	 * Kranium object creator
+	 *
+	 * @param {String||Array||TiObject||Object} dom
+	 * @param {String||Array||TiObject||Object} context
+	 * @returns {Z} Kranium collection
+	 */
 	var $ = function(selector, context){
 		if (context !== undefined) return $(context).find(selector);
 		else if (selector instanceof Z) return selector;
@@ -33,12 +92,19 @@ var reTiObject = /^\[object Ti/,
 			//else if (typeof selector === 'string' && /\.jade/)
 			else if (Array.isArray(selector)){ dom = K.create(selector); }
 			else if (selector && selector.toString && reTiObject.test(selector.toString())) dom = [selector];
-			else if (toString.call(selector) == '[object Object]' || (typeof selector === 'string' && reJadeStr.test(selector) )) dom = [K.create(selector)];
+			else if (
+				toString.call(selector) == '[object Object]' || 
+				(typeof selector === 'string' && reJadeStr.test(selector) )
+			) dom = [K.create(selector)];
 			else dom = Array.isArray((tmp = $$(selector, null))) ? tmp : [tmp];			
 			return Z(dom, selector);
 		}
 	};
 
+
+	/**
+	 * Utility methods
+	 */
 	var block;
 	$.fn = {
 		forEach: ArrayProp.forEach,
@@ -47,13 +113,33 @@ var reTiObject = /^\[object Ti/,
 		push: ArrayProp.push,
 		indexOf: ArrayProp.indexOf,
 		concat: ArrayProp.concat,
+		
+		/**
+		 * Get plain array from Kranium collection
+		 *
+		 * @param {Integer} [idx] Return only element at index
+		 * @returns {Z} Kranium collection
+		 */
 		get: function(idx){ 
 			return idx === undefined ? 
 				slice.call(this) : 
 				(idx < 0 ? this[this.length + idx] : this[idx]); 
 		},
+		
+		/**
+		 * Set properties on all elements in Kranium collection
+		 *
+		 * @param {String||Object} [prop] Prop to set value to, or Object containg key-value-pairs
+		 * @param {String} [val] Value to set prop to
+		 * @returns {Z} Kranium collection
+		 */
 		set: function(prop, val){
-			var props = (typeof prop === 'string') ? [{ key: prop, val: val }] : Object.keys(prop).map(function(key){ return { key: key, val: prop[key] }; }),
+			var props = (typeof prop === 'string') ? 
+					[{ key: prop, val: val }] : 
+					Object.keys(prop).map(function(key){ 
+						return { key: key, val: prop[key] }; 	
+					}),
+					
 				i, o;
 			return this.each(function(){
 				i = props.length;
@@ -62,12 +148,37 @@ var reTiObject = /^\[object Ti/,
 				}
 			});
 		},
+		
+		/**
+		 * Select part of collection
+		 *
+		 * @param {Integer} start Starting position
+		 * @param {Integer} end Ending position
+		 * @returns {Z} Kranium collection
+		 */
 		slice: function(start, end){			
 			return K(slice.call(this, start, end === 0 ? undefined : end));
 		},
+		
+		/**
+		 * Turn Kranium collection into plain Array
+		 *
+		 * @returns {Array}
+		 */
 		toArray: function(){ return slice.call(this); },
+		
+		/**
+		 * Get number of elements in collection
+		 *
+		 * @returns {Inteer}
+		 */
 		size: function(){ return this.length; },
-		rem: function(){ alert('WOOOT'); },
+		
+		/**
+		 * Remove the elements in the collection from their respective parents
+		 *
+		 * @returns {Z} Kranium collection
+		 */
 		remove: function(){
 
 			return this.each(
@@ -90,30 +201,92 @@ var reTiObject = /^\[object Ti/,
 				}
 			); 
 		},
+		
+		/**
+		 * Iterate collection using iterator
+		 *
+		 * @param {Function} callback
+		 * @returns {Z} Kranium collection
+		 */
 		each: function(callback){
 			this.forEach(function(el, idx){ callback.call(el, idx, el); });
 			return this;
 		},
+		
+		/**
+		 * Filter collection using selector
+		 *
+		 * @param {String} selector
+		 * @returns {Z} Kranium collection
+		 */
 		filter: function(selector){
 			return $(ArrayProp.filter.call(this, function(element){
 				return $$(selector, element.getParent()).indexOf(element) >= 0;
 			}));
 		},
+		
+		/**
+		 * Test if first element in collection matches selector
+		 *
+		 * @param {String} selector
+		 * @returns {Z} Kranium collection
+		 */
 		is: function(selector){
 			return this.length > 0 && $(this[0]).filter(selector).length > 0;
 		},
+		
+		/**
+		 * Pick element from collection
+		 *
+		 * @param {Integer} idx
+		 * @returns {Z} Kranium collection
+		 */
 		eq: function(idx){ idx = parseInt(idx, 10); return $(this).slice(idx, idx + 1); },
+		
+		/**
+		 * Add stuff to a clone of the current collection
+		 *
+		 * @param {Array||TiObject||KraniumCollection} els
+		 * @returns {Z} Kranium collection
+		 */
 		add: function(els){
 			return $(this.concat(Array.isArray(els) ? els : [els]));
 		},
+		
+		/**
+		 * Get first element in collection
+		 *
+		 * @returns {Z} Kranium collection
+		 */
 		first: function(){ return $(this[0]); },
+		
+		/**
+		 * Get last element in collection
+		 *
+		 * @returns {Z} Kranium collection
+		 */
 		last: function(){ return $(this[this.length - 1]); },
+		
+		/**
+		 * Search first element for elements matching selector
+		 *
+		 * @param {String} selector
+		 * @returns {Z} Kranium collection
+		 */
 		find: function(selector){
 			var result;
 			if (this.length == 1) result = $$(selector, this[0]);
 			else result = flatten(this.map(function(el){ return $$(selector, el); }));
 			return $(result);
 		},
+		
+		/**
+		 * Find the first ancestor matching the selector
+		 *
+		 * @param {String} selector
+		 * @param {String||TiObject} context
+		 * @returns {Z} Kranium collection
+		 */
 		closest: function(selector, context){
 			var node = this[0],
 				nodes = $$(selector, context); //context !== undefined ? context : document);
@@ -122,8 +295,15 @@ var reTiObject = /^\[object Ti/,
 			while (node && nodes.indexOf(node) < 0) { node = node.getParent(); };
 			return $(node);
 
-		}, //TODO: implement me
+		},
 		parents: function(){}, //TODO: implement me
+		
+		/**
+		 * For all elements in the collection, return their parent, optionally only if it matches the selector
+		 *
+		 * @param {String} selector
+		 * @returns {Z} Kranium collection
+		 */
 		parent: function(selector){
 			var node, nodes = [];
 			this.each(function(){
@@ -132,6 +312,13 @@ var reTiObject = /^\[object Ti/,
 			nodes = $(nodes);
 			return selector === undefined ? nodes : nodes.filter(selector);
 		},
+		
+		/**
+		 * For all elements in the collection, return their children, optionally only if it matches the selector
+		 *
+		 * @param {String} selector
+		 * @returns {Z} Kranium collection
+		 */
 		children: function(selector){
 			var children, nodes = [];
 			this.each(function(){
@@ -142,24 +329,62 @@ var reTiObject = /^\[object Ti/,
 			nodes = $(nodes);
 			return selector === undefined ? nodes : nodes.filter(selector);
 		},
+		
 		siblings: function(){}, //TODO: implement me
+		
+		/**
+		 * Pluck property from elements in collection
+		 *
+		 * @param {String} property
+		 * @returns {Z} Kranium collection
+		 */
 		pluck: function(property){ return this.map(function(element){ return element[property]; }); },
+		
+		/**
+		 * Show elements in collection
+		 *
+		 * @returns {Z} Kranium collection
+		 */
 		show: function(o){ return this.each(function(){ this.show(o); }); },
+		
+		/**
+		 * Hide elements in collection
+		 *
+		 * @returns {Z} Kranium collection
+		 */
 		hide: function(){ return this.each(function(){ this.hide(); }); },
+		
+		
 		prev: function(){}, //TODO: implement me
 		next: function(){}, //TODO: implement me
+		
+		/**
+		 * Get value of first element or set value of all elements in collection
+		 *
+		 * @param {Any} [val] If specified, set value of all elements, otherwise return current value of first element
+		 * @returns {Z} Kranium collection
+		 */
 		val: function(val){
 			return val === undefined ? (this.length > 0 ? this[0].value : null) : this.each(function() {
 				this.value = val;
 			});
-		}, //TODO: implement me
+		},
+		
 		offset: function(){}, //TODO: implement me
+		
+		/**
+		 * Get css property of first element or set css property of all elements in collection
+		 *
+		 * @param {String||Object} property Property to get or set value for, or hash map to set
+		 * @param {String||Integer} [value] If specified, set css of elements, otherwise return current value of first element
+		 * @returns {Z} Kranium collection
+		 */
 		css: function(property, value) {
-			if (value === undefined && typeof property == 'string') return this[0][camelize(property)];
+			if (value === undefined && typeof property == 'string') return this[0] && this[0][camelize(property)];
 			if(typeof property == 'string' && typeof value != 'undefined'){
 				var p = property;
 				property = {};
-				property[p] = value;
+				property[camelize(p)] = value;
 			}
 			return this.each(function() {
 				for (key in property){
@@ -167,28 +392,71 @@ var reTiObject = /^\[object Ti/,
 				}
 			});
 		},
+		
+		/**
+		 * Get index of element in collection
+		 *
+		 * @param {TiObject} element
+		 * @returns {Integer} Position in collection
+		 */
 		index: function(element){
 			return this.indexOf($(element)[0]);
 		},
+		
+		/**
+		 * Test if first element in collection has the specified class
+		 *
+		 * @param {String} name
+		 * @returns {Boolean}
+		 */
 		hasClass: function(name){
 			return classRE(name).test(this[0].className);
 		},
+		
+		/**
+		 * Add class to all elements in collection
+		 *
+		 * @param {String} name
+		 * @returns {Boolean}
+		 */
 		addClass: function(name){
 			return this.each(function(){
 				!$(this).hasClass(name) && (this.className += (this.className ? ' ' : '') + name);
 			});
 		},
+		
+		/**
+		 * Rmove class from all elements in collection
+		 *
+		 * @param {String} name
+		 * @returns {Boolean}
+		 */
 		removeClass: function(name){
 			return this.each(function(){
 				this.className = this.className.replace(classRE(name), ' ').trim();
 			});
 		},
+		
+		/**
+		 * Toggle class for all elements in collection
+		 *
+		 * @param {String} name
+		 * @param {Boolean} [when]
+		 * @returns {Boolean}
+		 */
 		toggleClass: function(name, when){
 			return this.each(function(){
 			 	((when !== undefined && !when) || $(this).hasClass(name)) ?
 			 	$(this).removeClass(name) : $(this).addClass(name);
 			});
 		},
+		
+		/**
+		 * Append elements to first element in collection
+		 *
+		 * @param {Array||TiObject} els
+		 * @returns {Z} Kranium collection
+		 */
 		append: function(els){
 			var parent = this[0],
 				els = arrayify(els);
@@ -202,6 +470,13 @@ var reTiObject = /^\[object Ti/,
 			}
 			return this;
 		},
+		
+		/**
+		 * Append all elements to specified parent
+		 *
+		 * @param {Array||TiObject||Collection} parent
+		 * @returns {Z} Kranium collection
+		 */
 		appendTo: function(parent){
 			if(typeof parent === 'string'){
 				parent = K(parent).get(0);
@@ -221,6 +496,15 @@ var reTiObject = /^\[object Ti/,
 			}
 			return this;
 		},
+		
+		/**
+		 * Bind namd event listener to all elements in collection with optional context
+		 *
+		 * @param {String} name
+		 * @param {Function} fn
+		 * @param {Any} ctx
+		 * @returns {Z} Kranium collection
+		 */
 		bind: function(name, fn, ctx){
 			return this.each(function(){
 				var el = this,
@@ -232,6 +516,13 @@ var reTiObject = /^\[object Ti/,
 				el.addEventListener(name, boundFn);
 			});
 		},
+		
+		/**
+		 * Unbind namd event listener from all elements in collection
+		 *
+		 * @param {String} name
+		 * @returns {Z} Kranium collection
+		 */
 		unbind: function(name){
 			return this.each(function(el){
 				var toUnbind = [], fns;
@@ -252,6 +543,15 @@ var reTiObject = /^\[object Ti/,
 				});
 			});
 		},
+		
+		/**
+		 * Open first element in collection
+		 *
+		 * @param {TiObject} parent
+		 * @param {Object} o Options object to pass to open fn
+		 * @param {Any} ctx
+		 * @returns {Z} Kranium collection
+		 */
 		open: function(parent, o){
 			var el = this[0];
 			if(el){
@@ -263,9 +563,19 @@ var reTiObject = /^\[object Ti/,
 							el.addEventListener('open', function(){ block = false; });
 							K.currentWindow = el;
 							
-							var tab = ((tmp = ((o&&o.tab)||o) ) && (typeof tmp === 'string') ? $$(tmp)[0] : tmp) || ((tmp = $$('tabgroup')) && tmp[0] && tmp[0].activeTab);
+							var tab = (
+								(tmp = ((o&&o.tab)||o)) &&
+								(typeof tmp === 'string') ? $$(tmp)[0] : tmp
+							) || (
+								(tmp = $$('tabgroup')) && tmp[0] && tmp[0].activeTab
+							);
+							
 							(tab||Ti.UI.currentTab).open(el, o||{});
-						} else if(parent && (parent && parent._type ? parent : (parent = $$(parent)[0])) && ['navigationgroup', 'tabgroup'].indexOf(parent._type) !== -1) {
+						} else if(
+								parent && 
+								(parent && parent._type ? parent : (parent = $$(parent)[0])) && 
+								['navigationgroup', 'tabgroup'].indexOf(parent._type) !== -1
+							) {
 							parent.open(el, o||{});
 						} else {
 							el.open();
@@ -279,28 +589,62 @@ var reTiObject = /^\[object Ti/,
 			}
 			return this;
 		},
-		close: function(t){
+		
+		/**
+		 * Close first element in collection
+		 *
+		 * @returns {Z} Kranium collection
+		 */
+		close: function(){
 			var el = this[0];
 			el && el.close && el.close();
 			return this;
 		},
+		
+		/**
+		 * Get text of first element or set text of all elements in collection
+		 *
+		 * @param {String} [text] If specified, set text of elements, otherwise return current text of first element
+		 * @returns {Z} Kranium collection
+		 */
 		text: function(text) {
 			return text === undefined ? (this.length > 0 ? (this[0].text||this[0].title) : null) : this.each(function() {
 				this.text = this.title = text;
 			});
 		},
+		
+		/**
+		 * Animate every element in the collection with the specified options and callback
+		 *
+		 * @param {Object} opts
+		 * @param {Function} [cb]
+		 * @returns {Z} Kranium collection
+		 */
 		animate: function(opts, cb){
 			return this.each(function(i){
 				this.animate(opts, (i == 0 ? cb||noop : noop));
 			});
 		},
 		
+		/**
+		 * Trigger the passed event for every element in the collection with optional options object
+		 *
+		 * @param {String} event
+		 * @param {Object} [obj]
+		 * @returns {Z} Kranium collection
+		 */
 		trigger: function(event, obj){
 			return this.each(function(i){
 				this.fireEvent(event, obj);
 			});
 		},
 		
+		/**
+		 * Replace every element in collection with passed el
+		 *
+		 * @param {TiObject||Object} el
+		 * @returns {Z} Kranium collection
+		 */
 		replaceWith: function(el){
 			var $parent;
 			return this.each(function(i){
@@ -309,25 +653,54 @@ var reTiObject = /^\[object Ti/,
 			});
 		},
 		
+		/**
+		 * Return stringified representation of collection
+		 *
+		 * @returns {String} Stringified representation of collection
+		 */
 		stringify: function(){
 			return K.stringify(this);
 		}
 
 	};
 	
+	/**
+	 * Iterator
+	 *
+	 * @param {Array||Collection} obj
+	 * @param {Function} iterator
+	 */
 	$.each = function(obj, iterator){
 		(obj||[]).forEach(function(el){
 			iterator.call(el, el);
 		});
 	}
 
+	/**
+	 * Set utility methods to Z prototype to expose to collections
+	 */
 	Z.prototype = $.fn;
+	
+	/**
+	 * Expose Kranium to global variables
+	 */
 	global.$ = global.K = global.jQuery = global.Zepto = $;
+	
+	/**
+	 * Expose Kranium-Jade to global variable
+	 */
 	global.J = function(jadeStr, o){
 		return K(K.jade(jadeStr, o));
 	};
 	
+	/**
+	 * Cache platform
+	 */
 	var platform = Ti.Platform.osname;
+	
+	/**
+	 * Basic feature detection
+	 */
 	$.is = {
 		android: platform === 'android',
 		ios: platform === 'iphone'
@@ -488,7 +861,7 @@ if(!Object.prototype.arrayify){
 	});
 }
 
-if(!Object.prototype.defer){
+if(!Function.prototype.defer){
 	Object.defineProperty(Function.prototype, "defer", {
 	    enumerable: false,
 	    value: function(ms, _scope) {
@@ -860,8 +1233,15 @@ $.qsa = $$ = (function(document, global){
 })(this);
 
 /*** FILE ***/
+/**
+ * File module
+ */
+
 (function(){
 	
+	/**
+	 * Simplified path map
+	 */
 	var pathMap = {
 		res: Ti.Filesystem.resourcesDirectory,
 		resources: Ti.Filesystem.resourcesDirectory,
@@ -872,6 +1252,12 @@ $.qsa = $$ = (function(document, global){
 		support: Ti.Filesystem.applicationSupportDirectory
 	};
 
+	/**
+	 * Simplified file handler
+	 *
+	 * @param {String} file 
+	 * @returns {TiFile||String}
+	 */
 	K.file = function(file){
 		var parts = file.match(/((\w+):\/\/)?(.*?\.?)(\w+)$/),
 			dir = pathMap[parts[2]||'res']||pathMap.res,
@@ -1071,6 +1457,7 @@ $.qsa = $$ = (function(document, global){
 		}
 	}
 
+	// Code from... ?
 	var WHITESPACE_CHARACTERS = /\t|\n|\r/g,
 		EMPTY_STRING = "",
 		PLACEHOLDER_STRING = "$1",
@@ -1152,41 +1539,90 @@ $.qsa = $$ = (function(document, global){
 
 (function(global){
 	
-	// Function returning constructor string from type string
+	
+	/**
+	 * Define variables
+	 */
 	var rrep = /^(\w)(\w+)/,
-		rfunc = function($0, $1, $2){
-			return $1.toUpperCase() + $2;
-		};
-
-	var creators = {};
+		creators = {};
+	
+	/**
+	 * Expose creators
+	 */	
 	K.creators = creators;	
 	
+	/**
+	 * Default creation function used when subclassing basic element types
+	 *
+	 * @param {Object} o
+	 * @returns {K.UI.Module}
+	 */
 	function defaultInit(o){
-		//Ti.API.log('defi', { o: o, t: this });
 		var t = extend({}, this, { collection: false });
 		var el = (creators[this.type]||K.create)(o ? extend(t, o) : t);
 		el._props = o;
 	    return (this.el = el);
 	}
 
+	/**
+	 * Force Titanium to load basic types
+	 */
 	function forceLoad(){
-		Ti.UI.create2DMatrix(); Ti.UI.create3DMatrix(); Ti.UI.createActivityIndicator(); Ti.UI.createAlertDialog(); Ti.UI.createAnimation(); Ti.UI.createButton(); Ti.UI.createButtonBar(); Ti.UI.createCoverFlowView(); Ti.UI.createDashboardItem(); Ti.UI.createDashboardView(); Ti.UI.createEmailDialog(); Ti.UI.createImageView(); Ti.UI.createLabel(); Ti.UI.createMaskedImage(); Ti.UI.createOptionDialog(); Ti.UI.createPicker(); Ti.UI.createPickerColumn(); Ti.UI.createPickerRow(); Ti.UI.createProgressBar(); Ti.UI.createScrollView(); Ti.UI.createScrollableView(); Ti.UI.createSearchBar(); Ti.UI.createSlider(); Ti.UI.createSwitch(); Ti.UI.createTab(); Ti.UI.createTabGroup(); Ti.UI.createTabbedBar(); Ti.UI.createTableView(); Ti.UI.createTableViewRow(); Ti.UI.createTableViewSection(); Ti.UI.createTextArea(); Ti.UI.createTextField(); Ti.UI.createToolbar(); Ti.UI.createView(); Ti.UI.createWebView(); Ti.UI.createWindow();
+		Ti.UI.create2DMatrix();
+		Ti.UI.create3DMatrix();
+		Ti.UI.createActivityIndicator();
+		Ti.UI.createAlertDialog();
+		Ti.UI.createAnimation();
+		Ti.UI.createButton();
+		Ti.UI.createButtonBar();
+		Ti.UI.createCoverFlowView();
+		Ti.UI.createDashboardItem();
+		Ti.UI.createDashboardView();
+		Ti.UI.createEmailDialog();
+		Ti.UI.createImageView();
+		Ti.UI.createLabel();
+		Ti.UI.createMaskedImage();
+		Ti.UI.createOptionDialog();
+		Ti.UI.createPicker();
+		Ti.UI.createPickerColumn();
+		Ti.UI.createPickerRow();
+		Ti.UI.createProgressBar();
+		Ti.UI.createScrollView();
+		Ti.UI.createScrollableView();
+		Ti.UI.createSearchBar();
+		Ti.UI.createSlider();
+		Ti.UI.createSwitch();
+		Ti.UI.createTab();
+		Ti.UI.createTabGroup();
+		Ti.UI.createTabbedBar();
+		Ti.UI.createTableView();
+		Ti.UI.createTableViewRow();
+		Ti.UI.createTableViewSection();
+		Ti.UI.createTextArea();
+		Ti.UI.createTextField();
+		Ti.UI.createToolbar();
+		Ti.UI.createView();
+		Ti.UI.createWebView();
+		Ti.UI.createWindow();
 		Ti.UI.iPad.createSplitWindow();
 		Ti.UI.iPad.createPopover();
 		Ti.UI.iPhone.createNavigationGroup();
-		
+
 		Ti.Map.createMapView();
 		Ti.Map.createAnnotation();
-		
+
 		Ti.UI.iPhone.SystemButtonStyle.BORDERED;
 		Ti.UI.iPhone.TableViewStyle.GROUPED;
-		
+
 		Ti.UI.iPhone.TableViewCellSelectionStyle.NONE;
 		Ti.UI.iPhone.ActivityIndicatorStyle.BIG;
 	}
 
 	var defaultCreators = {};
 	
+	/**
+	 * Map some types to easier names too
+	 */
 	var extraCreators = {
 		TableViewRow: 'Row',
 		TableViewSection: 'Section',
@@ -1195,6 +1631,9 @@ $.qsa = $$ = (function(document, global){
 		ActivityIndicator: 'Indicator'
 	};
 	
+	/**
+	 * Direct type to correct Ti module
+	 */
 	var moduleByType = {
 		splitwindow: Ti.UI.iPad,
 		navigationgroup: Ti.UI.iPhone,
@@ -1208,6 +1647,9 @@ $.qsa = $$ = (function(document, global){
 		mapview: 'View'
 	};
 	
+	/**
+	 * Optionally redirect event callbacks
+	 */
 	function functionifyEventString(fn, to){
 		if(typeof fn === 'string') { 
 			return function(e){
@@ -1228,9 +1670,6 @@ $.qsa = $$ = (function(document, global){
 				} else {
 					(to||Ti.App).fireEvent(fn, K.extend({ value: value }, e).sanitize(["type", "source"]));
 				}
-				
-				/*Ti.API.log('going to fire', { fn: fn, to: to, value: value });
-				(to||Ti.App).fireEvent(fn, K.extend({ value: value }, e).sanitize(["type", "source"])); */
 			} 
 		} else {
 			return fn
@@ -1238,7 +1677,21 @@ $.qsa = $$ = (function(document, global){
 	}
 	
 	var extend = K.extend;
-	["2DMatrix", "3DMatrix", "ActivityIndicator", "AlertDialog", "Animation", "Annotation", "Button", "ButtonBar", "CoverFlowView", "DashboardItem", "DashboardView", "EmailDialog", "ImageView", "Label", "MapView", "MaskedImage", "NavigationGroup", "OptionDialog", "Picker", "PickerColumn", "PickerRow", "Popover", "ProgressBar", "ScrollView", "ScrollableView", "SearchBar", "Slider", "SplitWindow", "Switch", "Tab", "TabGroup", "TabbedBar", "TableView", "TableViewRow", "TableViewSection", "TextArea", "TextField", "Toolbar", "View", "WebView", "Window"].forEach(function(t){
+	
+	/**
+	 * Define creators
+	 */
+	[
+		"2DMatrix", "3DMatrix", "ActivityIndicator", "AlertDialog", "Animation", 
+		"Annotation", "Button", "ButtonBar", "CoverFlowView", "DashboardItem", 
+		"DashboardView", "EmailDialog", "ImageView", "Label", "MapView", 
+		"MaskedImage", "NavigationGroup", "OptionDialog", "Picker", "PickerColumn", 
+		"PickerRow", "Popover", "ProgressBar", "ScrollView", "ScrollableView", 
+		"SearchBar", "Slider", "SplitWindow", "Switch", "Tab", "TabGroup", 
+		"TabbedBar", "TableView", "TableViewRow", "TableViewSection", "TextArea", 
+		"TextField", "Toolbar", "View", "WebView", "Window"
+	]
+	.forEach(function(t){
 		var type = t.toLowerCase(),
 			module = moduleByType[type]||Ti.UI,
 			factoryString = 'create' + (factoryModifier[type]||t),
@@ -1250,6 +1703,9 @@ $.qsa = $$ = (function(document, global){
 		        init: defaultInit
 			});
 
+		/**
+		 * Expose and define creators
+		 */
 		K[factoryString] = K.creators[type] = function(opts){
 			opts = opts||{};
 			if(opts._type){ return opts; }
@@ -1270,6 +1726,10 @@ $.qsa = $$ = (function(document, global){
 				id = o.id;
 				delete o.id;
 			}
+			
+			/**
+			 * Handle types pre-construct
+			 */
 			switch(type){
 				case 'window':
 					if(o.rightNavButton){ o.rightNavButton = K.create(o.rightNavButton, { type: 'button' }); }
@@ -1348,6 +1808,9 @@ $.qsa = $$ = (function(document, global){
 					
 			}
 
+			/**
+			 * Create actual TiObject
+			 */
 			delete o.type;
 			if(typeof o.intype !== 'undefined'){
 				o.type = o.intype;
@@ -1359,6 +1822,9 @@ $.qsa = $$ = (function(document, global){
 			el._opts = opts;
 			el._id = id;
 
+			/**
+			 * Handle types post-construct
+			 */
 			switch(type){
 				case 'activityIndicator':
 					el.show();
@@ -1411,11 +1877,17 @@ $.qsa = $$ = (function(document, global){
 					break;
 			}
 
+			/**
+			 * Add children
+			 */
 			(children || []).forEach(function(child){
 				//child.parentNode = el;
 				el.add(K.create(child));
 			});
 
+			/**
+			 * Cache selectables from el if not silent
+			 */
 			if(!_silent){
 				if((classes = (o.className || o.cls))){
 					classes.split(/\s+/).forEach(function(cls){
@@ -1429,6 +1901,9 @@ $.qsa = $$ = (function(document, global){
 				//els.push(el);
 			}
 
+			/**
+			 * Handle events
+			 */
 			o.events && (o.events = o.events.clone()); // Hmm... must treat input objects as immutable
 			if((fn = o.click)){
 				(tmp = (o.events = o.events||{})).click ? ((Array.isArray(tmp.click) ? tmp.click.push(fn) : (tmp.click = [tmp.click, fn]) )) : (tmp.click = fn);				
@@ -1481,6 +1956,9 @@ $.qsa = $$ = (function(document, global){
 			return el;
 		};
 		
+		/**
+		 * Alias extra creators
+		 */
 		if((extra = extraCreators[t])){
 			var extraType = extra.toLowerCase();
 			global[extra] = K.classes[extraType] = Class.extend({
@@ -1492,6 +1970,12 @@ $.qsa = $$ = (function(document, global){
 		}
 	});
 
+	/**
+	 * Wrap custom creators with extra logic
+	 *
+	 * @param {Function} creator
+	 * @returns {Function}
+	 */
 	K._wrapCustomCreator = function(creator, type){
 		return function(o){		
 			delete o.type;
@@ -1505,26 +1989,20 @@ $.qsa = $$ = (function(document, global){
 		}
 	}
 	
-	var jadeMatcher = /^\s*<([^$]+?)>?\s*$/;
+	/**
+	 * Magic element creator. Autoloads custom modules if needed
+	 *
+	 * @param {Object} o Element blueprint
+	 * @param {Object} [def] Default properties to augment each created element with
+	 * @returns {TiObject||Array}
+	 */
 	K.create = function(o, def){
 		if(o instanceof Array){ return o.map(function(el){ return K.create(el, def); }); }
 		if(o && o._type){ return o; }
 		
 		var obj;
 		if(typeof o === 'string'){
-			return K.jade(o);
-			
-			/*var jadeStr;
-			if( (/\.jade$/.test(o) && (jadeStr = K.file('jade/' + o)) ) || (jadeStr = (o.match(jadeMatcher)||[false,false])[1]) && jadeStr){
-
-				obj = K.jade(jadeStr)();
-				if(obj && obj.length === 1){
-					obj = obj[0];
-				}
-				obj = K.create(obj);
-			} else {
-				o = { type: o.toLowerCase() };
-			}*/			
+			return K.jade(o);		
 		}
 		
 		if(def && typeof def === 'object'){
@@ -1560,6 +2038,9 @@ $.qsa = $$ = (function(document, global){
 /*** AJAX ***/
 (function(global){
 
+    /**
+     * Default AJAX settings
+     */
 	var noop = function(){}, 
 		ajaxDefaults = {
 		cache: true,
@@ -1589,6 +2070,18 @@ $.qsa = $$ = (function(document, global){
 		dataType: 'json'
 		};
 
+	/**
+	 * Simplified ajax
+	 *
+	 * @param {Object} inOpts containing
+	 * * type
+	 * * dataType
+	 * * data
+	 * * success
+	 * * error
+	 * * timeout
+	 * @returns {Ti.Network.HTTPClient} The resulting HTTPClient
+	 */
 	K.ajax = function(inOpts){
 		var opts = K.extend(K.extend({}, ajaxDefaults), inOpts), 
 			xhr = Ti.Network.createHTTPClient(opts), 
@@ -1675,11 +2168,37 @@ $.qsa = $$ = (function(document, global){
 		return xhr;
 	};
 
+	/**
+	 * Change default AJAX settings
+	 *
+	 * @param {Object} opts containing any or all of
+	 * * type
+	 * * dataType
+	 * * data
+	 * * success
+	 * * error
+	 * * timeout
+	 */
 	K.ajaxSetup = function(opts){ K.merge(ajaxDefaults, opts); };
 
+	/**
+	 * YQL service path
+	 */
 	var yqlStart = 'http://query.yahooapis.com/v1/public/yql',
 		yqlEnd = '&format=json&callback=';
-		
+	
+	/**
+	 * YQL interface
+	 *
+	 * @param {Object} opts containing
+	 * * q
+	 * * params
+	 * * success
+	 * * error
+	 * * timeout
+	 * @returns {Ti.Network.HTTPClient} The resulting HTTPClient
+	 */	
+	
 	K.yql = function(opts){
 		opts.url = yqlStart;
 		opts.data = ('format=json&callback=&diagnostics=true&q=' + opts.q).esc(opts.params, encodeURIComponent).toString();
@@ -1931,9 +2450,12 @@ $.qsa = $$ = (function(document, global){
 
 
 /*** STRINGIFY ***/
+/**
+ * TiObject stringifier based heavily on code from @rem's JSConsole
+ */
+
 (function(global){
 	var reTiObject = /^\[object Ti/;
-	// From jsconsole by @rem
 	function sortci(a, b) {
 	  return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
 	}
@@ -2010,6 +2532,10 @@ $.qsa = $$ = (function(document, global){
 
 
 /*** TESTER ***/
+/**
+ * Jasmine tester
+ */
+
 (function(global){
 	if(global.TEST){
 		K.log('Testing activated! :-O');
@@ -2048,6 +2574,10 @@ $.qsa = $$ = (function(document, global){
 })(this);
 
 /*** JADE-LOADER ***/
+/**
+ * Jade loader
+ * Only load Jade when needed, and then only do it once.
+ */
 (function(){
 	K.jade = function(jadeStr, o){
 		Ti.include('/kranium/lib/kranium-jade.js');

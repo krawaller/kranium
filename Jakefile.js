@@ -2,6 +2,7 @@ var fs = require('fs'),
 	_ = require('nimble'),
 	flag = './.monitor',
 	uglify = require('uglify-js'),
+	sys = require('sys'),
 	exec = require('child_process').exec;
 	
 	parts = [
@@ -24,8 +25,8 @@ var fs = require('fs'),
 
 var fileTypes = "js".split(" "),
 	fileTypesFlags = fileTypes.map(function(ext){ return '-name "*.'+ext+'"'; }).join(" -o "),
-	findAll = 'find . -type f \\( '+fileTypesFlags + ' \\)',
-	findChanged = 'find . -type f -newer '+flag+' \\( '+fileTypesFlags + ' \\)',
+	findAll = 'find lib/kranium-src/ -type f \\( '+fileTypesFlags + ' \\)',
+	findChanged = 'find lib/kranium-src/ -type f -newer '+flag+' \\( '+fileTypesFlags + ' \\)',
 	cmdByType = { "new": findChanged, "all": findAll };
 
 function watch(fn, params){
@@ -52,7 +53,7 @@ function watch(fn, params){
 desc('Create K-library from parts');
 task('build', [], function(params) {
 	watch(function(params, done){
-		_.map(parts, function(part, callback){ fs.readFile(part + '.js', callback); }, function(err, res){
+		_.map(parts, function(part, callback){ fs.readFile('lib/kranium-src/' + part + '.js', callback); }, function(err, res){
 			var contents = res.map(function(b, i){ return ('/*** ' + parts[i].toUpperCase() + ' ***/\n') + b.toString() }).join("\n\n");
 			console.log('updating!');
 			
@@ -60,7 +61,7 @@ task('build', [], function(params) {
 			//return JSON.parse(fs.readFileSync(require.main.filename.replace(/[^\/]+$/, 'package.json'))).version;
 			
 				
-			fs.writeFileSync('../../dist/kranium.js', contents);
+			fs.writeFileSync('dist/kranium.js', contents);
 			
 			/*var ast = uglify.parser.parse(contents);
 			ast = uglify.uglify.ast_mangle(ast);
@@ -72,5 +73,21 @@ task('build', [], function(params) {
 		});
 	}, params);
 	
-	fs.writeFileSync('../../dist/kranium-jade.js', fs.readFileSync('jade.js'));
+	fs.writeFileSync('dist/kranium-jade.js', fs.readFileSync('lib/kranium-src/jade.js'));
 });
+
+desc('Create annotated source docs');
+task('annotate-source', [], function(params) {
+	var cmd = 'dox --title Kranium --desc "This is the annotated source of the Kranium library" ' + parts.map(function(p){
+		return 'lib/kranium-src/' + p + '.js';
+	}).join(" ") + ' > docs/annotated-source.html';
+	
+	//console.log(cmd);
+	
+	exec(cmd, function(error, stdout, stderr){
+		sys.puts(stderr); //console.log(error, stdout, stderr);
+	});
+});
+
+
+//
