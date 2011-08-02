@@ -239,7 +239,7 @@ window {
 
 <h1>Live updating UI modules</h1>
 
-<p>Kranium builds upon our previous work on <a href="http://blog.krawaller.se/livetanium">Livetanium</a>. This means that you'll see your changes in the <strong>simulator</strong> or on the <strong>device</strong> as sone as you save a <code>kss</code>-file (iOS only at the moment). This is a true painkiller for your styling needs. This only works if you have <code>kranium init</code> or <code>kranium watch</code> running in your terminal. This will start a script watching for changes of your project files. So whenever something changes, it will be piped to the app over a socket in realtime, and applied to all relevant elements.</p>
+<p>Kranium builds upon our previous work on <a href="http://blog.krawaller.se/livetanium">Livetanium</a>. This means that you'll see your changes in the <strong>simulator</strong> or on the <strong>device</strong> as soon as you save a <code>kss</code>-file (iOS only at the moment). This is a true painkiller for your styling needs. This only works if you have <code>kranium init</code> or <code>kranium watch</code> running in your terminal. This will start a script watching for changes of your project files. So whenever something changes, it will be piped to the app over a socket in realtime, and applied to all relevant elements.</p>
 
 <p>As if just live updating of your style changes weren't enough, we have experimental support for live updating of the UI modules themselves. So if we were to change the <code>updateStatus</code> function in the module definition in <code>kui/loginstatus.js</code> above to:</p>
 

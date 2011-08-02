@@ -1,6 +1,6 @@
 /*** CORE ***/
 /**
- * Define core methods
+ * Define core module
  */
 
 (function(global){
@@ -79,8 +79,8 @@ var reTiObject = /^\[object Ti/,
 	/**
 	 * Kranium object creator
 	 *
-	 * @param {String||Array||TiObject||Object} dom
-	 * @param {String||Array||TiObject||Object} context
+	 * @param {String|Array|TiObject|Object} dom
+	 * @param {String|Array|TiObject|Object} context
 	 * @returns {Z} Kranium collection
 	 */
 	var $ = function(selector, context){
@@ -129,7 +129,7 @@ var reTiObject = /^\[object Ti/,
 		/**
 		 * Set properties on all elements in Kranium collection
 		 *
-		 * @param {String||Object} [prop] Prop to set value to, or Object containg key-value-pairs
+		 * @param {String|Object} [prop] Prop to set value to, or Object containg key-value-pairs
 		 * @param {String} [val] Value to set prop to
 		 * @returns {Z} Kranium collection
 		 */
@@ -170,7 +170,7 @@ var reTiObject = /^\[object Ti/,
 		/**
 		 * Get number of elements in collection
 		 *
-		 * @returns {Inteer}
+		 * @returns {Integer}
 		 */
 		size: function(){ return this.length; },
 		
@@ -246,7 +246,7 @@ var reTiObject = /^\[object Ti/,
 		/**
 		 * Add stuff to a clone of the current collection
 		 *
-		 * @param {Array||TiObject||KraniumCollection} els
+		 * @param {Array|TiObject|KraniumCollection} els
 		 * @returns {Z} Kranium collection
 		 */
 		add: function(els){
@@ -284,7 +284,7 @@ var reTiObject = /^\[object Ti/,
 		 * Find the first ancestor matching the selector
 		 *
 		 * @param {String} selector
-		 * @param {String||TiObject} context
+		 * @param {String|TiObject} context
 		 * @returns {Z} Kranium collection
 		 */
 		closest: function(selector, context){
@@ -375,8 +375,8 @@ var reTiObject = /^\[object Ti/,
 		/**
 		 * Get css property of first element or set css property of all elements in collection
 		 *
-		 * @param {String||Object} property Property to get or set value for, or hash map to set
-		 * @param {String||Integer} [value] If specified, set css of elements, otherwise return current value of first element
+		 * @param {String|Object} property Property to get or set value for, or hash map to set
+		 * @param {String|Integer} [value] If specified, set css of elements, otherwise return current value of first element
 		 * @returns {Z} Kranium collection
 		 */
 		css: function(property, value) {
@@ -454,7 +454,7 @@ var reTiObject = /^\[object Ti/,
 		/**
 		 * Append elements to first element in collection
 		 *
-		 * @param {Array||TiObject} els
+		 * @param {Array|TiObject} els
 		 * @returns {Z} Kranium collection
 		 */
 		append: function(els){
@@ -474,7 +474,7 @@ var reTiObject = /^\[object Ti/,
 		/**
 		 * Append all elements to specified parent
 		 *
-		 * @param {Array||TiObject||Collection} parent
+		 * @param {Array|TiObject|Collection} parent
 		 * @returns {Z} Kranium collection
 		 */
 		appendTo: function(parent){
@@ -566,7 +566,7 @@ var reTiObject = /^\[object Ti/,
 							var tab = (
 								(tmp = ((o&&o.tab)||o)) &&
 								(typeof tmp === 'string') ? $$(tmp)[0] : tmp
-							) || (
+							) || (
 								(tmp = $$('tabgroup')) && tmp[0] && tmp[0].activeTab
 							);
 							
@@ -642,7 +642,7 @@ var reTiObject = /^\[object Ti/,
 		/**
 		 * Replace every element in collection with passed el
 		 *
-		 * @param {TiObject||Object} el
+		 * @param {TiObject|Object} el
 		 * @returns {Z} Kranium collection
 		 */
 		replaceWith: function(el){
@@ -667,7 +667,7 @@ var reTiObject = /^\[object Ti/,
 	/**
 	 * Iterator
 	 *
-	 * @param {Array||Collection} obj
+	 * @param {Array|Collection} obj
 	 * @param {Function} iterator
 	 */
 	$.each = function(obj, iterator){
@@ -712,6 +712,10 @@ var reTiObject = /^\[object Ti/,
 
 
 /*** UTILS ***/
+/**
+ * Define utils
+ */
+
 //(function(global){
 
 K.isFunc = function(obj){ return toString.call(obj) === "[object Function]"; };
@@ -721,7 +725,7 @@ K.set = function(str, val){ return Ti.App.Properties.setString(str, JSON.stringi
 
 K.alert = function(message, title){
 	Ti.UI.createAlertDialog({
-        title: title || 'Obs!',
+        title: title || 'Obs!',
         message: message
     }).show();
 };
@@ -1234,7 +1238,7 @@ $.qsa = $$ = (function(document, global){
 
 /*** FILE ***/
 /**
- * File module
+ * Define file module
  */
 
 (function(){
@@ -1256,7 +1260,7 @@ $.qsa = $$ = (function(document, global){
 	 * Simplified file handler
 	 *
 	 * @param {String} file 
-	 * @returns {TiFile||String}
+	 * @returns {TiFile|String}
 	 */
 	K.file = function(file){
 		var parts = file.match(/((\w+):\/\/)?(.*?\.?)(\w+)$/),
@@ -1284,6 +1288,10 @@ $.qsa = $$ = (function(document, global){
 })();
 
 /*** STYLE ***/
+/**
+ * Define style module
+ */
+
 (function(global){
 	
 	var styles = K.styles = {},
@@ -1535,7 +1543,9 @@ $.qsa = $$ = (function(document, global){
 })(this);
 
 /*** CREATE ***/
-//TODO: make event delegating more backboney
+/**
+ * Define create module
+ */
 
 (function(global){
 	
@@ -2036,6 +2046,11 @@ $.qsa = $$ = (function(document, global){
 })(this);
 
 /*** AJAX ***/
+/**
+ * Define AJAX module
+ */
+
+
 (function(global){
 
     /**
@@ -2212,6 +2227,10 @@ $.qsa = $$ = (function(document, global){
 })(this);
 
 /*** LIVE ***/
+/**
+ * Define live module
+ */
+
 (function(global) {
 
 	K.reset = function() {
@@ -2451,6 +2470,8 @@ $.qsa = $$ = (function(document, global){
 
 /*** STRINGIFY ***/
 /**
+ * Define stringify module
+ * 
  * TiObject stringifier based heavily on code from @rem's JSConsole
  */
 
@@ -2526,6 +2547,10 @@ $.qsa = $$ = (function(document, global){
 })(this);
 
 /*** END ***/
+/**
+ * Define end module
+ */
+
 (function(global){
 	Ti.include('/kranium/kranium-generated-bootstrap.js');
 })(this);
@@ -2533,6 +2558,7 @@ $.qsa = $$ = (function(document, global){
 
 /*** TESTER ***/
 /**
+ * Define tester module
  * Jasmine tester
  */
 
@@ -2575,7 +2601,7 @@ $.qsa = $$ = (function(document, global){
 
 /*** JADE-LOADER ***/
 /**
- * Jade loader
+ * Define Jade loader
  * Only load Jade when needed, and then only do it once.
  */
 (function(){

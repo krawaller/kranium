@@ -215,7 +215,7 @@ Here we extend the basic type `Label` and gives it some special abilities. The `
 
 #Live updating UI modules
 
-Kranium builds upon our previous work on [Livetanium](http://blog.krawaller.se/livetanium). This means that you'll see your changes in the __simulator__ or on the __device__ as sone as you save a `kss`-file (iOS only at the moment). This is a true painkiller for your styling needs. This only works if you have `kranium init` or `kranium watch` running in your terminal. This will start a script watching for changes of your project files. So whenever something changes, it will be piped to the app over a socket in realtime, and applied to all relevant elements.
+Kranium builds upon our previous work on [Livetanium](http://blog.krawaller.se/livetanium). This means that you'll see your changes in the __simulator__ or on the __device__ as soon as you save a `kss`-file (iOS only at the moment). This is a true painkiller for your styling needs. This only works if you have `kranium init` or `kranium watch` running in your terminal. This will start a script watching for changes of your project files. So whenever something changes, it will be piped to the app over a socket in realtime, and applied to all relevant elements.
 
 As if just live updating of your style changes weren't enough, we have experimental support for live updating of the UI modules themselves. So if we were to change the `updateStatus` function in the module definition in `kui/loginstatus.js` above to:
 
