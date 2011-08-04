@@ -20,7 +20,8 @@ var fs = require('fs'),
 		//"backboneintegration",
 		"end",
 		"tester",
-		"jade-loader"
+		"jade-loader",
+		"androidshim"
 	];
 
 var fileTypes = "js".split(" "),
