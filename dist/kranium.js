@@ -1382,7 +1382,57 @@ $.qsa = $$ = (function(document, global){
 
 (function(global){
 	
-	var styles = K.styles = {},
+	var styles = K.styles = K.is.android ? {
+			/*".navBar": {
+				top: 0,
+				height: 44,
+				backgroundColor: "#ccc",
+				color: "#fff"
+			},
+
+			".navBarGradient": {
+				top: 0,
+				height: 44
+			},
+
+			".navBaredContent": {
+				top: 44
+			},
+
+			".navBarLabel": {
+				height: 44,
+				color: "#fff"
+			},
+
+			".navButton": {
+				height: 44,
+				width: 80,
+				color: "#fff"
+			},
+
+			".rightNavButton": {
+				right: 0
+			},
+
+			".leftNavButton": {
+				left: 0
+			},
+
+			".tabbedBarLabel": {
+				height: 44,
+				textAlign: 'center'
+			},
+
+			".buttonBarLabel": {
+				height: 44,
+				textAlign: 'center'
+			},
+
+			".toolbarItem": {
+				height: 44,
+				textAlign: 'center'
+			}*/
+		} : {},
 		extend = K.extend;
 		
 	K.extendStyle = K.addStyle = function(opts){
@@ -2839,6 +2889,9 @@ if(K.is.android){
 		},
 		
 		_setNavButton: function(navButton, rightLeft){
+			if(!navButton){
+				return;
+			}
 			var navButtonOptions = navButton._opts || navButton,
 				navButtonClass = (rightLeft || 'right') + 'NavButton',
 				navButtonName = '_' + navButtonClass,
