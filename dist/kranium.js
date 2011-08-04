@@ -711,6 +711,15 @@ var reTiObject = /^\[object Ti/,
 
 
 
+/*** SETTINGS ***/
+(function(){
+	
+	K.settings = {
+		alwaysUseCustomAndroidNavBar: true
+	};
+	
+})();
+
 /*** UTILS ***/
 /**
  * Define utils
@@ -734,6 +743,81 @@ var android = Ti.Platform.osname === 'android';
 K.log = function(a, b){
 	var out = (b ? Array.prototype.slice.call(arguments) : a);
 	Ti.API.log("Kranium", android ? JSON.stringify(out) : out);
+};
+
+K.pad = function(num, totalChars) {
+    var pad = '0';
+    num = num + '';
+    while (num.length < totalChars) {
+        num = pad + num;
+    }
+    return num;
+};
+
+// Ratio is between 0 and 1
+K.changeColor = function(color, ratio, darker) {
+    // Trim trailing/leading whitespace
+    color = color.replace(/^\s*|\s*$/, '');
+
+    // Expand three-digit hex
+    color = color.replace(
+        /^#?([a-f0-9])([a-f0-9])([a-f0-9])$/i,
+        '#$1$1$2$2$3$3'
+    );
+
+    // Calculate ratio
+    var difference = Math.round(ratio * 256) * (darker ? -1 : 1),
+        // Determine if input is RGB(A)
+        rgb = color.match(new RegExp('^rgba?\\(\\s*' +
+            '(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])' +
+            '\\s*,\\s*' +
+            '(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])' +
+            '\\s*,\\s*' +
+            '(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])' +
+            '(?:\\s*,\\s*' +
+            '(0|1|0?\\.\\d+))?' +
+            '\\s*\\)$'
+        , 'i')),
+        alpha = !!rgb && rgb[4] != null ? rgb[4] : null,
+
+        // Convert hex to decimal
+        decimal = !!rgb? [rgb[1], rgb[2], rgb[3]] : color.replace(
+            /^#?([a-f0-9][a-f0-9])([a-f0-9][a-f0-9])([a-f0-9][a-f0-9])/i,
+            function() {
+                return parseInt(arguments[1], 16) + ',' +
+                    parseInt(arguments[2], 16) + ',' +
+                    parseInt(arguments[3], 16);
+            }
+        ).split(/,/),
+        returnValue;
+
+    // Return RGB(A)
+    return !!rgb ?
+        'rgb' + (alpha !== null ? 'a' : '') + '(' +
+            Math[darker ? 'max' : 'min'](
+                parseInt(decimal[0], 10) + difference, darker ? 0 : 255
+            ) + ', ' +
+            Math[darker ? 'max' : 'min'](
+                parseInt(decimal[1], 10) + difference, darker ? 0 : 255
+            ) + ', ' +
+            Math[darker ? 'max' : 'min'](
+                parseInt(decimal[2], 10) + difference, darker ? 0 : 255
+            ) +
+            (alpha !== null ? ', ' + alpha : '') +
+            ')' :
+        // Return hex
+        [
+            '#',
+            K.pad(Math[darker ? 'max' : 'min'](
+                parseInt(decimal[0], 10) + difference, darker ? 0 : 255
+            ).toString(16), 2),
+            K.pad(Math[darker ? 'max' : 'min'](
+                parseInt(decimal[1], 10) + difference, darker ? 0 : 255
+            ).toString(16), 2),
+            K.pad(Math[darker ? 'max' : 'min'](
+                parseInt(decimal[2], 10) + difference, darker ? 0 : 255
+            ).toString(16), 2)
+        ].join('');
 };
 
 K.loadify = function(el, fn){
@@ -856,14 +940,18 @@ if(!Object.prototype.or){
 	});
 }
 
-if(!Object.prototype.arrayify){
+function arrayify() {
+    return Array.isArray(this) ? this : [this];
+}
+
+/*if(!Object.prototype.arrayify){
 	Object.defineProperty(Object.prototype, "arrayify", {
 	    enumerable: false,
 	    value: function() {
 	        return Array.isArray(this) ? this : [this];
 	    }
 	});
-}
+}*/
 
 if(!Function.prototype.defer){
 	Object.defineProperty(Function.prototype, "defer", {
@@ -2613,4 +2701,245 @@ $.qsa = $$ = (function(document, global){
 		return K.jade(jadeStr, o);
 	};
 	K.jade.isLoader = true;
+})();
+
+/*** ANDROIDSHIM ***/
+(function(){
+
+if(K.is.android){
+	
+	// Shim the buttonbar and tabbedbar modules
+	function createSegmentedCreator(type){
+		var camelized = ({
+			buttonbar: 'buttonBar',
+			tabbedbar: 'tabbedBar'
+		})[type];
+		
+		return function(opts){
+			var onClicks = [];
+			if(opts.click){
+				onClicks.push(opts.click);
+				delete opts.click;
+			}
+
+			var	labelWidth = (opts.width||320)/opts.labels.length,
+				backgroundColor = opts.backgroundColor || K.getStyle(null, type).backgroundColor || '#ccc',
+				selectedBackgroundColor = K.changeColor(backgroundColor, 0.2, true),
+				labels = (opts.labels||[]).map(function(o, i){
+					var events = {
+						click: function(){
+							var me = this;
+							if(type === 'tabbedbar'){
+								if(bar.index === i){ return; }
+								labels[bar.index].backgroundColor = backgroundColor;
+								labels[i].backgroundColor = selectedBackgroundColor;
+								bar.index = i;
+							}
+
+							onClicks.forEach(function(callback){
+								callback.call(me, {
+									index: i,
+									source: bar
+								});
+							});
+						}
+					};
+					if(typeof o === 'string'){
+						o = { 
+							type: 'label', text: o, 
+							backgroundColor: type === 'tabbedbar' && i === (opts.index||0) ? selectedBackgroundColor : backgroundColor
+						};
+						
+						events.touchstart = function(){
+							if(type === 'tabbedbar' && bar.index === i){ return; }
+							this.backgroundColor = selectedBackgroundColor;
+						};
+						
+						events.touchend = function(){
+							if(type === 'tabbedbar' && bar.index === i){ return; }
+							this.backgroundColor = backgroundColor;
+						}
+					}
+					o.className = (o.className||'') + ' ' + camelized + 'Label';
+
+					return K.create(K.extend({
+						width: labelWidth,
+						left: labelWidth*i,
+						events: events
+					}, o));
+				});
+
+
+			var separators = [];
+			labels.forEach(function(label, i){
+				if(i > 0){
+					separators.push(K.createView({
+						top: 0,
+						width: 2,
+						height: 44,
+						left: labelWidth*i - 1,
+						backgroundImage: 'images/android-navbar-separator.png'
+					}));
+				}
+			});
+
+			var bar = K.createView(K.extend({
+				index: 0,
+				height: 44,
+				children: labels.concat(separators)
+			}, K.getStyle(null, type), opts));
+			return bar;
+		};
+	}
+	
+	K['createTabbedBar'] = K.creators['tabbedbar'] = createSegmentedCreator('tabbedbar');
+	K['createButtonBar'] = K.creators['buttonbar'] = createSegmentedCreator('buttonbar');
+	
+	// Shim the window module with pretty navbars with left- and rightNavButtons.
+	Window = Window.extend({
+		init: function(o){
+			if(!this.navBarHidden && (this.leftNavButton || this.rightNavButton || K.settings.alwaysUseCustomAndroidNavBar)){
+				this.navBarHidden = true;
+
+				var barColor = K.getStyle(null, 'window').barColor;
+				this._navBar = K.create({
+					type: 'view',
+					className: 'navBar',
+					backgroundImage: 'images/android-navbar-overlay.png',
+					children: [{
+						type: 'label',
+						className: 'navBarLabel',
+						text: this.title || ''
+					}]
+				});
+
+				this.children = [
+					{
+						type: 'view',
+						className: 'navBarGradient',
+						backgroundColor: barColor
+					},
+					this._navBar,
+					{
+						type: 'view',
+						className: 'navBaredContent',
+						children: this.children
+					}
+				];
+				
+				if(this.rightNavButton){
+					this.setRightNavButton(this.rightNavButton);
+				}
+				if(this.rightNavButton){
+					this.setLeftNavButton(this.leftNavButton);
+				}				
+			}
+
+			this._super(o);
+		},
+		
+		_setNavButton: function(navButton, rightLeft){
+			var navButtonOptions = navButton._opts || navButton,
+				navButtonClass = (rightLeft || 'right') + 'NavButton',
+				navButtonName = '_' + navButtonClass,
+				separatorName = navButtonName + 'Separator';
+				
+			navButtonOptions.className = (navButtonOptions.className||"") + " " + navButtonClass + " navButton";
+			K.log('r', navButtonOptions);
+			
+			if(this[navButtonName]){
+				this._navBar.remove(this[navButtonName]);
+			}
+			
+			this[navButtonName] = K.createButton(navButtonOptions);
+			
+			if(!this[separatorName]){
+				this[separatorName] = K.createView({
+					top: 0,
+					width: 2,
+					height: 44,
+					backgroundImage: 'images/android-navbar-separator.png'
+				});
+				this._navBar.add(this[separatorName]);
+			}
+			this[separatorName][rightLeft||'right'] = this[navButtonName].width;
+			
+			this._navBar.add(this[navButtonName]);
+			//K.alert(1);
+			K.log(' ================================== setnavbutton');
+		},
+		
+		setRightNavButton: function(navButton){
+			this._setNavButton(navButton, 'right');
+		},
+		
+		setLeftNavButton: function(navButton){
+			this._setNavButton(navButton, 'left');
+		}
+	});
+	
+
+	// Shim the toolbar module
+	K['createToolbar'] = K.creators['toolbar'] = function(opts){
+		var	toolbarWidth = opts.width||K.getStyle({ type: 'toolbar', className: opts.className }).width||320,
+			numSpacers = 0,
+			widthSum = 0;
+				
+		(opts.items||[]).forEach(function(o, i){
+			if(o === 'spacer'){
+				numSpacers++;
+				return o;
+			} else {
+				var itemWidth = o.width || K.getStyle({
+					type: o.type,
+					className: (o.className||o.cls||'') + ' toolbarItem'
+				}).width;
+				
+				if(itemWidth){
+					widthSum += itemWidth;
+				} else {
+					numSpacers++;
+				}
+			}
+		});
+		
+		var left = 0,
+			spacerWidth = (toolbarWidth - widthSum)/numSpacers;
+		
+		var items = [];
+		(opts.items||[]).forEach(function(o, i){
+			if(o === 'spacer'){
+				left += spacerWidth;
+			} else {
+				if(typeof o === 'string'){
+					o = { type: 'label', text: o, width: spacerWidth };
+				}
+				o.className = (o.className||'') + ' toolbarItem';
+
+				o.left = left;
+				o.width = o.width || K.getStyle({
+					type: o.type,
+					className: (o.className||o.cls||'') + ' toolbarItem'
+				}).width || spacerWidth;
+				
+				var el = K.create(o);
+
+				left += el.width||0;
+				
+				items.push(el);
+			}
+		});
+		
+		var toolbar = K.createView(K.extend({
+			height: 44,
+			width: toolbarWidth,
+			className: 'toolbar',
+			children: items
+		}, opts));
+		
+		return toolbar;
+	};
+
+}
+
 })();

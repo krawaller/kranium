@@ -7,6 +7,7 @@ var fs = require('fs'),
 	
 	parts = [
 		"core",
+		"settings",
 		"utils",
 		"qsa", 
 		"klass",
