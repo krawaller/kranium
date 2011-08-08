@@ -820,21 +820,31 @@ K.changeColor = function(color, ratio, darker) {
         ].join('');
 };
 
+var androidIndicator;
 K.loadify = function(el, fn){
 	var p = el||GLOBAL.win||Ti.UI.currentWindow,
 		done;
 		
 	if(!p){ return; } 
 	
-	if(p && !p._loader){
-		p._loader = K.createActivityIndicator({
-			className: 'loader',
-		});
-				
-		p.add(p._loader);
+	if(K.is.ios){
+		if(p && !p._loader){
+			p._loader = K.createActivityIndicator({
+				className: 'loader',
+			});
+
+			p.add(p._loader);
+
+		}
+
+		p._loader.show();
+	} else {
+		androidIndicator = androidIndicator || Titanium.UI.createActivityIndicator();
+		androidIndicator.message = "Laddar...";
+		androidIndicator.show();
 	}
 	
-	p._loader.show();
+	
 	
 	if(fn){ // Test if func
 		done = function(){ K.doneify(el); };
@@ -845,11 +855,101 @@ K.loadify = function(el, fn){
 };
 
 K.doneify = function(el){
-	var p = el||GLOBAL.win||Ti.UI.currentWindow;	
-	p && p._loader && setTimeout(p._loader.hide, 500);
+	var p = el||GLOBAL.win||Ti.UI.currentWindow;
+	if(K.is.ios){
+		p && p._loader && setTimeout(p._loader.hide, 500);
+	} else {
+		androidIndicator.hide();
+	}
 };
 
 K.parseJSON = JSON.parse;
+
+
+// Notification popups
+(function(){
+
+	function show(){
+		messageView.opacity = 0;
+		messageView.show();
+		messageView.animate({ opacity: 0.95, duration: 500 });
+	}
+
+	function hide(){
+		messageView.animate({ opacity: 0, duration: 500 }, function(){
+			messageView.hide();
+		});
+	}
+
+	var messageLabel, messageView;
+	K.notify = function(msg){
+		if(K.is.ios){
+			if(!messageLabel){
+				messageLabel = K.createLabel({
+					className: 'notificationLabel',
+					text: msg
+				});
+			}
+
+			if(!messageView){
+				messageView = K.createView({
+					className: 'notification',
+					visible: false,
+					children: [{
+						type: 'view',
+						className: 'notificationBody',
+						children: [messageLabel]
+					},
+					{
+						type: 'view',
+						className: 'notificationShadow'
+					}],
+					click: hide
+				});
+
+				K('tabgroup').append(messageView);
+			}
+
+			messageView.height = Math.ceil(msg.length/32) * 20 + 20;
+			messageLabel.text = msg;
+			show();
+
+			setTimeout(hide, 5000);
+		} else {
+			Ti.UI.createNotification({
+				message: msg,
+				duration: Ti.UI.NOTIFICATION_DURATION_LONG,
+				offsetX: 20,
+				offsetY: 20
+			}).show();
+		}
+	
+	};
+
+})();
+
+// Enhanced localization
+(function(){
+	var cache = {};
+	K.l = function(key, hint, obj, modifier){
+		if(cache[key]){
+			return cache[key];
+		}
+		
+		modifier = modifier || function(s){ return s; };
+		if(typeof hint === 'object'){
+			obj = hint;
+			hint = null;
+		}
+	
+		return (cache = (Titanium.Locale.getString(key, hint)||'').replace(/(^|[^\w\d])@([A-Za-z_\-]+)\b/g, function($0, $1, name){
+			return ($1||'')+modifier(obj && typeof obj[name] !== 'undefined' ? obj[name] : Titanium.Locale.getString(name));
+		}));
+	};
+})();
+
+
+
 
 function singleExtend(destination, source){
 	var property;
@@ -1034,9 +1134,20 @@ String.prototype.trim = function(){
 	return this.replace(rtrim, "");	
 };
 
-String.prototype.esc = function(obj, func){
-    return this.replace(/#\{([A-Za-z_]+)\}/g, function($0, $1){
-        return typeof obj[$1] != "undefined" ? (func ? func(obj[$1]) : obj[$1]) : $0;
+String.prototype.esc = function(obj, func, matcher){
+	
+	if(func instanceof RegExp){
+		matcher = func;
+		func = null;
+	}
+	
+	if(typeof obj === 'function'){
+		func = obj;
+		obj = {};
+	}
+	
+    return this.replace(matcher || /#\{([A-Za-z_]+)\}/g, function($0, $1){
+        return typeof obj[$1] != "undefined" ? (func ? func(obj[$1]) : obj[$1]) : (func ? func($1)||$0 : $0);
     });
 };
 
@@ -1954,10 +2065,8 @@ $.qsa = $$ = (function(document, global){
 					break;
 				
 				case 'tableviewsection':
-					K.log('heeeere');
 					if(K.is.android){
 						sectionRows.forEach(function(row){
-							K.log(['TRYING TO ADD', row, 'TO', el])
 							el.add(row);
 						});
 					}
