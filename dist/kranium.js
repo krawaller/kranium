@@ -821,30 +821,33 @@ K.changeColor = function(color, ratio, darker) {
 };
 
 var androidIndicator;
-K.loadify = function(el, fn){
-	var p = el||GLOBAL.win||Ti.UI.currentWindow,
+K.loadify = function(el, fn, msg, modal){
+	var p = el._p||el||GLOBAL.win||Ti.UI.currentWindow,
 		done;
 		
 	if(!p){ return; } 
 	
 	if(K.is.ios){
+		if(modal){
+			p = el._p = K('tabgroup').get(0);
+		} 
+	
 		if(p && !p._loader){
 			p._loader = K.createActivityIndicator({
-				className: 'loader',
+				className: modal ? 'modalLoader' : 'loader'
 			});
 
 			p.add(p._loader);
-
 		}
-
+		
+		p._loader.message = msg || null;
 		p._loader.show();
+		
 	} else {
 		androidIndicator = androidIndicator || Titanium.UI.createActivityIndicator();
-		androidIndicator.message = "Laddar...";
+		androidIndicator.message = msg;
 		androidIndicator.show();
 	}
-	
-	
 	
 	if(fn){ // Test if func
 		done = function(){ K.doneify(el); };
@@ -1380,6 +1383,7 @@ $.qsa = $$ = (function(document, global){
 		}
 
 		var _super = this.prototype;
+		//K.log('got prop', { prop: prop, o: o });
 
 		// Instantiate a base class (but only create the instance,
 		// don't run the init constructor)
@@ -2183,18 +2187,36 @@ $.qsa = $$ = (function(document, global){
 	 * @param {Function} creator
 	 * @returns {Function}
 	 */
+	var instanceCounter = 0,
+		instances = {};
+		
 	K._wrapCustomCreator = function(creator, type){
 		return function(o){		
 			delete o.type;
-			var obj = (new creator(o)).el;
+			var obj = new creator(o),
+				el = obj.el;
 
-			if(!obj._type){
-				obj = K.creators[(obj.type||'view')](obj);
+			if(!el._type){
+				el = K.creators[(el.type||'view')](el);
 			};
-			(K.elsByName[type]||(K.elsByName[type] = [])).push(obj);
-			return obj;
+			(K.elsByName[type]||(K.elsByName[type] = [])).push(el);
+			el.inst = obj;
+			el._inst = instanceCounter;
+			instances[instanceCounter] = obj;
+			instanceCounter++;
+			return el;
 		}
 	}
+
+	/**
+	 * Get a Klass instance from a custom object
+	 *
+	 * @param {Function} creator
+	 * @returns {Function}
+	 */
+	K.getInst = function(el){
+		return instances[el._inst];
+	};
 	
 	/**
 	 * Magic element creator. Autoloads custom modules if needed
@@ -2224,15 +2246,14 @@ $.qsa = $$ = (function(document, global){
 		}
 
 		if(type && !K.creators[type]){
-			//K.loadStyle(type);
-
-			(function(){
-				//Ti.API.log('requiring in creator', type);
-				var creator = K.loadClass(type)||function(){ Ti.API.error(type + ' not available'); };
-				K.classes[type] = creator;
-				//obj = (K.creators[type] = wrapCustomCreator(creator, type))(m||o);
-				obj = K._wrapCustomCreator(creator, type)(o);
-			})();
+			
+			var creator = K.loadClass(type)||function(){ Ti.API.error(type + ' not available'); },
+				wrapped = K._wrapCustomCreator(creator, type);
+				
+			K.classes[type] = creator;
+			K.creators[type] = wrapped;
+			obj = wrapped(o);
+			
 		} else {
 			obj = (K.creators[type])(o);
 		}
