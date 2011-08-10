@@ -34,9 +34,9 @@ hljs.initHighlightingOnLoad();
 
 <p>Kranium isn't super tiny. The core library currently weighs in at 31 kb uglified. It also lazy loads other libraries when needed. For example a variant of Jade is bundled containing a compiler outputting Kranium-friendly templates. This file 19 kb uglified, but only loaded if needed.</p>
 
-<p>Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do <a href="mailto://<a href='mailto:kranium@krawaller.se'>kranium@krawaller.se</a>">tell us</a>. </p>
+<p>Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do <a href="mailto://<a href='mailto:kraniumjs@krawaller.se'>kraniumjs@krawaller.se</a>">tell us</a>. </p>
 
-<p><strong>Latest version:</strong> <a href="kranium.js">0.1.0</a> (<a href="kranium.min.js">minified</a>).<br />Or check out the <a href="http://github.com/krawaller/kranium">source code</a>.</p>
+<p><strong>Latest version:</strong> <a href="http://dev.krawaller.se/kraniumjs/build/kraniumjs-0.1.0.zip">0.1.0</a>.<br /><del>Or check out the <a href="http://github.com/krawaller/kranium">source code</a>.</del></p>
 
 <h1>Overview</h1>
 
@@ -62,9 +62,20 @@ hljs.initHighlightingOnLoad();
 
 <h1>Installation</h1>
 
-<p>Installing Kranium <del>is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running <code>npm install kranium -g</code> in your terminal.</del> will be very straightforward once public. For now, you'll have to download a snapshot of the repo and install it manually. This is how:</p>
+<p><del>Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running <code>npm install kranium -g</code> in your terminal.</del></p>
 
-<p>If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found <a href="http://example.com">here</a> before following the previous paragraph.</p>
+<p><del>If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found <a href="https://github.com/joyent/node/wiki/Installation">here</a> before following the previous paragraph.</del></p>
+
+<p>Installing Kranium will be very straightforward once public. For now, you'll have to download a snapshot of the repo and install it manually. This is how:</p>
+
+<ul>
+<li>Install <a href="https://github.com/joyent/node/wiki/Installation">NodeJS and NPM</a></li>
+<li>Download the <a href="http://dev.krawaller.se/kraniumjs/build/kraniumjs-0.1.0.zip">latest build</a></li>
+<li>Unzip somewhere safe and <code>cd</code> into the extracted folder</li>
+<li>Run <code>npm install</code></li>
+<li>Run <code>npm link</code></li>
+<li>Run <code>kranium --version</code> to see if it's there</li>
+</ul>
 
 <h1>Using Kranium</h1>
 
@@ -409,7 +420,7 @@ val('value'): sets the value of the form element
 <h1>FAQ</h1>
 
 <ul>
-<li><p><em>Uhm... what questions are frequently asked?</em><br />We don't know yet. Please let us know! :-)</p></li>
+<li><p><em>Uhm... what questions are frequently asked?</em><br />We don't know yet. Please <a href="mailto://<a href='mailto:kraniumjs@krawaller.se'>kraniumjs@krawaller.se</a>">let us know</a>! :-)</p></li>
 <li><p><em>Do you like raptors?</em><br />No, we quite like being alive.</p></li>
 </ul>
 

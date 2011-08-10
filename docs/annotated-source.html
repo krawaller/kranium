@@ -1033,6 +1033,19 @@ $.<span class="variable">fn</span> = {
 
 </code></pre>
 </td>
+</tr><tr class="filename"><td><h2 id="lib/kranium-src/settings.js"><a href="#">settings</a></h2></td><td>lib/kranium-src/settings.js</td></tr><tr class="code">
+<td class="docs">
+<p>(function(){</p>
+
+<p>K.settings = {
+    alwaysUseCustomAndroidNavBar: true
+};</p>
+
+<p>})();</p>
+</td>
+<td class="code">
+
+</td>
 </tr><tr class="filename"><td><h2 id="lib/kranium-src/utils.js"><a href="#">utils</a></h2></td><td>lib/kranium-src/utils.js</td></tr><tr class="code">
 <td class="docs">
 <p>Define utils
@@ -1059,21 +1072,109 @@ $.<span class="variable">fn</span> = {
 <span class="class">Ti</span>.<span class="class">API</span>.<span class="variable">log</span>(<span class="string">"Kranium"</span>, <span class="variable">android</span> ? <span class="class">JSON</span>.<span class="variable">stringify</span>(<span class="variable">out</span>) : <span class="variable">out</span>);
 };
 
-<span class="class">K</span>.<span class="variable">loadify</span> = <span class="keyword">function</span>(<span class="variable">el</span>, <span class="variable">fn</span>){
-<span class="keyword">var</span> <span class="variable">p</span> = <span class="variable">el</span>||<span class="class">GLOBAL</span>.<span class="variable">win</span>||<span class="class">Ti</span>.<span class="class">UI</span>.<span class="variable">currentWindow</span>,
+<span class="class">K</span>.<span class="variable">pad</span> = <span class="keyword">function</span>(<span class="variable">num</span>, <span class="variable">totalChars</span>) {
+    <span class="keyword">var</span> <span class="variable">pad</span> = <span class="string">'0'</span>;
+    <span class="variable">num</span> = <span class="variable">num</span> + <span class="string">''</span>;
+    <span class="keyword">while</span> (<span class="variable">num</span>.<span class="variable">length</span> < <span class="variable">totalChars</span>) {
+        <span class="variable">num</span> = <span class="variable">pad</span> + <span class="variable">num</span>;
+    }
+    <span class="keyword">return</span> <span class="variable">num</span>;
+};
+
+<span class="comment">// Ratio is between 0 and 1</span>
+<span class="class">K</span>.<span class="variable">changeColor</span> = <span class="keyword">function</span>(<span class="variable">color</span>, <span class="variable">ratio</span>, <span class="variable">darker</span>) {
+    <span class="comment">// Trim trailing/leading whitespace</span>
+    <span class="variable">color</span> = <span class="variable">color</span>.<span class="variable">replace</span>(<span class="regexp">/^\s*|\s*$/</span>, <span class="string">''</span>);
+
+    <span class="comment">// Expand three-digit hex</span>
+    <span class="variable">color</span> = <span class="variable">color</span>.<span class="variable">replace</span>(
+        <span class="regexp">/^#?([a-f0-9])([a-f0-9])([a-f0-9])$/i</span>,
+        <span class="string">'#$1$1$2$2$3$3'</span>
+    );
+
+    <span class="comment">// Calculate ratio</span>
+    <span class="keyword">var</span> <span class="variable">difference</span> = <span class="class">Math</span>.<span class="variable">round</span>(<span class="variable">ratio</span> * <span class="number integer">256</span>) * (<span class="variable">darker</span> ? -<span class="number integer">1</span> : <span class="number integer">1</span>),
+        <span class="comment">// Determine if input is RGB(A)</span>
+        <span class="variable">rgb</span> = <span class="variable">color</span>.<span class="variable">match</span>(<span class="keyword">new</span> <span class="class">RegExp</span>(<span class="string">'^rgba?\\(\\s*'</span> +
+            <span class="string">'(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])'</span> +
+            <span class="string">'\\s*,\\s*'</span> +
+            <span class="string">'(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])'</span> +
+            <span class="string">'\\s*,\\s*'</span> +
+            <span class="string">'(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])'</span> +
+            <span class="string">'(?:\\s*,\\s*'</span> +
+            <span class="string">'(0|1|0?\\.\\d+))?'</span> +
+            <span class="string">'\\s*\\)$'</span>
+        , <span class="string">'i'</span>)),
+        <span class="variable">alpha</span> = !!<span class="variable">rgb</span> && <span class="variable">rgb</span>[<span class="number integer">4</span>] != <span class="keyword">null</span> ? <span class="variable">rgb</span>[<span class="number integer">4</span>] : <span class="keyword">null</span>,
+
+        <span class="comment">// Convert hex to decimal</span>
+        <span class="variable">decimal</span> = !!<span class="variable">rgb</span>? [<span class="variable">rgb</span>[<span class="number integer">1</span>], <span class="variable">rgb</span>[<span class="number integer">2</span>], <span class="variable">rgb</span>[<span class="number integer">3</span>]] : <span class="variable">color</span>.<span class="variable">replace</span>(
+            <span class="regexp">/^#?([a-f0-9][a-f0-9])([a-f0-9][a-f0-9])([a-f0-9][a-f0-9])/i</span>,
+            <span class="keyword">function</span>() {
+                <span class="keyword">return</span> <span class="variable">parseInt</span>(<span class="variable">arguments</span>[<span class="number integer">1</span>], <span class="number integer">16</span>) + <span class="string">','</span> +
+                    <span class="variable">parseInt</span>(<span class="variable">arguments</span>[<span class="number integer">2</span>], <span class="number integer">16</span>) + <span class="string">','</span> +
+                    <span class="variable">parseInt</span>(<span class="variable">arguments</span>[<span class="number integer">3</span>], <span class="number integer">16</span>);
+            }
+        ).<span class="variable">split</span>(<span class="regexp">/,/</span>),
+        <span class="variable">returnValue</span>;
+
+    <span class="comment">// Return RGB(A)</span>
+    <span class="keyword">return</span> !!<span class="variable">rgb</span> ?
+        <span class="string">'rgb'</span> + (<span class="variable">alpha</span> !== <span class="keyword">null</span> ? <span class="string">'a'</span> : <span class="string">''</span>) + <span class="string">'('</span> +
+            <span class="class">Math</span>[<span class="variable">darker</span> ? <span class="string">'max'</span> : <span class="string">'min'</span>](
+                <span class="variable">parseInt</span>(<span class="variable">decimal</span>[<span class="number integer">0</span>], <span class="number integer">10</span>) + <span class="variable">difference</span>, <span class="variable">darker</span> ? <span class="number integer">0</span> : <span class="number integer">255</span>
+            ) + <span class="string">', '</span> +
+            <span class="class">Math</span>[<span class="variable">darker</span> ? <span class="string">'max'</span> : <span class="string">'min'</span>](
+                <span class="variable">parseInt</span>(<span class="variable">decimal</span>[<span class="number integer">1</span>], <span class="number integer">10</span>) + <span class="variable">difference</span>, <span class="variable">darker</span> ? <span class="number integer">0</span> : <span class="number integer">255</span>
+            ) + <span class="string">', '</span> +
+            <span class="class">Math</span>[<span class="variable">darker</span> ? <span class="string">'max'</span> : <span class="string">'min'</span>](
+                <span class="variable">parseInt</span>(<span class="variable">decimal</span>[<span class="number integer">2</span>], <span class="number integer">10</span>) + <span class="variable">difference</span>, <span class="variable">darker</span> ? <span class="number integer">0</span> : <span class="number integer">255</span>
+            ) +
+            (<span class="variable">alpha</span> !== <span class="keyword">null</span> ? <span class="string">', '</span> + <span class="variable">alpha</span> : <span class="string">''</span>) +
+            <span class="string">')'</span> :
+        <span class="comment">// Return hex</span>
+        [
+            <span class="string">'#'</span>,
+            <span class="class">K</span>.<span class="variable">pad</span>(<span class="class">Math</span>[<span class="variable">darker</span> ? <span class="string">'max'</span> : <span class="string">'min'</span>](
+                <span class="variable">parseInt</span>(<span class="variable">decimal</span>[<span class="number integer">0</span>], <span class="number integer">10</span>) + <span class="variable">difference</span>, <span class="variable">darker</span> ? <span class="number integer">0</span> : <span class="number integer">255</span>
+            ).<span class="variable">toString</span>(<span class="number integer">16</span>), <span class="number integer">2</span>),
+            <span class="class">K</span>.<span class="variable">pad</span>(<span class="class">Math</span>[<span class="variable">darker</span> ? <span class="string">'max'</span> : <span class="string">'min'</span>](
+                <span class="variable">parseInt</span>(<span class="variable">decimal</span>[<span class="number integer">1</span>], <span class="number integer">10</span>) + <span class="variable">difference</span>, <span class="variable">darker</span> ? <span class="number integer">0</span> : <span class="number integer">255</span>
+            ).<span class="variable">toString</span>(<span class="number integer">16</span>), <span class="number integer">2</span>),
+            <span class="class">K</span>.<span class="variable">pad</span>(<span class="class">Math</span>[<span class="variable">darker</span> ? <span class="string">'max'</span> : <span class="string">'min'</span>](
+                <span class="variable">parseInt</span>(<span class="variable">decimal</span>[<span class="number integer">2</span>], <span class="number integer">10</span>) + <span class="variable">difference</span>, <span class="variable">darker</span> ? <span class="number integer">0</span> : <span class="number integer">255</span>
+            ).<span class="variable">toString</span>(<span class="number integer">16</span>), <span class="number integer">2</span>)
+        ].<span class="variable">join</span>(<span class="string">''</span>);
+};
+
+<span class="keyword">var</span> <span class="variable">androidIndicator</span>;
+<span class="class">K</span>.<span class="variable">loadify</span> = <span class="keyword">function</span>(<span class="variable">el</span>, <span class="variable">fn</span>, <span class="variable">msg</span>, <span class="variable">modal</span>){
+<span class="keyword">var</span> <span class="variable">p</span> = <span class="variable">el</span>.<span class="variable">_p</span>||<span class="variable">el</span>||<span class="class">GLOBAL</span>.<span class="variable">win</span>||<span class="class">Ti</span>.<span class="class">UI</span>.<span class="variable">currentWindow</span>,
     <span class="variable">done</span>;
     
 <span class="keyword">if</span>(!<span class="variable">p</span>){ <span class="keyword">return</span>; } 
 
-<span class="keyword">if</span>(<span class="variable">p</span> && !<span class="variable">p</span>.<span class="variable">_loader</span>){
-    <span class="variable">p</span>.<span class="variable">_loader</span> = <span class="class">K</span>.<span class="variable">createActivityIndicator</span>({
-        <span class="variable">className</span>: <span class="string">'loader'</span>,
-    });
-            
-    <span class="variable">p</span>.<span class="variable">add</span>(<span class="variable">p</span>.<span class="variable">_loader</span>);
-}
+<span class="keyword">if</span>(<span class="class">K</span>.<span class="variable">is</span>.<span class="variable">ios</span>){
+    <span class="keyword">if</span>(<span class="variable">modal</span>){
+        <span class="variable">p</span> = <span class="variable">el</span>.<span class="variable">_p</span> = <span class="class">K</span>(<span class="string">'tabgroup'</span>).<span class="variable">get</span>(<span class="number integer">0</span>);
+    } 
 
-<span class="variable">p</span>.<span class="variable">_loader</span>.<span class="variable">show</span>();
+    <span class="keyword">if</span>(<span class="variable">p</span> && !<span class="variable">p</span>.<span class="variable">_loader</span>){
+        <span class="variable">p</span>.<span class="variable">_loader</span> = <span class="class">K</span>.<span class="variable">createActivityIndicator</span>({
+            <span class="variable">className</span>: <span class="variable">modal</span> ? <span class="string">'modalLoader'</span> : <span class="string">'loader'</span>
+        });
+
+        <span class="variable">p</span>.<span class="variable">add</span>(<span class="variable">p</span>.<span class="variable">_loader</span>);
+    }
+    
+    <span class="variable">p</span>.<span class="variable">_loader</span>.<span class="variable">message</span> = <span class="variable">msg</span> || <span class="keyword">null</span>;
+    <span class="variable">p</span>.<span class="variable">_loader</span>.<span class="variable">show</span>();
+    
+} <span class="keyword">else</span> {
+    <span class="variable">androidIndicator</span> = <span class="variable">androidIndicator</span> || <span class="class">Titanium</span>.<span class="class">UI</span>.<span class="variable">createActivityIndicator</span>();
+    <span class="variable">androidIndicator</span>.<span class="variable">message</span> = <span class="variable">msg</span>;
+    <span class="variable">androidIndicator</span>.<span class="variable">show</span>();
+}
 
 <span class="keyword">if</span>(<span class="variable">fn</span>){ <span class="comment">// Test if func</span>
     <span class="variable">done</span> = <span class="keyword">function</span>(){ <span class="class">K</span>.<span class="variable">doneify</span>(<span class="variable">el</span>); };
@@ -1084,11 +1185,101 @@ $.<span class="variable">fn</span> = {
 };
 
 <span class="class">K</span>.<span class="variable">doneify</span> = <span class="keyword">function</span>(<span class="variable">el</span>){
-<span class="keyword">var</span> <span class="variable">p</span> = <span class="variable">el</span>||<span class="class">GLOBAL</span>.<span class="variable">win</span>||<span class="class">Ti</span>.<span class="class">UI</span>.<span class="variable">currentWindow</span>;	
-<span class="variable">p</span> && <span class="variable">p</span>.<span class="variable">_loader</span> && <span class="variable">setTimeout</span>(<span class="variable">p</span>.<span class="variable">_loader</span>.<span class="variable">hide</span>, <span class="number integer">500</span>);
+<span class="keyword">var</span> <span class="variable">p</span> = <span class="variable">el</span>||<span class="class">GLOBAL</span>.<span class="variable">win</span>||<span class="class">Ti</span>.<span class="class">UI</span>.<span class="variable">currentWindow</span>;
+<span class="keyword">if</span>(<span class="class">K</span>.<span class="variable">is</span>.<span class="variable">ios</span>){
+    <span class="variable">p</span> && <span class="variable">p</span>.<span class="variable">_loader</span> && <span class="variable">setTimeout</span>(<span class="variable">p</span>.<span class="variable">_loader</span>.<span class="variable">hide</span>, <span class="number integer">500</span>);
+} <span class="keyword">else</span> {
+    <span class="variable">androidIndicator</span>.<span class="variable">hide</span>();
+}
 };
 
 <span class="class">K</span>.<span class="variable">parseJSON</span> = <span class="class">JSON</span>.<span class="variable">parse</span>;
+
+
+<span class="comment">// Notification popups</span>
+(<span class="keyword">function</span>(){
+
+<span class="keyword">function</span> <span class="variable">show</span>(){
+    <span class="variable">messageView</span>.<span class="variable">opacity</span> = <span class="number integer">0</span>;
+    <span class="variable">messageView</span>.<span class="variable">show</span>();
+    <span class="variable">messageView</span>.<span class="variable">animate</span>({ <span class="variable">opacity</span>: <span class="number float">0.95</span>, <span class="variable">duration</span>: <span class="number integer">500</span> });
+}
+
+<span class="keyword">function</span> <span class="variable">hide</span>(){
+    <span class="variable">messageView</span>.<span class="variable">animate</span>({ <span class="variable">opacity</span>: <span class="number integer">0</span>, <span class="variable">duration</span>: <span class="number integer">500</span> }, <span class="keyword">function</span>(){
+        <span class="variable">messageView</span>.<span class="variable">hide</span>();
+    });
+}
+
+<span class="keyword">var</span> <span class="variable">messageLabel</span>, <span class="variable">messageView</span>;
+<span class="class">K</span>.<span class="variable">notify</span> = <span class="keyword">function</span>(<span class="variable">msg</span>){
+    <span class="keyword">if</span>(<span class="class">K</span>.<span class="variable">is</span>.<span class="variable">ios</span>){
+        <span class="keyword">if</span>(!<span class="variable">messageLabel</span>){
+            <span class="variable">messageLabel</span> = <span class="class">K</span>.<span class="variable">createLabel</span>({
+                <span class="variable">className</span>: <span class="string">'notificationLabel'</span>,
+                <span class="variable">text</span>: <span class="variable">msg</span>
+            });
+        }
+
+        <span class="keyword">if</span>(!<span class="variable">messageView</span>){
+            <span class="variable">messageView</span> = <span class="class">K</span>.<span class="variable">createView</span>({
+                <span class="variable">className</span>: <span class="string">'notification'</span>,
+                <span class="variable">visible</span>: <span class="variable">false</span>,
+                <span class="variable">children</span>: [{
+                    <span class="variable">type</span>: <span class="string">'view'</span>,
+                    <span class="variable">className</span>: <span class="string">'notificationBody'</span>,
+                    <span class="variable">children</span>: [<span class="variable">messageLabel</span>]
+                },
+                {
+                    <span class="variable">type</span>: <span class="string">'view'</span>,
+                    <span class="variable">className</span>: <span class="string">'notificationShadow'</span>
+                }],
+                <span class="variable">click</span>: <span class="variable">hide</span>
+            });
+
+            <span class="class">K</span>(<span class="string">'tabgroup'</span>).<span class="variable">append</span>(<span class="variable">messageView</span>);
+        }
+
+        <span class="variable">messageView</span>.<span class="variable">height</span> = <span class="class">Math</span>.<span class="variable">ceil</span>(<span class="variable">msg</span>.<span class="variable">length</span>/<span class="number integer">32</span>) * <span class="number integer">20</span> + <span class="number integer">20</span>;
+        <span class="variable">messageLabel</span>.<span class="variable">text</span> = <span class="variable">msg</span>;
+        <span class="variable">show</span>();
+
+        <span class="variable">setTimeout</span>(<span class="variable">hide</span>, <span class="number integer">5000</span>);
+    } <span class="keyword">else</span> {
+        <span class="class">Ti</span>.<span class="class">UI</span>.<span class="variable">createNotification</span>({
+            <span class="variable">message</span>: <span class="variable">msg</span>,
+            <span class="variable">duration</span>: <span class="class">Ti</span>.<span class="class">UI</span>.<span class="class">NOTIFICATION_DURATION_LONG</span>,
+            <span class="variable">offsetX</span>: <span class="number integer">20</span>,
+            <span class="variable">offsetY</span>: <span class="number integer">20</span>
+        }).<span class="variable">show</span>();
+    }
+
+};
+
+})();
+
+<span class="comment">// Enhanced localization</span>
+(<span class="keyword">function</span>(){
+<span class="keyword">var</span> <span class="variable">cache</span> = {};
+<span class="class">K</span>.<span class="variable">l</span> = <span class="keyword">function</span>(<span class="variable">key</span>, <span class="variable">hint</span>, <span class="variable">obj</span>, <span class="variable">modifier</span>){
+    <span class="keyword">if</span>(<span class="variable">cache</span>[<span class="variable">key</span>]){
+        <span class="keyword">return</span> <span class="variable">cache</span>[<span class="variable">key</span>];
+    }
+    
+    <span class="variable">modifier</span> = <span class="variable">modifier</span> || <span class="keyword">function</span>(<span class="variable">s</span>){ <span class="keyword">return</span> <span class="variable">s</span>; };
+    <span class="keyword">if</span>(<span class="keyword">typeof</span> <span class="variable">hint</span> === <span class="string">'object'</span>){
+        <span class="variable">obj</span> = <span class="variable">hint</span>;
+        <span class="variable">hint</span> = <span class="keyword">null</span>;
+    }
+
+    <span class="keyword">return</span> (<span class="variable">cache</span> = (<span class="class">Titanium</span>.<span class="class">Locale</span>.<span class="variable">getString</span>(<span class="variable">key</span>, <span class="variable">hint</span>)||<span class="string">''</span>).<span class="variable">replace</span>(<span class="regexp">/(^|[^\w\d])@([A-Za-z_\-]+)\b/g</span>, <span class="keyword">function</span>($<span class="number integer">0</span>, $<span class="number integer">1</span>, <span class="variable">name</span>){
+        <span class="keyword">return</span> ($<span class="number integer">1</span>||<span class="string">''</span>)+<span class="variable">modifier</span>(<span class="variable">obj</span> && <span class="keyword">typeof</span> <span class="variable">obj</span>[<span class="variable">name</span>] !== <span class="string">'undefined'</span> ? <span class="variable">obj</span>[<span class="variable">name</span>] : <span class="class">Titanium</span>.<span class="class">Locale</span>.<span class="variable">getString</span>(<span class="variable">name</span>));
+    }));
+};
+})();
+
+
+
 
 <span class="keyword">function</span> <span class="variable">singleExtend</span>(<span class="variable">destination</span>, <span class="variable">source</span>){
 <span class="keyword">var</span> <span class="variable">property</span>;
@@ -1186,16 +1377,24 @@ $.<span class="variable">fn</span> = {
 });
 }
 
-<span class="keyword">if</span>(!<span class="class">Object</span>.<span class="variable">prototype</span>.<span class="variable">arrayify</span>){
-<span class="class">Object</span>.<span class="variable">defineProperty</span>(<span class="class">Object</span>.<span class="variable">prototype</span>, <span class="string">"arrayify"</span>, {
-    <span class="variable">enumerable</span>: <span class="variable">false</span>,
-    <span class="variable">value</span>: <span class="keyword">function</span>() {
-        <span class="keyword">return</span> <span class="class">Array</span>.<span class="variable">isArray</span>(<span class="this">this</span>) ? <span class="this">this</span> : [<span class="this">this</span>];
+<span class="keyword">function</span> <span class="variable">arrayify</span>() {
+    <span class="keyword">return</span> <span class="class">Array</span>.<span class="variable">isArray</span>(<span class="this">this</span>) ? <span class="this">this</span> : [<span class="this">this</span>];
+}</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>if(!Object.prototype.arrayify){
+Object.defineProperty(Object.prototype, "arrayify", {
+    enumerable: false,
+    value: function() {
+        return Array.isArray(this) ? this : [this];
     }
 });
-}
-
-<span class="keyword">if</span>(!<span class="class">Function</span>.<span class="variable">prototype</span>.<span class="variable">defer</span>){
+}</p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">if</span>(!<span class="class">Function</span>.<span class="variable">prototype</span>.<span class="variable">defer</span>){
 <span class="class">Object</span>.<span class="variable">defineProperty</span>(<span class="class">Function</span>.<span class="variable">prototype</span>, <span class="string">"defer"</span>, {
     <span class="variable">enumerable</span>: <span class="variable">false</span>,
     <span class="variable">value</span>: <span class="keyword">function</span>(<span class="variable">ms</span>, <span class="variable">_scope</span>) {
@@ -1297,381 +1496,24 @@ $.<span class="variable">fn</span> = {
 <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">replace</span>(<span class="variable">rtrim</span>, <span class="string">""</span>);	
 };
 
-<span class="class">String</span>.<span class="variable">prototype</span>.<span class="variable">esc</span> = <span class="keyword">function</span>(<span class="variable">obj</span>, <span class="variable">func</span>){
-    <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">replace</span>(<span class="regexp">/#\{([A-Za-z_]+)\}/g</span>, <span class="keyword">function</span>($<span class="number integer">0</span>, $<span class="number integer">1</span>){
-        <span class="keyword">return</span> <span class="keyword">typeof</span> <span class="variable">obj</span>[$<span class="number integer">1</span>] != <span class="string">"undefined"</span> ? (<span class="variable">func</span> ? <span class="variable">func</span>(<span class="variable">obj</span>[$<span class="number integer">1</span>]) : <span class="variable">obj</span>[$<span class="number integer">1</span>]) : $<span class="number integer">0</span>;
+<span class="class">String</span>.<span class="variable">prototype</span>.<span class="variable">esc</span> = <span class="keyword">function</span>(<span class="variable">obj</span>, <span class="variable">func</span>, <span class="variable">matcher</span>){
+
+<span class="keyword">if</span>(<span class="variable">func</span> <span class="variable">instanceof</span> <span class="class">RegExp</span>){
+    <span class="variable">matcher</span> = <span class="variable">func</span>;
+    <span class="variable">func</span> = <span class="keyword">null</span>;
+}
+
+<span class="keyword">if</span>(<span class="keyword">typeof</span> <span class="variable">obj</span> === <span class="string">'function'</span>){
+    <span class="variable">func</span> = <span class="variable">obj</span>;
+    <span class="variable">obj</span> = {};
+}
+
+    <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">replace</span>(<span class="variable">matcher</span> || <span class="regexp">/#\{([A-Za-z_]+)\}/g</span>, <span class="keyword">function</span>($<span class="number integer">0</span>, $<span class="number integer">1</span>){
+        <span class="keyword">return</span> <span class="keyword">typeof</span> <span class="variable">obj</span>[$<span class="number integer">1</span>] != <span class="string">"undefined"</span> ? (<span class="variable">func</span> ? <span class="variable">func</span>(<span class="variable">obj</span>[$<span class="number integer">1</span>]) : <span class="variable">obj</span>[$<span class="number integer">1</span>]) : (<span class="variable">func</span> ? <span class="variable">func</span>($<span class="number integer">1</span>)||$<span class="number integer">0</span> : $<span class="number integer">0</span>);
     });
 };
 
 <span class="comment">//})(this);</span></code></pre>
-</td>
-</tr><tr class="filename"><td><h2 id="lib/kranium-src/qsa.js"><a href="#">qsa</a></h2></td><td>lib/kranium-src/qsa.js</td></tr><tr class="code">
-<td class="docs">
-<p>"mini" Selector Engine
-Copyright (c) 2009 James Padolsey</p>
-
-<hr></hr>
-
-<p>Dual licensed under the MIT and GPL licenses.
-   - http://www.opensource.org/licenses/mit-license.php
-   - http://www.gnu.org/copyleft/gpl.html</p>
-
-<hr></hr>
-
-<h2>Version 0.01 (BETA)</h2>
-</td>
-<td class="code">
-<pre><code>$.<span class="variable">qsa</span> = $$ = (<span class="keyword">function</span>(<span class="variable">document</span>, <span class="variable">global</span>){
-
-<span class="keyword">var</span> <span class="variable">me</span> = <span class="variable">document</span>;
-[
-    { <span class="variable">fn</span>: <span class="string">"getElementsByClassName"</span>, <span class="variable">arrName</span>: <span class="string">"elsByClassName"</span> },
-    { <span class="variable">fn</span>: <span class="string">"getElementsByTagName"</span>, <span class="variable">arrName</span>: <span class="string">"elsByName"</span> },
-    { <span class="variable">fn</span>: <span class="string">"getElementById"</span>, <span class="variable">arrName</span>: <span class="string">"elsById"</span> }
-].<span class="variable">forEach</span>(<span class="keyword">function</span>(<span class="variable">o</span>){
-    <span class="keyword">var</span> <span class="variable">name</span> = <span class="variable">o</span>.<span class="variable">fn</span>, 
-        <span class="variable">arrName</span> = <span class="variable">o</span>.<span class="variable">arrName</span>,
-        <span class="variable">singular</span> = (<span class="variable">o</span>.<span class="variable">fn</span> == <span class="string">"getElementById"</span>), 
-        <span class="variable">a</span>, 
-        <span class="variable">res</span>;
-
-    <span class="variable">me</span>[<span class="variable">name</span>] = <span class="variable">global</span>[<span class="variable">name</span>] = <span class="keyword">function</span>(<span class="variable">s</span>, <span class="variable">context</span>){
-        <span class="keyword">var</span> <span class="variable">arr</span> = <span class="class">K</span>[<span class="variable">arrName</span>],
-            <span class="variable">res</span> = <span class="keyword">null</span>;
-
-        <span class="keyword">if</span>((<span class="variable">a</span> = <span class="variable">arr</span>[<span class="variable">s</span>]) && (<span class="variable">a</span> = (<span class="class">Array</span>.<span class="variable">isArray</span>(<span class="variable">a</span>) ? <span class="variable">a</span> : [<span class="variable">a</span>]))){
-            <span class="keyword">if</span>(<span class="variable">context</span>){
-                <span class="variable">res</span> = <span class="variable">a</span>.<span class="variable">filter</span>(<span class="keyword">function</span>(<span class="variable">el</span>){
-                    <span class="keyword">do</span> {
-                        <span class="keyword">if</span>(<span class="variable">el</span>.<span class="variable">_uuid</span> === <span class="variable">context</span>.<span class="variable">_uuid</span>){ <span class="keyword">return</span> <span class="variable">true</span>; }
-                    } <span class="keyword">while</span>((<span class="variable">el</span> = (<span class="variable">el</span>.<span class="variable">getParent</span>()) ));
-                    <span class="keyword">return</span> <span class="variable">false</span>;
-                });
-            } <span class="keyword">else</span> {
-                <span class="variable">res</span> = <span class="variable">a</span>;
-            }
-        }
-
-        <span class="keyword">return</span> <span class="variable">singular</span> ? <span class="class">Array</span>.<span class="variable">isArray</span>(<span class="variable">res</span>) && <span class="variable">res</span>[<span class="number integer">0</span>] : <span class="variable">res</span>;
-    };
-});
-
-
-    <span class="keyword">var</span> <span class="variable">snack</span> = <span class="regexp">/(?:[\w\-\\.#]+)+(?:\[\w+?=([\'"])?(?:\\\1|.)+?\1\])?|\*|>/ig</span>,
-        <span class="variable">exprClassName</span> = <span class="regexp">/^(?:[\w\-_]+)?\.([\w\-_]+)/</span>,
-        <span class="variable">exprId</span> = <span class="regexp">/^(?:[\w\-_]+)?#([\w\-_]+)/</span>,
-        <span class="variable">exprNodeName</span> = <span class="regexp">/^([\w\*\-_]+)/</span>,
-        <span class="variable">na</span> = [<span class="keyword">null</span>,<span class="keyword">null</span>];
-
-    <span class="keyword">function</span> <span class="variable">_find</span>(<span class="variable">selector</span>, <span class="variable">context</span>) {</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>This is what you call via x()
-Starts everything off...
-         </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="variable">simple</span> = <span class="regexp">/^[\w\-_#]+$/</span>.<span class="variable">test</span>(<span class="variable">selector</span>);
-    
-        <span class="keyword">if</span> (<span class="variable">selector</span>.<span class="variable">indexOf</span>(<span class="string">','</span>) > -<span class="number integer">1</span>) {
-            <span class="keyword">var</span> <span class="variable">split</span> = <span class="variable">selector</span>.<span class="variable">split</span>(<span class="regexp">/,/g</span>), <span class="variable">ret</span> = [], <span class="variable">sIndex</span> = <span class="number integer">0</span>, <span class="variable">len</span> = <span class="variable">split</span>.<span class="variable">length</span>;
-            <span class="keyword">for</span>(; <span class="variable">sIndex</span> < <span class="variable">len</span>; ++<span class="variable">sIndex</span>) {
-                <span class="variable">ret</span> = <span class="variable">ret</span>.<span class="variable">concat</span>( <span class="variable">_find</span>(<span class="variable">split</span>[<span class="variable">sIndex</span>], <span class="variable">context</span>) );
-            }
-            <span class="keyword">return</span> <span class="variable">unique</span>(<span class="variable">ret</span>);
-        }
-
-        <span class="keyword">var</span> <span class="variable">parts</span> = <span class="variable">selector</span>.<span class="variable">match</span>(<span class="variable">snack</span>),
-            <span class="variable">part</span> = <span class="variable">parts</span>.<span class="variable">pop</span>(),
-            <span class="variable">id</span> = (<span class="variable">part</span>.<span class="variable">match</span>(<span class="variable">exprId</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
-            <span class="variable">className</span> = !<span class="variable">id</span> && (<span class="variable">part</span>.<span class="variable">match</span>(<span class="variable">exprClassName</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
-            <span class="variable">nodeName</span> = !<span class="variable">id</span> && (<span class="variable">part</span>.<span class="variable">match</span>(<span class="variable">exprNodeName</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
-            <span class="variable">collection</span>,
-        <span class="variable">el</span>;
-
-        <span class="keyword">if</span> (<span class="variable">className</span> && !<span class="variable">nodeName</span>) {
-            <span class="variable">collection</span> = <span class="variable">realArray</span>(<span class="variable">getElementsByClassName</span>(<span class="variable">className</span>, <span class="variable">context</span>));
-        } <span class="keyword">else</span> {
-            <span class="variable">collection</span> = !<span class="variable">id</span> && <span class="variable">realArray</span>(<span class="variable">getElementsByTagName</span>(<span class="variable">nodeName</span>||<span class="string">'*'</span>, <span class="variable">context</span>));
-        <span class="keyword">if</span> (<span class="variable">className</span>) {
-                <span class="variable">collection</span> = <span class="variable">filterByAttr</span>(<span class="variable">collection</span>, <span class="string">'className'</span>, <span class="class">RegExp</span>(<span class="string">'(^|\\s)'</span> + <span class="variable">className</span> + <span class="string">'(\\s|$)'</span>));
-            }
-            <span class="keyword">if</span> (<span class="variable">id</span>) {
-                <span class="keyword">return</span> (<span class="variable">el</span> = <span class="variable">getElementById</span>(<span class="variable">id</span>, <span class="variable">context</span>)) ? [<span class="variable">el</span>] : [];
-            }
-        }
-    
-    <span class="keyword">var</span> <span class="variable">ret</span> = <span class="variable">parts</span>[<span class="number integer">0</span>] && <span class="variable">collection</span>[<span class="number integer">0</span>] ? <span class="variable">filterParents</span>(<span class="variable">parts</span>, <span class="variable">collection</span>, <span class="variable">false</span>, <span class="variable">context</span>) : <span class="variable">collection</span>;
-    <span class="keyword">return</span> <span class="variable">ret</span>;
-    }
-
-    <span class="keyword">function</span> <span class="variable">realArray</span>(<span class="variable">c</span>) { <span class="keyword">return</span> <span class="class">Array</span>.<span class="variable">prototype</span>.<span class="variable">slice</span>.<span class="variable">call</span>(<span class="variable">c</span>); }
-
-    <span class="keyword">function</span> <span class="variable">filterParents</span>(<span class="variable">selectorParts</span>, <span class="variable">collection</span>, <span class="variable">direct</span>, <span class="variable">context</span>) {</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>This is where the magic happens.
-Parents are stepped through (upwards) to
-see if they comply with the selector.
-         </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="variable">parentSelector</span> = <span class="variable">selectorParts</span>.<span class="variable">pop</span>()||<span class="string">''</span>;
-        <span class="keyword">if</span> (<span class="variable">parentSelector</span> === <span class="string">'>'</span>) { <span class="keyword">return</span> <span class="variable">filterParents</span>(<span class="variable">selectorParts</span>, <span class="variable">collection</span>, <span class="variable">true</span>, <span class="variable">context</span>); }
-
-        <span class="keyword">var</span> <span class="variable">ret</span> = [],
-            <span class="variable">r</span> = -<span class="number integer">1</span>,
-            <span class="variable">id</span> = (<span class="variable">parentSelector</span>.<span class="variable">match</span>(<span class="variable">exprId</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
-            <span class="variable">className</span> = !<span class="variable">id</span> && (<span class="variable">parentSelector</span>.<span class="variable">match</span>(<span class="variable">exprClassName</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
-            <span class="variable">nodeName</span> = !<span class="variable">id</span> && (<span class="variable">parentSelector</span>.<span class="variable">match</span>(<span class="variable">exprNodeName</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
-            <span class="variable">cIndex</span> = -<span class="number integer">1</span>,
-            <span class="variable">node</span>, <span class="variable">parent</span>,
-            <span class="variable">matches</span>;
-
-        <span class="keyword">while</span> ( (<span class="variable">node</span> = <span class="variable">collection</span>[++<span class="variable">cIndex</span>]) ) {
-            <span class="keyword">if</span>(<span class="variable">context</span>){
-            <span class="keyword">if</span>(<span class="variable">node</span>.<span class="variable">getParent</span>().<span class="variable">_uuid</span> == <span class="variable">context</span>.<span class="variable">_uuid</span>){
-                <span class="variable">ret</span>[++<span class="variable">r</span>] = <span class="variable">node</span>;
-            }
-        } <span class="keyword">else</span> {
-            <span class="variable">parent</span> = <span class="variable">node</span>.<span class="variable">getParent</span>();
-            <span class="keyword">do</span> {
-                <span class="variable">matches</span> = !<span class="variable">nodeName</span> || <span class="variable">nodeName</span> === <span class="string">'*'</span> || <span class="variable">nodeName</span> === <span class="variable">parent</span>.<span class="variable">_type</span>;
-                <span class="variable">matches</span> = <span class="variable">matches</span> && (!<span class="variable">id</span> || <span class="variable">parent</span>.<span class="variable">_id</span> === <span class="variable">id</span>);
-                <span class="variable">matches</span> = <span class="variable">matches</span> && (!<span class="variable">className</span> || <span class="class">RegExp</span>(<span class="string">'(^|\\s)'</span> + <span class="variable">className</span> + <span class="string">'(\\s|$)'</span>).<span class="variable">test</span>(<span class="variable">parent</span>.<span class="variable">className</span>));
-                <span class="keyword">if</span> (<span class="variable">direct</span> || <span class="variable">matches</span>) { <span class="keyword">break</span>; }
-            } <span class="keyword">while</span> ( (<span class="variable">parent</span> = <span class="variable">parent</span>.<span class="variable">getParent</span>()) );
-            <span class="keyword">if</span> (<span class="variable">matches</span>) { <span class="variable">ret</span>[++<span class="variable">r</span>] = <span class="variable">node</span>; }
-        }
-        
-        }
-        <span class="keyword">return</span> <span class="variable">selectorParts</span>[<span class="number integer">0</span>] && <span class="variable">ret</span>[<span class="number integer">0</span>] ? <span class="variable">filterParents</span>(<span class="variable">selectorParts</span>, <span class="variable">ret</span>) : <span class="variable">ret</span>;
-    }
-
-
-    <span class="keyword">var</span> <span class="variable">unique</span> = (<span class="keyword">function</span>() {
-    <span class="keyword">var</span> <span class="variable">uid</span> = +<span class="keyword">new</span> <span class="class">Date</span>(),
-        <span class="variable">data</span> = (<span class="keyword">function</span>() {
-
-        <span class="keyword">var</span> <span class="variable">n</span> = <span class="number integer">1</span>;
-        <span class="keyword">return</span> <span class="keyword">function</span>(<span class="variable">elem</span>) {
-            <span class="keyword">var</span> <span class="variable">cacheIndex</span> = <span class="variable">elem</span>[<span class="variable">uid</span>],
-                <span class="variable">nextCacheIndex</span> = <span class="variable">n</span>++;
-
-            <span class="keyword">if</span> (!<span class="variable">cacheIndex</span>) {
-                <span class="variable">elem</span>[<span class="variable">uid</span>] = <span class="variable">nextCacheIndex</span>;
-                <span class="keyword">return</span> <span class="variable">true</span>;
-            }
-            <span class="keyword">return</span> <span class="variable">false</span>;
-        };
-
-    })();
-
-    <span class="keyword">return</span> <span class="keyword">function</span>(<span class="variable">arr</span>) {</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>Returns a unique array
-         </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="variable">length</span> = <span class="variable">arr</span>.<span class="variable">length</span>,
-            <span class="variable">ret</span> = [],
-            <span class="variable">r</span> = -<span class="number integer">1</span>,
-            <span class="variable">i</span> = <span class="number integer">0</span>,
-            <span class="variable">item</span>;
-
-        <span class="keyword">for</span> (; <span class="variable">i</span> < <span class="variable">length</span>; ++<span class="variable">i</span>) {
-            <span class="variable">item</span> = <span class="variable">arr</span>[<span class="variable">i</span>];
-            <span class="keyword">if</span> (<span class="variable">data</span>(<span class="variable">item</span>)) { <span class="variable">ret</span>[++<span class="variable">r</span>] = <span class="variable">item</span>; }
-        }
-
-        <span class="variable">uid</span> += <span class="number integer">1</span>;
-        <span class="keyword">return</span> <span class="variable">ret</span>;
-    };
-})();
-
-    <span class="keyword">function</span> <span class="variable">filterByAttr</span>(<span class="variable">collection</span>, <span class="variable">attr</span>, <span class="variable">regex</span>) {</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>Filters a collection by an attribute.
-         </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="variable">i</span> = -<span class="number integer">1</span>, <span class="variable">node</span>, <span class="variable">r</span> = -<span class="number integer">1</span>, <span class="variable">ret</span> = [];
-        <span class="keyword">while</span> ( (<span class="variable">node</span> = <span class="variable">collection</span>[++<span class="variable">i</span>]) ) {
-            <span class="keyword">if</span> (<span class="variable">regex</span>.<span class="variable">test</span>(<span class="variable">node</span>[<span class="variable">attr</span>])) {
-                <span class="variable">ret</span>[++<span class="variable">r</span>] = <span class="variable">node</span>;
-            }
-        }
-        <span class="keyword">return</span> <span class="variable">ret</span>;
-    }
-    <span class="keyword">return</span> <span class="variable">_find</span>;
-
-})(<span class="this">this</span>, <span class="this">this</span>);</code></pre>
-</td>
-</tr><tr class="filename"><td><h2 id="lib/kranium-src/klass.js"><a href="#">klass</a></h2></td><td>lib/kranium-src/klass.js</td></tr><tr class="code">
-<td class="docs">
-<p> Simple JavaScript Inheritance
-By John Resig http://ejohn.org/
-MIT Licensed.
- </p>
-</td>
-<td class="code">
-<pre><code><span class="comment">// Inspired by base2 and Prototype</span>
-(<span class="keyword">function</span>(<span class="variable">global</span>){
-
-<span class="class">K</span>.<span class="variable">classes</span> = {};
-<span class="class">K</span>.<span class="variable">loadClass</span> = <span class="keyword">function</span>(<span class="variable">name</span>, <span class="variable">liveKlass</span>){
-    <span class="keyword">var</span> <span class="variable">klass</span>, <span class="variable">cls</span>;
-    <span class="keyword">if</span>(<span class="variable">global</span>.<span class="class">DEBUG</span> || <span class="variable">liveKlass</span> || !(<span class="variable">klass</span> = <span class="class">K</span>.<span class="variable">classes</span>[<span class="variable">name</span>])){
-        <span class="keyword">if</span>(!<span class="variable">liveKlass</span>){ <span class="class">K</span>.<span class="variable">loadStyle</span>(<span class="variable">name</span>); }
-        <span class="variable">klass</span> = <span class="variable">liveKlass</span>||(<span class="variable">exports</span> = {}, <span class="class">Ti</span>.<span class="variable">include</span>(<span class="string">'kui/'</span> + <span class="variable">name</span> + <span class="string">'.js'</span>), <span class="variable">exports</span>.<span class="class">Class</span>);
-        <span class="variable">cls</span> = <span class="variable">klass</span>.<span class="variable">prototype</span>.<span class="variable">className</span>;
-        <span class="variable">klass</span>.<span class="variable">prototype</span>.<span class="variable">className</span> = <span class="variable">cls</span> ? <span class="variable">cls</span> + <span class="string">' '</span> + <span class="variable">name</span> : <span class="variable">name</span>;
-        <span class="variable">klass</span>.<span class="variable">prototype</span>.<span class="variable">_klass</span> = <span class="variable">name</span>;
-        
-        <span class="class">K</span>.<span class="variable">classes</span>[<span class="variable">name</span>] = <span class="variable">klass</span>;
-    }
-    <span class="keyword">return</span> <span class="variable">klass</span>;
-};
-
-
-<span class="keyword">var</span> <span class="variable">initializing</span> = <span class="variable">false</span>,
-    <span class="variable">fnTest</span> = <span class="regexp">/xyz/</span>.<span class="variable">test</span>(<span class="keyword">function</span>() {<span class="variable">xyz</span>;}) ? <span class="regexp">/\b_super\b/</span> : <span class="regexp">/.*/</span>;
-
-<span class="comment">// The base Class implementation (does nothing)</span>
-<span class="this">this</span>.<span class="class">Class</span> = <span class="keyword">function</span>() {};
-
-<span class="comment">// Create a new Class that inherits from this class</span>
-<span class="class">Class</span>.<span class="variable">extend</span> = <span class="keyword">function</span>(<span class="variable">prop</span>, <span class="variable">o</span>) {
-    <span class="comment">// Extended with autoloading</span>
-    <span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="variable">prop</span> === <span class="string">'string'</span> && <span class="variable">o</span>) {
-        <span class="keyword">return</span> <span class="class">K</span>.<span class="variable">loadClass</span>(<span class="variable">prop</span>).<span class="variable">extend</span>(<span class="variable">o</span>);
-    }
-
-    <span class="keyword">var</span> <span class="variable">_super</span> = <span class="this">this</span>.<span class="variable">prototype</span>;
-
-    <span class="comment">// Instantiate a base class (but only create the instance,</span>
-    <span class="comment">// don't run the init constructor)</span>
-    <span class="variable">initializing</span> = <span class="variable">true</span>;
-    <span class="keyword">var</span> <span class="variable">prototype</span> = <span class="keyword">new</span> <span class="this">this</span>();
-    <span class="variable">initializing</span> = <span class="variable">false</span>;
-
-    <span class="comment">// Copy the properties over onto the new prototype</span>
-    <span class="keyword">for</span> (<span class="keyword">var</span> <span class="variable">name</span> <span class="keyword">in</span> <span class="variable">prop</span>) {
-        <span class="comment">// Check if we're overwriting an existing function</span>
-        <span class="variable">prototype</span>[<span class="variable">name</span>] = <span class="keyword">typeof</span> <span class="variable">prop</span>[<span class="variable">name</span>] == <span class="string">"function"</span> && <span class="keyword">typeof</span> <span class="variable">_super</span>[<span class="variable">name</span>] == <span class="string">"function"</span> && <span class="variable">fnTest</span>.<span class="variable">test</span>(<span class="variable">prop</span>[<span class="variable">name</span>]) ? (<span class="keyword">function</span>(<span class="variable">name</span>, <span class="variable">fn</span>) {
-            <span class="keyword">return</span> <span class="keyword">function</span>() {
-                <span class="keyword">var</span> <span class="variable">tmp</span> = <span class="this">this</span>.<span class="variable">_super</span>;
-
-                <span class="comment">// Add a new ._super() method that is the same method</span>
-                <span class="comment">// but on the super-class</span>
-                <span class="this">this</span>.<span class="variable">_super</span> = <span class="variable">_super</span>[<span class="variable">name</span>];
-
-                <span class="comment">// The method only need to be bound temporarily, so we</span>
-                <span class="comment">// remove it when we're done executing</span>
-                <span class="keyword">var</span> <span class="variable">ret</span> = <span class="variable">fn</span>.<span class="variable">apply</span>(<span class="this">this</span>, <span class="variable">arguments</span>);
-                <span class="this">this</span>.<span class="variable">_super</span> = <span class="variable">tmp</span>;
-
-                <span class="keyword">return</span> <span class="variable">ret</span>;
-            };
-        })(<span class="variable">name</span>, <span class="variable">prop</span>[<span class="variable">name</span>]) : <span class="variable">prop</span>[<span class="variable">name</span>];
-    }
-
-    <span class="comment">// The dummy class constructor</span>
-    <span class="comment">// Slight modification to set init return value to default el</span>
-    <span class="keyword">var</span> <span class="variable">el</span>;
-
-
-    <span class="keyword">function</span> <span class="class">Class</span>(<span class="variable">o</span>) {
-        <span class="comment">// All construction is actually done in the init method</span>
-        <span class="keyword">if</span> (!<span class="variable">initializing</span> && <span class="this">this</span>.<span class="variable">init</span>) {
-            <span class="variable">o</span> && <span class="class">K</span>.<span class="variable">extend</span>(<span class="this">this</span>, <span class="variable">o</span>);
-            (<span class="variable">el</span> = <span class="this">this</span>.<span class="variable">init</span>.<span class="variable">apply</span>(<span class="this">this</span>, <span class="variable">arguments</span>)) && !<span class="this">this</span>.<span class="variable">el</span> && (<span class="this">this</span>.<span class="variable">el</span> = <span class="variable">el</span>);
-        }
-    }
-
-    <span class="comment">// Populate our constructed prototype object</span>
-    <span class="class">Class</span>.<span class="variable">prototype</span> = <span class="variable">prototype</span>;
-
-    <span class="comment">// Enforce the constructor to be what we expect</span>
-    <span class="class">Class</span>.<span class="variable">constructor</span> = <span class="class">Class</span>;
-
-    <span class="comment">// And make this class extendable</span>
-    <span class="class">Class</span>.<span class="variable">extend</span> = <span class="variable">arguments</span>.<span class="variable">callee</span>;
-
-    <span class="keyword">return</span> <span class="class">Class</span>;
-};
-
-})(<span class="this">this</span>);</code></pre>
-</td>
-</tr><tr class="filename"><td><h2 id="lib/kranium-src/file.js"><a href="#">file</a></h2></td><td>lib/kranium-src/file.js</td></tr><tr class="code">
-<td class="docs">
-<p>Define file module
- </p>
-</td>
-<td class="code">
-<pre><code>(<span class="keyword">function</span>(){</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>Simplified path map
- </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="variable">pathMap</span> = {
-    <span class="variable">res</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">resourcesDirectory</span>,
-    <span class="variable">resources</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">resourcesDirectory</span>,
-    <span class="variable">tmp</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">tempDirectory</span>,
-    <span class="variable">temp</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">tempDirectory</span>,
-    <span class="variable">app</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">applicationDirectory</span>,
-    <span class="variable">data</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">applicationDataDirectory</span>,
-    <span class="variable">support</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">applicationSupportDirectory</span>
-};</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>Simplified file handler</p>
-
-<h2></h2>
-
-<ul><li><p><strong>param</strong>: <em>String</em>  file </p></li><li><p><strong>returns</strong>: <em>TiFile | String</em> </p></li></ul>
-</td>
-<td class="code">
-<pre><code><span class="class">K</span>.<span class="variable">file</span> = <span class="keyword">function</span>(<span class="variable">file</span>){
-    <span class="keyword">var</span> <span class="variable">parts</span> = <span class="variable">file</span>.<span class="variable">match</span>(<span class="regexp">/((\w+):\/</span>\<span class="regexp">/)?(.*?\.?)(\w+)$/</span>),
-        <span class="variable">dir</span> = <span class="variable">pathMap</span>[<span class="variable">parts</span>[<span class="number integer">2</span>]||<span class="string">'res'</span>]||<span class="variable">pathMap</span>.<span class="variable">res</span>,
-        <span class="variable">path</span> = <span class="variable">parts</span>[<span class="number integer">3</span>]+<span class="variable">parts</span>[<span class="number integer">4</span>];
-    
-    
-    <span class="keyword">var</span> <span class="variable">f</span> = <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">getFile</span>(<span class="variable">dir</span>, <span class="variable">path</span>), <span class="variable">res</span> = <span class="variable">f</span>;
-
-    <span class="keyword">try</span> {
-        <span class="keyword">switch</span>(<span class="variable">parts</span>[<span class="number integer">4</span>]){
-            <span class="keyword">case</span> <span class="string">'txt'</span>:
-            <span class="keyword">case</span> <span class="string">'js'</span>:
-            <span class="keyword">case</span> <span class="string">'kss'</span>:
-            <span class="keyword">case</span> <span class="string">'html'</span>:
-            <span class="keyword">case</span> <span class="string">'css'</span>:
-            <span class="keyword">case</span> <span class="string">'jade'</span>:
-                <span class="variable">res</span> = <span class="variable">f</span>.<span class="variable">exists</span>() ? <span class="variable">f</span>.<span class="variable">read</span>().<span class="variable">text</span> : <span class="variable">false</span>;
-                <span class="keyword">break</span>;
-        }
-    } <span class="keyword">catch</span>(<span class="variable">e</span>){ <span class="class">Ti</span>.<span class="class">API</span>.<span class="variable">error</span>(<span class="variable">e</span>); }
-    <span class="keyword">return</span> <span class="variable">res</span>;
-};
-
-})();</code></pre>
 </td>
 </tr><tr class="filename"><td><h2 id="lib/kranium-src/style.js"><a href="#">style</a></h2></td><td>lib/kranium-src/style.js</td></tr><tr class="code">
 <td class="docs">
@@ -1944,6 +1786,375 @@ MIT Licensed.
     };
 
     <span class="class">K</span>.<span class="variable">loadStyle</span>(<span class="string">'app'</span>);
+
+})(<span class="this">this</span>);</code></pre>
+</td>
+</tr><tr class="filename"><td><h2 id="lib/kranium-src/file.js"><a href="#">file</a></h2></td><td>lib/kranium-src/file.js</td></tr><tr class="code">
+<td class="docs">
+<p>Define file module
+ </p>
+</td>
+<td class="code">
+<pre><code>(<span class="keyword">function</span>(){</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Simplified path map
+ </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="variable">pathMap</span> = {
+    <span class="variable">res</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">resourcesDirectory</span>,
+    <span class="variable">resources</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">resourcesDirectory</span>,
+    <span class="variable">tmp</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">tempDirectory</span>,
+    <span class="variable">temp</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">tempDirectory</span>,
+    <span class="variable">app</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">applicationDirectory</span>,
+    <span class="variable">data</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">applicationDataDirectory</span>,
+    <span class="variable">support</span>: <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">applicationSupportDirectory</span>
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Simplified file handler</p>
+
+<h2></h2>
+
+<ul><li><p><strong>param</strong>: <em>String</em>  file </p></li><li><p><strong>returns</strong>: <em>TiFile | String</em> </p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">K</span>.<span class="variable">file</span> = <span class="keyword">function</span>(<span class="variable">file</span>){
+    <span class="keyword">var</span> <span class="variable">parts</span> = <span class="variable">file</span>.<span class="variable">match</span>(<span class="regexp">/((\w+):\/</span>\<span class="regexp">/)?(.*?\.?)(\w+)$/</span>),
+        <span class="variable">dir</span> = <span class="variable">pathMap</span>[<span class="variable">parts</span>[<span class="number integer">2</span>]||<span class="string">'res'</span>]||<span class="variable">pathMap</span>.<span class="variable">res</span>,
+        <span class="variable">path</span> = <span class="variable">parts</span>[<span class="number integer">3</span>]+<span class="variable">parts</span>[<span class="number integer">4</span>];
+    
+    
+    <span class="keyword">var</span> <span class="variable">f</span> = <span class="class">Ti</span>.<span class="class">Filesystem</span>.<span class="variable">getFile</span>(<span class="variable">dir</span>, <span class="variable">path</span>), <span class="variable">res</span> = <span class="variable">f</span>;
+
+    <span class="keyword">try</span> {
+        <span class="keyword">switch</span>(<span class="variable">parts</span>[<span class="number integer">4</span>]){
+            <span class="keyword">case</span> <span class="string">'txt'</span>:
+            <span class="keyword">case</span> <span class="string">'js'</span>:
+            <span class="keyword">case</span> <span class="string">'kss'</span>:
+            <span class="keyword">case</span> <span class="string">'html'</span>:
+            <span class="keyword">case</span> <span class="string">'css'</span>:
+            <span class="keyword">case</span> <span class="string">'jade'</span>:
+                <span class="variable">res</span> = <span class="variable">f</span>.<span class="variable">exists</span>() ? <span class="variable">f</span>.<span class="variable">read</span>().<span class="variable">text</span> : <span class="variable">false</span>;
+                <span class="keyword">break</span>;
+        }
+    } <span class="keyword">catch</span>(<span class="variable">e</span>){ <span class="class">Ti</span>.<span class="class">API</span>.<span class="variable">error</span>(<span class="variable">e</span>); }
+    <span class="keyword">return</span> <span class="variable">res</span>;
+};
+
+})();</code></pre>
+</td>
+</tr><tr class="filename"><td><h2 id="lib/kranium-src/qsa.js"><a href="#">qsa</a></h2></td><td>lib/kranium-src/qsa.js</td></tr><tr class="code">
+<td class="docs">
+<p>"mini" Selector Engine
+Copyright (c) 2009 James Padolsey</p>
+
+<hr></hr>
+
+<p>Dual licensed under the MIT and GPL licenses.
+   - http://www.opensource.org/licenses/mit-license.php
+   - http://www.gnu.org/copyleft/gpl.html</p>
+
+<hr></hr>
+
+<h2>Version 0.01 (BETA)</h2>
+</td>
+<td class="code">
+<pre><code>$.<span class="variable">qsa</span> = $$ = (<span class="keyword">function</span>(<span class="variable">document</span>, <span class="variable">global</span>){
+
+<span class="keyword">var</span> <span class="variable">me</span> = <span class="variable">document</span>;
+[
+    { <span class="variable">fn</span>: <span class="string">"getElementsByClassName"</span>, <span class="variable">arrName</span>: <span class="string">"elsByClassName"</span> },
+    { <span class="variable">fn</span>: <span class="string">"getElementsByTagName"</span>, <span class="variable">arrName</span>: <span class="string">"elsByName"</span> },
+    { <span class="variable">fn</span>: <span class="string">"getElementById"</span>, <span class="variable">arrName</span>: <span class="string">"elsById"</span> }
+].<span class="variable">forEach</span>(<span class="keyword">function</span>(<span class="variable">o</span>){
+    <span class="keyword">var</span> <span class="variable">name</span> = <span class="variable">o</span>.<span class="variable">fn</span>, 
+        <span class="variable">arrName</span> = <span class="variable">o</span>.<span class="variable">arrName</span>,
+        <span class="variable">singular</span> = (<span class="variable">o</span>.<span class="variable">fn</span> == <span class="string">"getElementById"</span>), 
+        <span class="variable">a</span>, 
+        <span class="variable">res</span>;
+
+    <span class="variable">me</span>[<span class="variable">name</span>] = <span class="variable">global</span>[<span class="variable">name</span>] = <span class="keyword">function</span>(<span class="variable">s</span>, <span class="variable">context</span>){
+        <span class="keyword">var</span> <span class="variable">arr</span> = <span class="class">K</span>[<span class="variable">arrName</span>],
+            <span class="variable">res</span> = <span class="keyword">null</span>;
+
+        <span class="keyword">if</span>((<span class="variable">a</span> = <span class="variable">arr</span>[<span class="variable">s</span>]) && (<span class="variable">a</span> = (<span class="class">Array</span>.<span class="variable">isArray</span>(<span class="variable">a</span>) ? <span class="variable">a</span> : [<span class="variable">a</span>]))){
+            <span class="keyword">if</span>(<span class="variable">context</span>){
+                <span class="variable">res</span> = <span class="variable">a</span>.<span class="variable">filter</span>(<span class="keyword">function</span>(<span class="variable">el</span>){
+                    <span class="keyword">do</span> {
+                        <span class="keyword">if</span>(<span class="variable">el</span>.<span class="variable">_uuid</span> === <span class="variable">context</span>.<span class="variable">_uuid</span>){ <span class="keyword">return</span> <span class="variable">true</span>; }
+                    } <span class="keyword">while</span>((<span class="variable">el</span> = (<span class="variable">el</span>.<span class="variable">getParent</span>()) ));
+                    <span class="keyword">return</span> <span class="variable">false</span>;
+                });
+            } <span class="keyword">else</span> {
+                <span class="variable">res</span> = <span class="variable">a</span>;
+            }
+        }
+
+        <span class="keyword">return</span> <span class="variable">singular</span> ? <span class="class">Array</span>.<span class="variable">isArray</span>(<span class="variable">res</span>) && <span class="variable">res</span>[<span class="number integer">0</span>] : <span class="variable">res</span>;
+    };
+});
+
+
+    <span class="keyword">var</span> <span class="variable">snack</span> = <span class="regexp">/(?:[\w\-\\.#]+)+(?:\[\w+?=([\'"])?(?:\\\1|.)+?\1\])?|\*|>/ig</span>,
+        <span class="variable">exprClassName</span> = <span class="regexp">/^(?:[\w\-_]+)?\.([\w\-_]+)/</span>,
+        <span class="variable">exprId</span> = <span class="regexp">/^(?:[\w\-_]+)?#([\w\-_]+)/</span>,
+        <span class="variable">exprNodeName</span> = <span class="regexp">/^([\w\*\-_]+)/</span>,
+        <span class="variable">na</span> = [<span class="keyword">null</span>,<span class="keyword">null</span>];
+
+    <span class="keyword">function</span> <span class="variable">_find</span>(<span class="variable">selector</span>, <span class="variable">context</span>) {</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>This is what you call via x()
+Starts everything off...
+         </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="variable">simple</span> = <span class="regexp">/^[\w\-_#]+$/</span>.<span class="variable">test</span>(<span class="variable">selector</span>);
+    
+        <span class="keyword">if</span> (<span class="variable">selector</span>.<span class="variable">indexOf</span>(<span class="string">','</span>) > -<span class="number integer">1</span>) {
+            <span class="keyword">var</span> <span class="variable">split</span> = <span class="variable">selector</span>.<span class="variable">split</span>(<span class="regexp">/,/g</span>), <span class="variable">ret</span> = [], <span class="variable">sIndex</span> = <span class="number integer">0</span>, <span class="variable">len</span> = <span class="variable">split</span>.<span class="variable">length</span>;
+            <span class="keyword">for</span>(; <span class="variable">sIndex</span> < <span class="variable">len</span>; ++<span class="variable">sIndex</span>) {
+                <span class="variable">ret</span> = <span class="variable">ret</span>.<span class="variable">concat</span>( <span class="variable">_find</span>(<span class="variable">split</span>[<span class="variable">sIndex</span>], <span class="variable">context</span>) );
+            }
+            <span class="keyword">return</span> <span class="variable">unique</span>(<span class="variable">ret</span>);
+        }
+
+        <span class="keyword">var</span> <span class="variable">parts</span> = <span class="variable">selector</span>.<span class="variable">match</span>(<span class="variable">snack</span>),
+            <span class="variable">part</span> = <span class="variable">parts</span>.<span class="variable">pop</span>(),
+            <span class="variable">id</span> = (<span class="variable">part</span>.<span class="variable">match</span>(<span class="variable">exprId</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
+            <span class="variable">className</span> = !<span class="variable">id</span> && (<span class="variable">part</span>.<span class="variable">match</span>(<span class="variable">exprClassName</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
+            <span class="variable">nodeName</span> = !<span class="variable">id</span> && (<span class="variable">part</span>.<span class="variable">match</span>(<span class="variable">exprNodeName</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
+            <span class="variable">collection</span>,
+        <span class="variable">el</span>;
+
+        <span class="keyword">if</span> (<span class="variable">className</span> && !<span class="variable">nodeName</span>) {
+            <span class="variable">collection</span> = <span class="variable">realArray</span>(<span class="variable">getElementsByClassName</span>(<span class="variable">className</span>, <span class="variable">context</span>));
+        } <span class="keyword">else</span> {
+            <span class="variable">collection</span> = !<span class="variable">id</span> && <span class="variable">realArray</span>(<span class="variable">getElementsByTagName</span>(<span class="variable">nodeName</span>||<span class="string">'*'</span>, <span class="variable">context</span>));
+        <span class="keyword">if</span> (<span class="variable">className</span>) {
+                <span class="variable">collection</span> = <span class="variable">filterByAttr</span>(<span class="variable">collection</span>, <span class="string">'className'</span>, <span class="class">RegExp</span>(<span class="string">'(^|\\s)'</span> + <span class="variable">className</span> + <span class="string">'(\\s|$)'</span>));
+            }
+            <span class="keyword">if</span> (<span class="variable">id</span>) {
+                <span class="keyword">return</span> (<span class="variable">el</span> = <span class="variable">getElementById</span>(<span class="variable">id</span>, <span class="variable">context</span>)) ? [<span class="variable">el</span>] : [];
+            }
+        }
+    
+    <span class="keyword">var</span> <span class="variable">ret</span> = <span class="variable">parts</span>[<span class="number integer">0</span>] && <span class="variable">collection</span>[<span class="number integer">0</span>] ? <span class="variable">filterParents</span>(<span class="variable">parts</span>, <span class="variable">collection</span>, <span class="variable">false</span>, <span class="variable">context</span>) : <span class="variable">collection</span>;
+    <span class="keyword">return</span> <span class="variable">ret</span>;
+    }
+
+    <span class="keyword">function</span> <span class="variable">realArray</span>(<span class="variable">c</span>) { <span class="keyword">return</span> <span class="class">Array</span>.<span class="variable">prototype</span>.<span class="variable">slice</span>.<span class="variable">call</span>(<span class="variable">c</span>); }
+
+    <span class="keyword">function</span> <span class="variable">filterParents</span>(<span class="variable">selectorParts</span>, <span class="variable">collection</span>, <span class="variable">direct</span>, <span class="variable">context</span>) {</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>This is where the magic happens.
+Parents are stepped through (upwards) to
+see if they comply with the selector.
+         </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="variable">parentSelector</span> = <span class="variable">selectorParts</span>.<span class="variable">pop</span>()||<span class="string">''</span>;
+        <span class="keyword">if</span> (<span class="variable">parentSelector</span> === <span class="string">'>'</span>) { <span class="keyword">return</span> <span class="variable">filterParents</span>(<span class="variable">selectorParts</span>, <span class="variable">collection</span>, <span class="variable">true</span>, <span class="variable">context</span>); }
+
+        <span class="keyword">var</span> <span class="variable">ret</span> = [],
+            <span class="variable">r</span> = -<span class="number integer">1</span>,
+            <span class="variable">id</span> = (<span class="variable">parentSelector</span>.<span class="variable">match</span>(<span class="variable">exprId</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
+            <span class="variable">className</span> = !<span class="variable">id</span> && (<span class="variable">parentSelector</span>.<span class="variable">match</span>(<span class="variable">exprClassName</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
+            <span class="variable">nodeName</span> = !<span class="variable">id</span> && (<span class="variable">parentSelector</span>.<span class="variable">match</span>(<span class="variable">exprNodeName</span>) || <span class="variable">na</span>)[<span class="number integer">1</span>],
+            <span class="variable">cIndex</span> = -<span class="number integer">1</span>,
+            <span class="variable">node</span>, <span class="variable">parent</span>,
+            <span class="variable">matches</span>;
+
+        <span class="keyword">while</span> ( (<span class="variable">node</span> = <span class="variable">collection</span>[++<span class="variable">cIndex</span>]) ) {
+            <span class="keyword">if</span>(<span class="variable">context</span>){
+            <span class="keyword">if</span>(<span class="variable">node</span>.<span class="variable">getParent</span>().<span class="variable">_uuid</span> == <span class="variable">context</span>.<span class="variable">_uuid</span>){
+                <span class="variable">ret</span>[++<span class="variable">r</span>] = <span class="variable">node</span>;
+            }
+        } <span class="keyword">else</span> {
+            <span class="variable">parent</span> = <span class="variable">node</span>.<span class="variable">getParent</span>();
+            <span class="keyword">do</span> {
+                <span class="variable">matches</span> = !<span class="variable">nodeName</span> || <span class="variable">nodeName</span> === <span class="string">'*'</span> || <span class="variable">nodeName</span> === <span class="variable">parent</span>.<span class="variable">_type</span>;
+                <span class="variable">matches</span> = <span class="variable">matches</span> && (!<span class="variable">id</span> || <span class="variable">parent</span>.<span class="variable">_id</span> === <span class="variable">id</span>);
+                <span class="variable">matches</span> = <span class="variable">matches</span> && (!<span class="variable">className</span> || <span class="class">RegExp</span>(<span class="string">'(^|\\s)'</span> + <span class="variable">className</span> + <span class="string">'(\\s|$)'</span>).<span class="variable">test</span>(<span class="variable">parent</span>.<span class="variable">className</span>));
+                <span class="keyword">if</span> (<span class="variable">direct</span> || <span class="variable">matches</span>) { <span class="keyword">break</span>; }
+            } <span class="keyword">while</span> ( (<span class="variable">parent</span> = <span class="variable">parent</span>.<span class="variable">getParent</span>()) );
+            <span class="keyword">if</span> (<span class="variable">matches</span>) { <span class="variable">ret</span>[++<span class="variable">r</span>] = <span class="variable">node</span>; }
+        }
+        
+        }
+        <span class="keyword">return</span> <span class="variable">selectorParts</span>[<span class="number integer">0</span>] && <span class="variable">ret</span>[<span class="number integer">0</span>] ? <span class="variable">filterParents</span>(<span class="variable">selectorParts</span>, <span class="variable">ret</span>) : <span class="variable">ret</span>;
+    }
+
+
+    <span class="keyword">var</span> <span class="variable">unique</span> = (<span class="keyword">function</span>() {
+    <span class="keyword">var</span> <span class="variable">uid</span> = +<span class="keyword">new</span> <span class="class">Date</span>(),
+        <span class="variable">data</span> = (<span class="keyword">function</span>() {
+
+        <span class="keyword">var</span> <span class="variable">n</span> = <span class="number integer">1</span>;
+        <span class="keyword">return</span> <span class="keyword">function</span>(<span class="variable">elem</span>) {
+            <span class="keyword">var</span> <span class="variable">cacheIndex</span> = <span class="variable">elem</span>[<span class="variable">uid</span>],
+                <span class="variable">nextCacheIndex</span> = <span class="variable">n</span>++;
+
+            <span class="keyword">if</span> (!<span class="variable">cacheIndex</span>) {
+                <span class="variable">elem</span>[<span class="variable">uid</span>] = <span class="variable">nextCacheIndex</span>;
+                <span class="keyword">return</span> <span class="variable">true</span>;
+            }
+            <span class="keyword">return</span> <span class="variable">false</span>;
+        };
+
+    })();
+
+    <span class="keyword">return</span> <span class="keyword">function</span>(<span class="variable">arr</span>) {</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Returns a unique array
+         </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="variable">length</span> = <span class="variable">arr</span>.<span class="variable">length</span>,
+            <span class="variable">ret</span> = [],
+            <span class="variable">r</span> = -<span class="number integer">1</span>,
+            <span class="variable">i</span> = <span class="number integer">0</span>,
+            <span class="variable">item</span>;
+
+        <span class="keyword">for</span> (; <span class="variable">i</span> < <span class="variable">length</span>; ++<span class="variable">i</span>) {
+            <span class="variable">item</span> = <span class="variable">arr</span>[<span class="variable">i</span>];
+            <span class="keyword">if</span> (<span class="variable">data</span>(<span class="variable">item</span>)) { <span class="variable">ret</span>[++<span class="variable">r</span>] = <span class="variable">item</span>; }
+        }
+
+        <span class="variable">uid</span> += <span class="number integer">1</span>;
+        <span class="keyword">return</span> <span class="variable">ret</span>;
+    };
+})();
+
+    <span class="keyword">function</span> <span class="variable">filterByAttr</span>(<span class="variable">collection</span>, <span class="variable">attr</span>, <span class="variable">regex</span>) {</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Filters a collection by an attribute.
+         </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="variable">i</span> = -<span class="number integer">1</span>, <span class="variable">node</span>, <span class="variable">r</span> = -<span class="number integer">1</span>, <span class="variable">ret</span> = [];
+        <span class="keyword">while</span> ( (<span class="variable">node</span> = <span class="variable">collection</span>[++<span class="variable">i</span>]) ) {
+            <span class="keyword">if</span> (<span class="variable">regex</span>.<span class="variable">test</span>(<span class="variable">node</span>[<span class="variable">attr</span>])) {
+                <span class="variable">ret</span>[++<span class="variable">r</span>] = <span class="variable">node</span>;
+            }
+        }
+        <span class="keyword">return</span> <span class="variable">ret</span>;
+    }
+    <span class="keyword">return</span> <span class="variable">_find</span>;
+
+})(<span class="this">this</span>, <span class="this">this</span>);</code></pre>
+</td>
+</tr><tr class="filename"><td><h2 id="lib/kranium-src/klass.js"><a href="#">klass</a></h2></td><td>lib/kranium-src/klass.js</td></tr><tr class="code">
+<td class="docs">
+<p> Simple JavaScript Inheritance
+By John Resig http://ejohn.org/
+MIT Licensed.
+ </p>
+</td>
+<td class="code">
+<pre><code><span class="comment">// Inspired by base2 and Prototype</span>
+(<span class="keyword">function</span>(<span class="variable">global</span>){
+
+<span class="class">K</span>.<span class="variable">classes</span> = {};
+<span class="class">K</span>.<span class="variable">loadClass</span> = <span class="keyword">function</span>(<span class="variable">name</span>, <span class="variable">liveKlass</span>){
+    <span class="keyword">var</span> <span class="variable">klass</span>, <span class="variable">cls</span>;
+    <span class="keyword">if</span>(<span class="variable">global</span>.<span class="class">DEBUG</span> || <span class="variable">liveKlass</span> || !(<span class="variable">klass</span> = <span class="class">K</span>.<span class="variable">classes</span>[<span class="variable">name</span>])){
+        <span class="keyword">if</span>(!<span class="variable">liveKlass</span>){ <span class="class">K</span>.<span class="variable">loadStyle</span>(<span class="variable">name</span>); }
+        <span class="variable">klass</span> = <span class="variable">liveKlass</span>||(<span class="variable">exports</span> = {}, <span class="class">Ti</span>.<span class="variable">include</span>(<span class="string">'kui/'</span> + <span class="variable">name</span> + <span class="string">'.js'</span>), <span class="variable">exports</span>.<span class="class">Class</span>);
+        <span class="variable">cls</span> = <span class="variable">klass</span>.<span class="variable">prototype</span>.<span class="variable">className</span>;
+        <span class="variable">klass</span>.<span class="variable">prototype</span>.<span class="variable">className</span> = <span class="variable">cls</span> ? <span class="variable">cls</span> + <span class="string">' '</span> + <span class="variable">name</span> : <span class="variable">name</span>;
+        <span class="variable">klass</span>.<span class="variable">prototype</span>.<span class="variable">_klass</span> = <span class="variable">name</span>;
+        
+        <span class="class">K</span>.<span class="variable">classes</span>[<span class="variable">name</span>] = <span class="variable">klass</span>;
+    }
+    <span class="keyword">return</span> <span class="variable">klass</span>;
+};
+
+
+<span class="keyword">var</span> <span class="variable">initializing</span> = <span class="variable">false</span>,
+    <span class="variable">fnTest</span> = <span class="regexp">/xyz/</span>.<span class="variable">test</span>(<span class="keyword">function</span>() {<span class="variable">xyz</span>;}) ? <span class="regexp">/\b_super\b/</span> : <span class="regexp">/.*/</span>;
+
+<span class="comment">// The base Class implementation (does nothing)</span>
+<span class="this">this</span>.<span class="class">Class</span> = <span class="keyword">function</span>() {};
+
+<span class="comment">// Create a new Class that inherits from this class</span>
+<span class="class">Class</span>.<span class="variable">extend</span> = <span class="keyword">function</span>(<span class="variable">prop</span>, <span class="variable">o</span>) {
+    <span class="comment">// Extended with autoloading</span>
+    <span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="variable">prop</span> === <span class="string">'string'</span> && <span class="variable">o</span>) {
+        <span class="keyword">return</span> <span class="class">K</span>.<span class="variable">loadClass</span>(<span class="variable">prop</span>).<span class="variable">extend</span>(<span class="variable">o</span>);
+    }
+
+    <span class="keyword">var</span> <span class="variable">_super</span> = <span class="this">this</span>.<span class="variable">prototype</span>;
+    <span class="comment">//K.log('got prop', { prop: prop, o: o });</span>
+
+    <span class="comment">// Instantiate a base class (but only create the instance,</span>
+    <span class="comment">// don't run the init constructor)</span>
+    <span class="variable">initializing</span> = <span class="variable">true</span>;
+    <span class="keyword">var</span> <span class="variable">prototype</span> = <span class="keyword">new</span> <span class="this">this</span>();
+    <span class="variable">initializing</span> = <span class="variable">false</span>;
+
+    <span class="comment">// Copy the properties over onto the new prototype</span>
+    <span class="keyword">for</span> (<span class="keyword">var</span> <span class="variable">name</span> <span class="keyword">in</span> <span class="variable">prop</span>) {
+        <span class="comment">// Check if we're overwriting an existing function</span>
+        <span class="variable">prototype</span>[<span class="variable">name</span>] = <span class="keyword">typeof</span> <span class="variable">prop</span>[<span class="variable">name</span>] == <span class="string">"function"</span> && <span class="keyword">typeof</span> <span class="variable">_super</span>[<span class="variable">name</span>] == <span class="string">"function"</span> && <span class="variable">fnTest</span>.<span class="variable">test</span>(<span class="variable">prop</span>[<span class="variable">name</span>]) ? (<span class="keyword">function</span>(<span class="variable">name</span>, <span class="variable">fn</span>) {
+            <span class="keyword">return</span> <span class="keyword">function</span>() {
+                <span class="keyword">var</span> <span class="variable">tmp</span> = <span class="this">this</span>.<span class="variable">_super</span>;
+
+                <span class="comment">// Add a new ._super() method that is the same method</span>
+                <span class="comment">// but on the super-class</span>
+                <span class="this">this</span>.<span class="variable">_super</span> = <span class="variable">_super</span>[<span class="variable">name</span>];
+
+                <span class="comment">// The method only need to be bound temporarily, so we</span>
+                <span class="comment">// remove it when we're done executing</span>
+                <span class="keyword">var</span> <span class="variable">ret</span> = <span class="variable">fn</span>.<span class="variable">apply</span>(<span class="this">this</span>, <span class="variable">arguments</span>);
+                <span class="this">this</span>.<span class="variable">_super</span> = <span class="variable">tmp</span>;
+
+                <span class="keyword">return</span> <span class="variable">ret</span>;
+            };
+        })(<span class="variable">name</span>, <span class="variable">prop</span>[<span class="variable">name</span>]) : <span class="variable">prop</span>[<span class="variable">name</span>];
+    }
+
+    <span class="comment">// The dummy class constructor</span>
+    <span class="comment">// Slight modification to set init return value to default el</span>
+    <span class="keyword">var</span> <span class="variable">el</span>;
+
+
+    <span class="keyword">function</span> <span class="class">Class</span>(<span class="variable">o</span>) {
+        <span class="comment">// All construction is actually done in the init method</span>
+        <span class="keyword">if</span> (!<span class="variable">initializing</span> && <span class="this">this</span>.<span class="variable">init</span>) {
+            <span class="variable">o</span> && <span class="class">K</span>.<span class="variable">extend</span>(<span class="this">this</span>, <span class="variable">o</span>);
+            (<span class="variable">el</span> = <span class="this">this</span>.<span class="variable">init</span>.<span class="variable">apply</span>(<span class="this">this</span>, <span class="variable">arguments</span>)) && !<span class="this">this</span>.<span class="variable">el</span> && (<span class="this">this</span>.<span class="variable">el</span> = <span class="variable">el</span>);
+        }
+    }
+
+    <span class="comment">// Populate our constructed prototype object</span>
+    <span class="class">Class</span>.<span class="variable">prototype</span> = <span class="variable">prototype</span>;
+
+    <span class="comment">// Enforce the constructor to be what we expect</span>
+    <span class="class">Class</span>.<span class="variable">constructor</span> = <span class="class">Class</span>;
+
+    <span class="comment">// And make this class extendable</span>
+    <span class="class">Class</span>.<span class="variable">extend</span> = <span class="variable">arguments</span>.<span class="variable">callee</span>;
+
+    <span class="keyword">return</span> <span class="class">Class</span>;
+};
 
 })(<span class="this">this</span>);</code></pre>
 </td>
@@ -2319,10 +2530,8 @@ MIT Licensed.
                 <span class="keyword">break</span>;
             
             <span class="keyword">case</span> <span class="string">'tableviewsection'</span>:
-                <span class="class">K</span>.<span class="variable">log</span>(<span class="string">'heeeere'</span>);
                 <span class="keyword">if</span>(<span class="class">K</span>.<span class="variable">is</span>.<span class="variable">android</span>){
                     <span class="variable">sectionRows</span>.<span class="variable">forEach</span>(<span class="keyword">function</span>(<span class="variable">row</span>){
-                        <span class="class">K</span>.<span class="variable">log</span>([<span class="string">'TRYING TO ADD'</span>, <span class="variable">row</span>, <span class="string">'TO'</span>, <span class="variable">el</span>])
                         <span class="variable">el</span>.<span class="variable">add</span>(<span class="variable">row</span>);
                     });
                 }
@@ -2464,18 +2673,40 @@ MIT Licensed.
 <ul><li><p><strong>param</strong>: <em>Function</em>  creator</p></li><li><p><strong>returns</strong>: <em>Function</em> </p></li></ul>
 </td>
 <td class="code">
-<pre><code><span class="class">K</span>.<span class="variable">_wrapCustomCreator</span> = <span class="keyword">function</span>(<span class="variable">creator</span>, <span class="variable">type</span>){
+<pre><code><span class="keyword">var</span> <span class="variable">instanceCounter</span> = <span class="number integer">0</span>,
+    <span class="variable">instances</span> = {};
+    
+<span class="class">K</span>.<span class="variable">_wrapCustomCreator</span> = <span class="keyword">function</span>(<span class="variable">creator</span>, <span class="variable">type</span>){
     <span class="keyword">return</span> <span class="keyword">function</span>(<span class="variable">o</span>){		
         <span class="keyword">delete</span> <span class="variable">o</span>.<span class="variable">type</span>;
-        <span class="keyword">var</span> <span class="variable">obj</span> = (<span class="keyword">new</span> <span class="variable">creator</span>(<span class="variable">o</span>)).<span class="variable">el</span>;
+        <span class="keyword">var</span> <span class="variable">obj</span> = <span class="keyword">new</span> <span class="variable">creator</span>(<span class="variable">o</span>),
+            <span class="variable">el</span> = <span class="variable">obj</span>.<span class="variable">el</span>;
 
-        <span class="keyword">if</span>(!<span class="variable">obj</span>.<span class="variable">_type</span>){
-            <span class="variable">obj</span> = <span class="class">K</span>.<span class="variable">creators</span>[(<span class="variable">obj</span>.<span class="variable">type</span>||<span class="string">'view'</span>)](<span class="variable">obj</span>);
+        <span class="keyword">if</span>(!<span class="variable">el</span>.<span class="variable">_type</span>){
+            <span class="variable">el</span> = <span class="class">K</span>.<span class="variable">creators</span>[(<span class="variable">el</span>.<span class="variable">type</span>||<span class="string">'view'</span>)](<span class="variable">el</span>);
         };
-        (<span class="class">K</span>.<span class="variable">elsByName</span>[<span class="variable">type</span>]||(<span class="class">K</span>.<span class="variable">elsByName</span>[<span class="variable">type</span>] = [])).<span class="variable">push</span>(<span class="variable">obj</span>);
-        <span class="keyword">return</span> <span class="variable">obj</span>;
+        (<span class="class">K</span>.<span class="variable">elsByName</span>[<span class="variable">type</span>]||(<span class="class">K</span>.<span class="variable">elsByName</span>[<span class="variable">type</span>] = [])).<span class="variable">push</span>(<span class="variable">el</span>);
+        <span class="variable">el</span>.<span class="variable">inst</span> = <span class="variable">obj</span>;
+        <span class="variable">el</span>.<span class="variable">_inst</span> = <span class="variable">instanceCounter</span>;
+        <span class="variable">instances</span>[<span class="variable">instanceCounter</span>] = <span class="variable">obj</span>;
+        <span class="variable">instanceCounter</span>++;
+        <span class="keyword">return</span> <span class="variable">el</span>;
     }
 }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Get a Klass instance from a custom object</p>
+
+<h2></h2>
+
+<ul><li><p><strong>param</strong>: <em>Function</em>  creator</p></li><li><p><strong>returns</strong>: <em>Function</em> </p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">K</span>.<span class="variable">getInst</span> = <span class="keyword">function</span>(<span class="variable">el</span>){
+    <span class="keyword">return</span> <span class="variable">instances</span>[<span class="variable">el</span>.<span class="variable">_inst</span>];
+};</code></pre>
 </td>
 </tr>
 <tr class="code">
@@ -2508,15 +2739,14 @@ MIT Licensed.
     }
 
     <span class="keyword">if</span>(<span class="variable">type</span> && !<span class="class">K</span>.<span class="variable">creators</span>[<span class="variable">type</span>]){
-        <span class="comment">//K.loadStyle(type);</span>
-
-        (<span class="keyword">function</span>(){
-            <span class="comment">//Ti.API.log('requiring in creator', type);</span>
-            <span class="keyword">var</span> <span class="variable">creator</span> = <span class="class">K</span>.<span class="variable">loadClass</span>(<span class="variable">type</span>)||<span class="keyword">function</span>(){ <span class="class">Ti</span>.<span class="class">API</span>.<span class="variable">error</span>(<span class="variable">type</span> + <span class="string">' not available'</span>); };
-            <span class="class">K</span>.<span class="variable">classes</span>[<span class="variable">type</span>] = <span class="variable">creator</span>;
-            <span class="comment">//obj = (K.creators[type] = wrapCustomCreator(creator, type))(m||o);</span>
-            <span class="variable">obj</span> = <span class="class">K</span>.<span class="variable">_wrapCustomCreator</span>(<span class="variable">creator</span>, <span class="variable">type</span>)(<span class="variable">o</span>);
-        })();
+        
+        <span class="keyword">var</span> <span class="variable">creator</span> = <span class="class">K</span>.<span class="variable">loadClass</span>(<span class="variable">type</span>)||<span class="keyword">function</span>(){ <span class="class">Ti</span>.<span class="class">API</span>.<span class="variable">error</span>(<span class="variable">type</span> + <span class="string">' not available'</span>); },
+            <span class="variable">wrapped</span> = <span class="class">K</span>.<span class="variable">_wrapCustomCreator</span>(<span class="variable">creator</span>, <span class="variable">type</span>);
+            
+        <span class="class">K</span>.<span class="variable">classes</span>[<span class="variable">type</span>] = <span class="variable">creator</span>;
+        <span class="class">K</span>.<span class="variable">creators</span>[<span class="variable">type</span>] = <span class="variable">wrapped</span>;
+        <span class="variable">obj</span> = <span class="variable">wrapped</span>(<span class="variable">o</span>);
+        
     } <span class="keyword">else</span> {
         <span class="variable">obj</span> = (<span class="class">K</span>.<span class="variable">creators</span>[<span class="variable">type</span>])(<span class="variable">o</span>);
     }
@@ -2707,6 +2937,96 @@ MIT Licensed.
     };
     <span class="keyword">return</span> <span class="class">K</span>.<span class="variable">ajax</span>(<span class="variable">opts</span>);
 };
+
+})(<span class="this">this</span>);</code></pre>
+</td>
+</tr><tr class="filename"><td><h2 id="lib/kranium-src/end.js"><a href="#">end</a></h2></td><td>lib/kranium-src/end.js</td></tr><tr class="code">
+<td class="docs">
+<p>Define end module
+ </p>
+</td>
+<td class="code">
+<pre><code>(<span class="keyword">function</span>(<span class="variable">global</span>){
+<span class="class">Ti</span>.<span class="variable">include</span>(<span class="string">'/kranium/kranium-generated-bootstrap.js'</span>);
+})(<span class="this">this</span>);
+</code></pre>
+</td>
+</tr><tr class="filename"><td><h2 id="lib/kranium-src/stringify.js"><a href="#">stringify</a></h2></td><td>lib/kranium-src/stringify.js</td></tr><tr class="code">
+<td class="docs">
+<p>Define stringify module</p>
+
+<p>TiObject stringifier based heavily on code from @rem's JSConsole
+ </p>
+</td>
+<td class="code">
+<pre><code>(<span class="keyword">function</span>(<span class="variable">global</span>){
+<span class="keyword">var</span> <span class="variable">reTiObject</span> = <span class="regexp">/^\[object Ti/</span>;
+<span class="keyword">function</span> <span class="variable">sortci</span>(<span class="variable">a</span>, <span class="variable">b</span>) {
+  <span class="keyword">return</span> <span class="variable">a</span>.<span class="variable">toLowerCase</span>() < <span class="variable">b</span>.<span class="variable">toLowerCase</span>() ? -<span class="number integer">1</span> : <span class="number integer">1</span>;
+}
+
+<span class="keyword">function</span> <span class="variable">stringify</span>(<span class="variable">o</span>, <span class="variable">simple</span>) {
+  <span class="keyword">var</span> <span class="variable">json</span> = <span class="string">''</span>, <span class="variable">i</span>, <span class="variable">type</span> = ({}).<span class="variable">toString</span>.<span class="variable">call</span>(<span class="variable">o</span>), <span class="variable">parts</span> = [], <span class="variable">names</span> = [], <span class="variable">ownType</span> = <span class="variable">o</span> && <span class="variable">o</span>.<span class="variable">toString</span> && <span class="variable">o</span>.<span class="variable">toString</span>();
+  
+  <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object String]'</span>) {
+    <span class="variable">json</span> = <span class="string">'"'</span> + <span class="variable">o</span>.<span class="variable">replace</span>(<span class="regexp">/"/g</span>, <span class="string">'\\"'</span>) + <span class="string">'"'</span>;
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Array]'</span>) {
+    <span class="variable">json</span> = <span class="string">'['</span>;
+    <span class="keyword">for</span> (<span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> < <span class="variable">o</span>.<span class="variable">length</span>; <span class="variable">i</span>++) {
+      <span class="variable">parts</span>.<span class="variable">push</span>(<span class="variable">stringify</span>(<span class="variable">o</span>[<span class="variable">i</span>], <span class="variable">simple</span>));
+    }
+    <span class="variable">json</span> += <span class="variable">parts</span>.<span class="variable">join</span>(<span class="string">', '</span>) + <span class="string">']'</span>;
+    <span class="variable">json</span>;
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">o</span> === <span class="keyword">null</span>) {
+    <span class="variable">json</span> = <span class="string">'null'</span>;
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">o</span> === <span class="variable">undefined</span>) {
+    <span class="variable">json</span> = <span class="string">'undefined'</span>;
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">ownType</span> && <span class="variable">reTiObject</span>.<span class="variable">test</span>(<span class="variable">ownType</span>)) {
+    <span class="variable">json</span> += [
+        <span class="string">'"'</span>,
+        <span class="string">"<"</span>,
+        (<span class="variable">o</span>.<span class="variable">_type</span>||<span class="string">'unknown'</span>),
+        (<span class="variable">o</span>.<span class="variable">_id</span> ? <span class="string">" id='"</span>+<span class="variable">o</span>.<span class="variable">_id</span>+<span class="string">"'"</span> : <span class="string">""</span>),
+        <span class="variable">o</span>.<span class="variable">className</span> ? <span class="string">" class='"</span>+<span class="variable">o</span>.<span class="variable">className</span>+<span class="string">"'"</span> : <span class="string">""</span>,
+        <span class="string">">"</span>,
+        ((<span class="variable">tmp</span> = (<span class="variable">o</span>.<span class="variable">text</span>||<span class="variable">o</span>.<span class="variable">title</span>||<span class="string">""</span>))? <span class="variable">tmp</span> :<span class="string">''</span>),
+        <span class="string">"</"</span> + (<span class="variable">o</span>.<span class="variable">_type</span>||<span class="string">'unknown'</span>) + <span class="string">">"</span>,
+        <span class="string">'"'</span>
+    ].<span class="variable">join</span>(<span class="string">""</span>);
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Object]'</span>) {
+    <span class="variable">json</span> = <span class="string">'{'</span>;
+    <span class="keyword">for</span> (<span class="variable">i</span> <span class="keyword">in</span> <span class="variable">o</span>) {
+      <span class="variable">names</span>.<span class="variable">push</span>(<span class="variable">i</span>);
+    }
+    <span class="variable">names</span>.<span class="variable">sort</span>(<span class="variable">sortci</span>);
+    <span class="keyword">for</span> (<span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> < <span class="variable">names</span>.<span class="variable">length</span>; <span class="variable">i</span>++) {
+      <span class="variable">parts</span>.<span class="variable">push</span>(<span class="variable">stringify</span>(<span class="variable">names</span>[<span class="variable">i</span>]) + <span class="string">': '</span> + <span class="variable">stringify</span>(<span class="variable">o</span>[<span class="variable">names</span>[<span class="variable">i</span>] ], <span class="variable">simple</span>));
+    }
+    <span class="variable">json</span> += <span class="variable">parts</span>.<span class="variable">join</span>(<span class="string">', '</span>) + <span class="string">'}'</span>;
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Number]'</span>) {
+    <span class="variable">json</span> = <span class="variable">o</span>+<span class="string">''</span>;
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Boolean]'</span>) {
+    <span class="variable">json</span> = <span class="variable">o</span> ? <span class="string">'true'</span> : <span class="string">'false'</span>;
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Function]'</span>) {
+    <span class="variable">json</span> = <span class="variable">o</span>.<span class="variable">toString</span>();
+  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">simple</span> == <span class="variable">undefined</span>) {
+    <span class="variable">json</span> = <span class="variable">type</span> + <span class="string">'{\n'</span>;
+    <span class="keyword">for</span> (<span class="variable">i</span> <span class="keyword">in</span> <span class="variable">o</span>) {
+      <span class="variable">names</span>.<span class="variable">push</span>(<span class="variable">i</span>);
+    }
+    <span class="variable">names</span>.<span class="variable">sort</span>(<span class="variable">sortci</span>);
+    <span class="keyword">for</span> (<span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> < <span class="variable">names</span>.<span class="variable">length</span>; <span class="variable">i</span>++) {
+      <span class="variable">parts</span>.<span class="variable">push</span>(<span class="variable">names</span>[<span class="variable">i</span>] + <span class="string">': '</span> + <span class="variable">stringify</span>(<span class="variable">o</span>[<span class="variable">names</span>[<span class="variable">i</span>]], <span class="variable">true</span>)); <span class="comment">// safety from max stack</span>
+    }
+    <span class="variable">json</span> += <span class="variable">parts</span>.<span class="variable">join</span>(<span class="string">',\n'</span>) + <span class="string">'\n}'</span>;
+  } <span class="keyword">else</span> {
+    <span class="keyword">try</span> {
+      <span class="variable">json</span> = <span class="variable">o</span>+<span class="string">''</span>; <span class="comment">// should look like an object      </span>
+    } <span class="keyword">catch</span> (<span class="variable">e</span>) {}
+  }
+  <span class="keyword">return</span> <span class="variable">json</span>;
+}
+<span class="class">K</span>.<span class="variable">stringify</span> = <span class="variable">stringify</span>;
 
 })(<span class="this">this</span>);</code></pre>
 </td>
@@ -2973,96 +3293,6 @@ MIT Licensed.
 })(<span class="this">this</span>);
 </code></pre>
 </td>
-</tr><tr class="filename"><td><h2 id="lib/kranium-src/stringify.js"><a href="#">stringify</a></h2></td><td>lib/kranium-src/stringify.js</td></tr><tr class="code">
-<td class="docs">
-<p>Define stringify module</p>
-
-<p>TiObject stringifier based heavily on code from @rem's JSConsole
- </p>
-</td>
-<td class="code">
-<pre><code>(<span class="keyword">function</span>(<span class="variable">global</span>){
-<span class="keyword">var</span> <span class="variable">reTiObject</span> = <span class="regexp">/^\[object Ti/</span>;
-<span class="keyword">function</span> <span class="variable">sortci</span>(<span class="variable">a</span>, <span class="variable">b</span>) {
-  <span class="keyword">return</span> <span class="variable">a</span>.<span class="variable">toLowerCase</span>() < <span class="variable">b</span>.<span class="variable">toLowerCase</span>() ? -<span class="number integer">1</span> : <span class="number integer">1</span>;
-}
-
-<span class="keyword">function</span> <span class="variable">stringify</span>(<span class="variable">o</span>, <span class="variable">simple</span>) {
-  <span class="keyword">var</span> <span class="variable">json</span> = <span class="string">''</span>, <span class="variable">i</span>, <span class="variable">type</span> = ({}).<span class="variable">toString</span>.<span class="variable">call</span>(<span class="variable">o</span>), <span class="variable">parts</span> = [], <span class="variable">names</span> = [], <span class="variable">ownType</span> = <span class="variable">o</span> && <span class="variable">o</span>.<span class="variable">toString</span> && <span class="variable">o</span>.<span class="variable">toString</span>();
-  
-  <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object String]'</span>) {
-    <span class="variable">json</span> = <span class="string">'"'</span> + <span class="variable">o</span>.<span class="variable">replace</span>(<span class="regexp">/"/g</span>, <span class="string">'\\"'</span>) + <span class="string">'"'</span>;
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Array]'</span>) {
-    <span class="variable">json</span> = <span class="string">'['</span>;
-    <span class="keyword">for</span> (<span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> < <span class="variable">o</span>.<span class="variable">length</span>; <span class="variable">i</span>++) {
-      <span class="variable">parts</span>.<span class="variable">push</span>(<span class="variable">stringify</span>(<span class="variable">o</span>[<span class="variable">i</span>], <span class="variable">simple</span>));
-    }
-    <span class="variable">json</span> += <span class="variable">parts</span>.<span class="variable">join</span>(<span class="string">', '</span>) + <span class="string">']'</span>;
-    <span class="variable">json</span>;
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">o</span> === <span class="keyword">null</span>) {
-    <span class="variable">json</span> = <span class="string">'null'</span>;
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">o</span> === <span class="variable">undefined</span>) {
-    <span class="variable">json</span> = <span class="string">'undefined'</span>;
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">ownType</span> && <span class="variable">reTiObject</span>.<span class="variable">test</span>(<span class="variable">ownType</span>)) {
-    <span class="variable">json</span> += [
-        <span class="string">'"'</span>,
-        <span class="string">"<"</span>,
-        (<span class="variable">o</span>.<span class="variable">_type</span>||<span class="string">'unknown'</span>),
-        (<span class="variable">o</span>.<span class="variable">_id</span> ? <span class="string">" id='"</span>+<span class="variable">o</span>.<span class="variable">_id</span>+<span class="string">"'"</span> : <span class="string">""</span>),
-        <span class="variable">o</span>.<span class="variable">className</span> ? <span class="string">" class='"</span>+<span class="variable">o</span>.<span class="variable">className</span>+<span class="string">"'"</span> : <span class="string">""</span>,
-        <span class="string">">"</span>,
-        ((<span class="variable">tmp</span> = (<span class="variable">o</span>.<span class="variable">text</span>||<span class="variable">o</span>.<span class="variable">title</span>||<span class="string">""</span>))? <span class="variable">tmp</span> :<span class="string">''</span>),
-        <span class="string">"</"</span> + (<span class="variable">o</span>.<span class="variable">_type</span>||<span class="string">'unknown'</span>) + <span class="string">">"</span>,
-        <span class="string">'"'</span>
-    ].<span class="variable">join</span>(<span class="string">""</span>);
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Object]'</span>) {
-    <span class="variable">json</span> = <span class="string">'{'</span>;
-    <span class="keyword">for</span> (<span class="variable">i</span> <span class="keyword">in</span> <span class="variable">o</span>) {
-      <span class="variable">names</span>.<span class="variable">push</span>(<span class="variable">i</span>);
-    }
-    <span class="variable">names</span>.<span class="variable">sort</span>(<span class="variable">sortci</span>);
-    <span class="keyword">for</span> (<span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> < <span class="variable">names</span>.<span class="variable">length</span>; <span class="variable">i</span>++) {
-      <span class="variable">parts</span>.<span class="variable">push</span>(<span class="variable">stringify</span>(<span class="variable">names</span>[<span class="variable">i</span>]) + <span class="string">': '</span> + <span class="variable">stringify</span>(<span class="variable">o</span>[<span class="variable">names</span>[<span class="variable">i</span>] ], <span class="variable">simple</span>));
-    }
-    <span class="variable">json</span> += <span class="variable">parts</span>.<span class="variable">join</span>(<span class="string">', '</span>) + <span class="string">'}'</span>;
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Number]'</span>) {
-    <span class="variable">json</span> = <span class="variable">o</span>+<span class="string">''</span>;
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Boolean]'</span>) {
-    <span class="variable">json</span> = <span class="variable">o</span> ? <span class="string">'true'</span> : <span class="string">'false'</span>;
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'[object Function]'</span>) {
-    <span class="variable">json</span> = <span class="variable">o</span>.<span class="variable">toString</span>();
-  } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">simple</span> == <span class="variable">undefined</span>) {
-    <span class="variable">json</span> = <span class="variable">type</span> + <span class="string">'{\n'</span>;
-    <span class="keyword">for</span> (<span class="variable">i</span> <span class="keyword">in</span> <span class="variable">o</span>) {
-      <span class="variable">names</span>.<span class="variable">push</span>(<span class="variable">i</span>);
-    }
-    <span class="variable">names</span>.<span class="variable">sort</span>(<span class="variable">sortci</span>);
-    <span class="keyword">for</span> (<span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> < <span class="variable">names</span>.<span class="variable">length</span>; <span class="variable">i</span>++) {
-      <span class="variable">parts</span>.<span class="variable">push</span>(<span class="variable">names</span>[<span class="variable">i</span>] + <span class="string">': '</span> + <span class="variable">stringify</span>(<span class="variable">o</span>[<span class="variable">names</span>[<span class="variable">i</span>]], <span class="variable">true</span>)); <span class="comment">// safety from max stack</span>
-    }
-    <span class="variable">json</span> += <span class="variable">parts</span>.<span class="variable">join</span>(<span class="string">',\n'</span>) + <span class="string">'\n}'</span>;
-  } <span class="keyword">else</span> {
-    <span class="keyword">try</span> {
-      <span class="variable">json</span> = <span class="variable">o</span>+<span class="string">''</span>; <span class="comment">// should look like an object      </span>
-    } <span class="keyword">catch</span> (<span class="variable">e</span>) {}
-  }
-  <span class="keyword">return</span> <span class="variable">json</span>;
-}
-<span class="class">K</span>.<span class="variable">stringify</span> = <span class="variable">stringify</span>;
-
-})(<span class="this">this</span>);</code></pre>
-</td>
-</tr><tr class="filename"><td><h2 id="lib/kranium-src/end.js"><a href="#">end</a></h2></td><td>lib/kranium-src/end.js</td></tr><tr class="code">
-<td class="docs">
-<p>Define end module
- </p>
-</td>
-<td class="code">
-<pre><code>(<span class="keyword">function</span>(<span class="variable">global</span>){
-<span class="class">Ti</span>.<span class="variable">include</span>(<span class="string">'/kranium/kranium-generated-bootstrap.js'</span>);
-})(<span class="this">this</span>);
-</code></pre>
-</td>
 </tr><tr class="filename"><td><h2 id="lib/kranium-src/tester.js"><a href="#">tester</a></h2></td><td>lib/kranium-src/tester.js</td></tr><tr class="code">
 <td class="docs">
 <p>Define tester module
@@ -3124,6 +3354,258 @@ Only load Jade when needed, and then only do it once.
 };
 <span class="class">K</span>.<span class="variable">jade</span>.<span class="variable">isLoader</span> = <span class="variable">true</span>;
 })();</code></pre>
+</td>
+</tr><tr class="filename"><td><h2 id="lib/kranium-src/androidshim.js"><a href="#">androidshim</a></h2></td><td>lib/kranium-src/androidshim.js</td></tr><tr class="code">
+<td class="docs">
+<p>(function(){</p>
+
+<p>if(K.is.android){</p>
+
+<p>K.style('kranium/lib/kss/androidshim.kss');</p>
+
+<p>// Shim the buttonbar and tabbedbar modules
+function createSegmentedCreator(type){
+    var camelized = ({
+        buttonbar: 'buttonBar',
+        tabbedbar: 'tabbedBar'
+    })[type];</p>
+
+<pre><code>return function(opts){
+    var onClicks = [];
+    if(opts.click){
+        onClicks.push(opts.click);
+        delete opts.click;
+    }
+
+    var	labelWidth = (opts.width||320)/opts.labels.length,
+        backgroundColor = opts.backgroundColor || K.getStyle(null, type).backgroundColor || '#ccc',
+        selectedBackgroundColor = K.changeColor(backgroundColor, 0.2, true),
+        labels = (opts.labels||[]).map(function(o, i){
+            var events = {
+                click: function(){
+                    var me = this;
+                    if(type === 'tabbedbar'){
+                        if(bar.index === i){ return; }
+                        labels[bar.index].backgroundColor = backgroundColor;
+                        labels[i].backgroundColor = selectedBackgroundColor;
+                        bar.index = i;
+                    }
+
+                    onClicks.forEach(function(callback){
+                        callback.call(me, {
+                            index: i,
+                            source: bar
+                        });
+                    });
+                }
+            };
+            if(typeof o === 'string'){
+                o = { 
+                    type: 'label', text: o, 
+                    backgroundColor: type === 'tabbedbar' &amp;&amp; i === (opts.index||0) ? selectedBackgroundColor : backgroundColor
+                };
+
+                events.touchstart = function(){
+                    if(type === 'tabbedbar' &amp;&amp; bar.index === i){ return; }
+                    this.backgroundColor = selectedBackgroundColor;
+                };
+
+                events.touchend = function(){
+                    if(type === 'tabbedbar' &amp;&amp; bar.index === i){ return; }
+                    this.backgroundColor = backgroundColor;
+                }
+            }
+            o.className = (o.className||'') + ' ' + camelized + 'Label';
+
+            return K.create(K.extend({
+                width: labelWidth,
+                left: labelWidth*i,
+                events: events
+            }, o));
+        });
+
+
+    var separators = [];
+    labels.forEach(function(label, i){
+        if(i &gt; 0){
+            separators.push(K.createView({
+                top: 0,
+                width: 2,
+                height: 44,
+                left: labelWidth*i - 1,
+                backgroundImage: 'images/android-navbar-separator.png'
+            }));
+        }
+    });
+
+    var bar = K.createView(K.extend({
+        index: 0,
+        height: 44,
+        children: labels.concat(separators)
+    }, K.getStyle(null, type), opts));
+    return bar;
+};</code></pre>
+
+<p>}</p>
+
+<p>K['createTabbedBar'] = K.creators['tabbedbar'] = createSegmentedCreator('tabbedbar');
+K['createButtonBar'] = K.creators['buttonbar'] = createSegmentedCreator('buttonbar');</p>
+
+<p>// Shim the window module with pretty navbars with left- and rightNavButtons.
+Window = Window.extend({
+    init: function(o){
+        if(!this.navBarHidden &amp;&amp; (this.leftNavButton || this.rightNavButton || K.settings.alwaysUseCustomAndroidNavBar)){
+            this.navBarHidden = true;</p>
+
+<pre><code>        var barColor = K.getStyle(null, 'window').barColor;
+        this._navBar = K.create({
+            type: 'view',
+            className: 'navBar',
+            backgroundImage: 'images/android-navbar-overlay.png',
+            children: [{
+                type: 'label',
+                className: 'navBarLabel',
+                text: this.title || ''
+            }]
+        });
+
+        this.children = [
+            {
+                type: 'view',
+                className: 'navBarGradient',
+                backgroundColor: barColor
+            },
+            this._navBar,
+            {
+                type: 'view',
+                className: 'navBaredContent',
+                children: this.children
+            }
+        ];
+
+        if(this.rightNavButton){
+            this.setRightNavButton(this.rightNavButton);
+        }
+        if(this.rightNavButton){
+            this.setLeftNavButton(this.leftNavButton);
+        }				
+    }
+
+    this._super(o);
+},
+
+_setNavButton: function(navButton, rightLeft){
+    if(!navButton){
+        return;
+    }
+    var navButtonOptions = navButton._opts || navButton,
+        navButtonClass = (rightLeft || 'right') + 'NavButton',
+        navButtonName = '_' + navButtonClass,
+        separatorName = navButtonName + 'Separator';
+
+    navButtonOptions.className = (navButtonOptions.className||"") + " " + navButtonClass + " navButton";
+    K.log('r', navButtonOptions);
+
+    if(this[navButtonName]){
+        this._navBar.remove(this[navButtonName]);
+    }
+
+    this[navButtonName] = K.createButton(navButtonOptions);
+
+    if(!this[separatorName]){
+        this[separatorName] = K.createView({
+            top: 0,
+            width: 2,
+            height: 44,
+            backgroundImage: 'images/android-navbar-separator.png'
+        });
+        this._navBar.add(this[separatorName]);
+    }
+    this[separatorName][rightLeft||'right'] = this[navButtonName].width;
+
+    this._navBar.add(this[navButtonName]);
+    //K.alert(1);
+    K.log(' ================================== setnavbutton');
+},
+
+setRightNavButton: function(navButton){
+    this._setNavButton(navButton, 'right');
+},
+
+setLeftNavButton: function(navButton){
+    this._setNavButton(navButton, 'left');
+}</code></pre>
+
+<p>});</p>
+
+<p>// Shim the toolbar module
+K['createToolbar'] = K.creators['toolbar'] = function(opts){
+    var	toolbarWidth = opts.width||K.getStyle({ type: 'toolbar', className: opts.className }).width||320,
+        numSpacers = 0,
+        widthSum = 0;</p>
+
+<pre><code>(opts.items||[]).forEach(function(o, i){
+    if(o === 'spacer'){
+        numSpacers++;
+        return o;
+    } else {
+        var itemWidth = o.width || K.getStyle({
+            type: o.type,
+            className: (o.className||o.cls||'') + ' toolbarItem'
+        }).width;
+
+        if(itemWidth){
+            widthSum += itemWidth;
+        } else {
+            numSpacers++;
+        }
+    }
+});
+
+var left = 0,
+    spacerWidth = (toolbarWidth - widthSum)/numSpacers;
+
+var items = [];
+(opts.items||[]).forEach(function(o, i){
+    if(o === 'spacer'){
+        left += spacerWidth;
+    } else {
+        if(typeof o === 'string'){
+            o = { type: 'label', text: o, width: spacerWidth };
+        }
+        o.className = (o.className||'') + ' toolbarItem';
+
+        o.left = left;
+        o.width = o.width || K.getStyle({
+            type: o.type,
+            className: (o.className||o.cls||'') + ' toolbarItem'
+        }).width || spacerWidth;
+
+        var el = K.create(o);
+
+        left += el.width||0;
+
+        items.push(el);
+    }
+});
+
+var toolbar = K.createView(K.extend({
+    height: 44,
+    width: toolbarWidth,
+    className: 'toolbar',
+    children: items
+}, opts));
+
+return toolbar;</code></pre>
+
+<p>};</p>
+
+<p>}</p>
+
+<p>})();</p>
+</td>
+<td class="code">
+
 </td>
 </tr>	</body>
 </html></tbody></table>
