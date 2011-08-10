@@ -380,6 +380,9 @@ Kranium integrates [Remy Sharp](http://remysharp.com/)'s excellent JSConsole. Th
 
 ![Kranium folder structure](site/images/console.png)
 
+#Sponsors
+
+The development of Kranium is sponsored by [Logica](http://www.logica.com/)
 
 #FAQ
 
