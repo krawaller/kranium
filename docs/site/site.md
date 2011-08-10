@@ -44,7 +44,9 @@ But don't take my word for it. Take a look at the source of the example applicat
  
 #Installation
 
-Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running `npm install kranium -g` in your terminal.
+Installing Kranium <del>is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running `npm install kranium -g` in your terminal.</del> will be very straightforward once public. For now, you'll have to download a snapshot of the repo and install it manually. This is how:
+
+
 
 If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found [here](http://example.com) before following the previous paragraph.
 

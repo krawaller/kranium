@@ -3,6 +3,7 @@ var fs = require('fs'),
 	flag = './.monitor',
 	uglify = require('uglify-js'),
 	sys = require('sys'),
+	ghm = require("github-flavored-markdown"),
 	exec = require('child_process').exec;
 	
 	parts = [
@@ -25,7 +26,7 @@ var fs = require('fs'),
 		"androidshim"
 	];
 
-var fileTypes = "js".split(" "),
+var fileTypes = "js md".split(" "),
 	fileTypesFlags = fileTypes.map(function(ext){ return '-name "*.'+ext+'"'; }).join(" -o "),
 	findAll = 'find lib/kranium-src/ -type f \\( '+fileTypesFlags + ' \\)',
 	findChanged = 'find lib/kranium-src/ -type f -newer '+flag+' \\( '+fileTypesFlags + ' \\)',
@@ -92,4 +93,38 @@ task('annotate-source', [], function(params) {
 });
 
 
-//
+desc('Create docs');
+task('docs', [], function(params) {
+	watch(function(params, done){
+		
+		var html = ghm.parse(fs.readFileSync('docs/site/site.md').toString());
+		
+		var str = [
+		'<!DOCTYPE html>',
+		'<html>',
+		'<head>',
+		  '<meta charset=utf-8>',
+		  '<title>Kranium</title>',
+		  '<meta name="description" content="Spine is a lightweight MVC framework for building JavaScript applications.">',
+		  '<meta name="keywords" content="spine,javascript,mvc,framework,backbone,node,web,app">',
+		  '<link rel="stylesheet" href="site/site.css" type="text/css" charset="utf-8">',
+		  '<link rel="stylesheet" href="site/highlight.css" type="text/css" charset="utf-8">',
+		  '<script src="site/jquery.js" type="text/javascript" charset="utf-8"></script>      ',
+		  '<script src="spine.js" type="text/javascript" charset="utf-8"></script>      ',
+		  '<script src="site/highlight.pack.js" type="text/javascript" charset="utf-8"></script>',
+		  '<script type="text/javascript" charset="utf-8">',
+		    'hljs.initHighlightingOnLoad();',
+		  '</script>',
+		'</head>',
+		'<body>',
+		'<div id="container">'+html+'</div>',
+		'</body>',
+		'</html>'
+		];
+		
+		console.log('Updated!');
+		fs.writeFileSync('docs/docs.html', str.join("\r\n"));
+		done && done();
+		
+	}, params);
+});
