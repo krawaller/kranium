@@ -354,6 +354,8 @@ var reTiObject = /^\[object Ti/,
 		 */
 		hide: function(){ return this.each(function(){ this.hide(); }); },
 		
+		focus: function(){ return this.each(function(){ this.focus(); }); },
+		blur: function(){ return this.each(function(){ this.blur(); }); },
 		
 		prev: function(){}, //TODO: implement me
 		next: function(){}, //TODO: implement me
@@ -1494,6 +1496,576 @@ $.qsa = $$ = (function(document, global){
 
 /*** STYLE ***/
 /**
+ * Define AJAX module
+ */
+
+
+(function(global){
+
+    /**
+     * Default AJAX settings
+     */
+	var noop = function(){}, 
+		ajaxDefaults = {
+		cache: true,
+		data: {},
+		error: function(){},
+		defError: function(e){
+			Ti.API.error(['xhr', this.opts]);
+			var a = Ti.UI.createAlertDialog({
+				buttonNames: ['Försök igen','Avbryt'],
+				cancel: 1,
+				title: 'Kommunikationsfel',
+				message: "Kunde ej nå server. \nKolla din uppkoppling och försök igen!"
+			});
+			var xhr = this;
+			a.addEventListener('click', function(e){
+				if(e.index == 0){
+					K.ajax(xhr.inOpts);
+				}
+			});
+			a.show();
+		},
+		appcacheAge: 360000000,
+		appcache: false, // TODO - set this to false!!
+		timeout: 30000,
+		success: noop,
+		type: 'GET',
+		dataType: 'json'
+		};
+
+	/**
+	 * Simplified ajax
+	 *
+	 * @param {Object} inOpts containing
+	 * * type
+	 * * dataType
+	 * * data
+	 * * success
+	 * * error
+	 * * timeout
+	 * @returns {Ti.Network.HTTPClient} The resulting HTTPClient
+	 */
+	K.ajax = function(inOpts){
+		var opts = K.extend(K.extend({}, ajaxDefaults), inOpts), 
+			xhr = Ti.Network.createHTTPClient(opts), 
+			data = K.extend(opts.data, opts.extendData || {}),
+			loader = { _hide: function(){} },
+			hash;
+	
+		if(opts.loader){
+		
+			//Ti.API.log('optsloader', K.stringify(opts.loader));
+			var parent = (opts.loader._type ? opts.loader : K.currentWindow||Ti.UI.currentWindow);
+			loader = parent._loader||K.createActivityIndicator({ className: 'loader' });
+		
+			if(!parent._loader){
+			
+				parent.add(loader);
+				loader._show = function(){ loader.opacity = 0; loader.show(); loader.animate({ opacity: 0.7, duration: 300 }); }
+				loader._hide = function(){ loader.animate({ opacity: 0, duration: 300 }, function(){ loader.hide(); }); }
+				parent._loader = loader;
+			}
+			loader._show();
+			Ti.API.log('showing loader');
+		}
+		xhr.inOpts = inOpts;
+	
+		if(!opts.url){
+			loader._hide();
+			return false;
+		}
+		 
+		xhr.onload = function(){
+			try {
+				var text = typeof opts.preprocess === 'function' ? opts.preprocess(this.responseText) : this.responseText,
+					response;
+					
+				switch (opts.dataType) {
+					case 'json':
+						try {
+							response = JSON.parse(text);
+						}
+						catch(e){
+							Ti.API.error(e);
+							Ti.API.error(text);
+							throw "WTF?!"+e;
+						}
+						break;
+					
+					default:
+						response = text;
+						break;
+				}
+
+			
+				opts.success && opts.success.call(opts.context || xhr, response, xhr.status, xhr);
+				loader._hide();
+				
+				opts.complete && opts.complete(xhr, ({200:'success',304:'notmodified'})[xhr.status]||'error');
+			} 
+			catch (e) {
+				Ti.API.error(['onload error', e]);
+			}
+			opts.anyway && opts.anyway();
+		};
+		xhr.opts = opts;
+		if (!opts.silent){
+			xhr.onerror = function(e){
+				opts.anyway && opts.anyway();
+				loader._hide();
+				if( (opts.error && opts.error(e) !== false) || !opts.error){ xhr.defError(e); }
+			};
+		}
+		xhr.requestedAt = new Date().getTime();
+		xhr.open(opts.type, opts.url + (!opts.cache ? '?' + new Date().getTime() : ''));
+	
+		opts.beforeSend && opts.beforeSend(xhr);
+		opts.contentType && xhr.setRequestHeader('Content-Type', opts.contentType);
+		var name;
+		if(opts.headers){
+			for(name in opts.headers){
+				xhr.setRequestHeader(name, opts.headers[name]);
+			}
+		}
+		xhr.send(data);
+		return xhr;
+	};
+
+	/**
+	 * Change default AJAX settings
+	 *
+	 * @param {Object} opts containing any or all of
+	 * * type
+	 * * dataType
+	 * * data
+	 * * success
+	 * * error
+	 * * timeout
+	 */
+	K.ajaxSetup = function(opts){ K.merge(ajaxDefaults, opts); };
+
+	/**
+	 * YQL service path
+	 */
+	var yqlStart = 'http://query.yahooapis.com/v1/public/yql',
+		yqlEnd = '&format=json&callback=';
+	
+	/**
+	 * YQL interface
+	 *
+	 * @param {Object} opts containing
+	 * * q
+	 * * params
+	 * * success
+	 * * error
+	 * * timeout
+	 * @returns {Ti.Network.HTTPClient} The resulting HTTPClient
+	 */	
+	
+	K.yql = function(opts){
+		opts.url = yqlStart;
+		opts.data = ('format=json&callback=&diagnostics=true&q=' + opts.q).esc(opts.params, encodeURIComponent).toString();
+		opts.type = 'POST';
+		opts.headers = {
+			"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+		};
+		return K.ajax(opts);
+	};
+
+})(this);
+
+/*** CREATE ***/
+/**
+ * Define live module
+ */
+
+(function(global) {
+
+	K.reset = function() {
+		K.elsByClassName = {};
+		K.elsById = {};
+		K.elsByName = {};
+		uuid = win._uuid = 1;
+	};
+	K.reset();
+
+	function cleanse(s) {
+		return (s || '').replace(/[<>&]/g, function(m) {
+			return {
+				'&': '&amp;',
+				'>': '&gt;',
+				'<': '&lt;'
+			} [m];
+		});
+	}
+
+	var Framer = function(delimiter) {
+		this.delimiter = delimiter ? delimiter : "\0";
+		this.buffer = [];
+	};
+
+	Framer.prototype.next = function(data) {
+		var frames = data.split(this.delimiter, -1);
+		this.buffer.push(frames.shift());
+		if (frames.length > 0) {
+			frames.unshift(this.buffer.join(''));
+			this.buffer.length = 0;
+			this.buffer.push(frames.pop());
+		}
+		return frames;
+	};
+
+	var framer = new Framer("ZOMG" + "KRAWALLERROCKS");
+
+	/**
+	 * Start watching for file changes to be piped from nodejs server
+	 * @param host Host for server
+	 * @param port Port for server. Default is 8128
+	 * @param win Window to add 'close' listener to for cleaning up socket
+	 */
+	Ti.App.Properties.setBool('_watching', false);
+	K.watch = function(host, port) {
+		K.log('starting livetanium');
+		// Only open one connection, preferrably from app.js
+		if (Ti.App.Properties.getBool('_watching')) {
+			return false;
+		}
+		Ti.App.Properties.setBool('_watching', true);
+
+		var watchers = {},
+			Watcher = {
+			watch: function(file, callback, e) {
+				if (!watchers[file]) {
+					socket.write(JSON.stringify({
+						action: 'watch',
+						file: file
+					}));
+					watchers[file] = e.source;
+				}
+			}
+		};
+
+		var socket = Titanium.Network.createTCPSocket({
+			hostName: host,
+			port: port,
+			mode: Titanium.Network.READ_WRITE_MODE
+		});
+
+		function parseFrame(frame) {
+			try {
+				var o = JSON.parse(frame);
+
+				switch (o.action) {
+					case 'cmd':
+						var res;
+						try {
+							res = eval('(' + o.cmd + ')');
+						} catch(e) {
+							res = e;
+						}
+						socket.write(JSON.stringify({
+							action: 'res',
+							res: cleanse(K.stringify(res)).replace(/[\u007F-\uFFFF]/g, function(a){ return '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4) })
+						}));
+						break;
+
+					case 'filechange':
+						// Upon filechange, call all applicable listening contexts
+						Ti.App.fireEvent('filechange', { name: o.file });
+						try {
+							var name = o.file.replace(/^\.?\//, function($0) {
+								return '';
+							}).replace(/\//g, '-'),
+								path = Ti.Filesystem.tempDirectory.replace(/\/$/, ''),
+								h = Ti.Filesystem.getFile(path, name);
+
+							h.write(o.content);
+						} catch(e) {
+							Ti.API.error(e);
+						}
+
+						var m = o.file.match(/[^.]+$/); // Get file extension
+						switch (m && m[0]) {
+							case 'kss':
+							case 'jss':
+								K.log('Applying live styles from: "' + o.file + '"');
+								
+								K.style(null, o.content, true);
+								
+								/*var tree = K.buildSelectorTree(o.content);
+								tree.forEach(function(rule) {
+									//Ti.API.log('procel', [rule.selector, K(rule.selector)]);
+									K(rule.selector).each(function() {
+										var el = this;
+										//Ti.API.log('el', el); 
+										rule.properties.forEach(function(o) {
+											el[o.property] = o.value;
+										});
+									});
+								});*/
+								break;
+
+							case 'js':
+								if (/kui\//.test(o.file)) {
+									var req = eval('try { var exports = {}; ' + o.content + '; exports.Class; } catch(e){ Ti.API.error(e); }'),
+										type;
+									
+									K.log('Trying to live update "'+o.file+'". If this explodes, run "kranium watch --nolivejs" instead')
+									if (req && (type = (o.file.match(/([^\/]+)\.js$/) || [false, false])[1])) {
+										var klass = K.classes[type] = K.loadClass(type, req);
+										K('.' + type).each(function() {
+											//Ti.API.log('oldprops', this._props);
+											
+											var old = this,
+												index,
+												n = new klass(old._props).el;
+
+											if (n._type == 'window') {
+												K(old.children).each(function() {
+													K(this).remove();
+												});
+
+												/*if ((index = K.elsByName[old._type].indexOf(old)) != -1) {
+													K.elsByName[old._type].splice(index, 1);
+												}*/
+
+												var $old = K(old);
+												K(n.children).each(function() {
+													$old.append(this);
+												});
+												//Ti.API.log('children', n.children);
+											} else {
+												var parent = old.getParent();
+												K(old).remove();
+												
+												/*if ((index = K.elsByName[old._type].indexOf(old)) != -1) {
+													K.elsByName[old._type].splice(index, 1);
+												}*/
+
+												K(parent).append(n);
+											}
+											//Ti.API.log('n', n);
+										});
+									}
+								}
+							break;
+						}
+						break;
+
+					case 'files':
+						// Write all files to app tmp directory on startup
+						Ti.API.info('Socket connected - receiving files');
+						o.files.forEach(function(f, i) {
+							var name = f.name.replace(/\.\//, function($0) {
+								return '';
+							}).replace(/\//g, '-'),
+								path = Ti.Filesystem.tempDirectory.replace(/\/$/, ''),
+								h = Ti.Filesystem.getFile(path, name);
+
+							h.write(f.content);
+						});
+						break;
+
+					case 'message':
+						Ti.API.info('Socket message', o.message);
+						break;
+				}
+			} catch(e) {
+				Ti.API.error(e);
+			}
+		}
+
+		socket.addEventListener('read', function(e) {
+			//Ti.API.log('inserting into frame', e.data.text);
+			framer.next(e.data.text).forEach(parseFrame);
+		});
+		
+		socket.addEventListener('close', function(e) {
+			K.log('socket closed');
+		});
+
+		Ti.App.addEventListener('close', function(e) {
+			if (socket.isValid) {
+				Ti.API.log('close socket');
+				socket.close();
+			}
+		});
+
+		socket.connect();
+		socket.write(JSON.stringify({
+			action: 'echo',
+			message: 'Socket connected'
+		}));
+		
+		global.socketwrite = function(msg, type){ socket.write(JSON.stringify({ action: type, msg: msg })); };
+		global.customsocketwrite = function(o){ if(!o.action){ return; } socket.write(JSON.stringify(o)); };
+		
+		var log = K.log;
+		K.log = function(){
+			var args = Array.prototype.slice.call(arguments);
+			log.apply(log, args);
+			try {
+				socket.write(JSON.stringify({
+					action: 'res',
+					res: cleanse(K.stringify(args.length === 1 ? args[0] : args))
+				}));
+			} catch(e){ Ti.API.error(e); }
+		};
+	};
+
+})(this);
+
+
+/*** AJAX ***/
+/**
+ * Define stringify module
+ * 
+ * TiObject stringifier based heavily on code from @rem's JSConsole
+ */
+
+(function(global){
+	var reTiObject = /^\[object Ti/;
+	function sortci(a, b) {
+	  return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
+	}
+
+	function stringify(o, simple) {
+	  var json = '', i, type = ({}).toString.call(o), parts = [], names = [], ownType = o && o.toString && o.toString();
+  
+	  if (type == '[object String]') {
+	    json = '"' + o.replace(/"/g, '\\"') + '"';
+	  } else if (type == '[object Array]') {
+	    json = '[';
+	    for (i = 0; i < o.length; i++) {
+	      parts.push(stringify(o[i], simple));
+	    }
+	    json += parts.join(', ') + ']';
+	    json;
+	  } else if (o === null) {
+	    json = 'null';
+	  } else if (o === undefined) {
+	    json = 'undefined';
+	  } else if (ownType && reTiObject.test(ownType)) {
+		json += [
+			'"',
+			"<",
+			(o._type||'unknown'),
+			(o._id ? " id='"+o._id+"'" : ""),
+			o.className ? " class='"+o.className+"'" : "",
+			">",
+			((tmp = (o.text||o.title||""))? tmp :''),
+			"</" + (o._type||'unknown') + ">",
+			'"'
+		].join("");
+	  } else if (type == '[object Object]') {
+	    json = '{';
+	    for (i in o) {
+	      names.push(i);
+	    }
+	    names.sort(sortci);
+	    for (i = 0; i < names.length; i++) {
+	      parts.push(stringify(names[i]) + ': ' + stringify(o[names[i] ], simple));
+	    }
+	    json += parts.join(', ') + '}';
+	  } else if (type == '[object Number]') {
+	    json = o+'';
+	  } else if (type == '[object Boolean]') {
+	    json = o ? 'true' : 'false';
+	  } else if (type == '[object Function]') {
+	    json = o.toString();
+	  } else if (simple == undefined) {
+	    json = type + '{\n';
+	    for (i in o) {
+	      names.push(i);
+	    }
+	    names.sort(sortci);
+	    for (i = 0; i < names.length; i++) {
+	      parts.push(names[i] + ': ' + stringify(o[names[i]], true)); // safety from max stack
+	    }
+	    json += parts.join(',\n') + '\n}';
+	  } else {
+	    try {
+	      json = o+''; // should look like an object      
+	    } catch (e) {}
+	  }
+	  return json;
+	}
+	K.stringify = stringify;
+
+})(this);
+
+/*** LIVE ***/
+/**
+ * Define end module
+ */
+
+(function(global){
+	Ti.include('/kranium/kranium-generated-bootstrap.js');
+})(this);
+
+
+/*** STRINGIFY ***/
+/**
+ * Define tester module
+ * Jasmine tester
+ */
+
+(function(global){
+	if(global.TEST){
+		K.log('Testing activated! :-O');
+		Ti.App.addEventListener('filechange', test);
+
+		Ti.include('/kranium/lib/test/jasmine-1.0.2.js');
+		Ti.include('/kranium/lib/test/jasmine-titanium-node.js');
+
+		function test(){
+			jasmine.currentEnv_ = null;
+			jasmine.getEnv().addReporter(new jasmine.TitaniumNodeReporter());
+
+			win = Ti.UI.createWindow({ width: 100, height: 100, backgroundColor: '#ccc', left: -200, opacity: 0.8 });
+			win.open();
+			Ti.App.addEventListener('filechange', function(){ win.close(); });
+
+			q = function(str){
+				return (Array.prototype.slice.call(arguments).join(", ")).split(/\s+,\s+/g).map(function(id){ return getElementById(id); });
+			};
+
+			// Include all the test files
+			//Ti.include('/test/demo.js');
+			
+			var testDir = Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory, 'test');
+			testDir.getDirectoryListing().forEach(function(file){
+				if(file !== 'lib'){
+					Ti.include('/test/' + file);
+				}
+			});
+			
+			
+			jasmine.getEnv().execute();
+		}
+		test();
+	}
+})(this);
+
+/*** END ***/
+/**
+ * Define Jade loader
+ * Only load Jade when needed, and then only do it once.
+ */
+(function(){
+	K.jade = function(jadeStr, o){
+		Ti.include('/kranium/lib/kranium-jade.js');
+		if(K.jade.isLoader){
+			throw 'something went wrong while loading jade';
+		}
+		return K.jade(jadeStr, o);
+	};
+	K.jade.isLoader = true;
+})();
+
+/*** TESTER ***/
+/**
  * Define style module
  */
 
@@ -1745,7 +2317,7 @@ $.qsa = $$ = (function(document, global){
 
 })(this);
 
-/*** CREATE ***/
+/*** JADE-LOADER ***/
 /**
  * Define create module
  */
@@ -2262,576 +2834,6 @@ $.qsa = $$ = (function(document, global){
 	};
 	
 })(this);
-
-/*** AJAX ***/
-/**
- * Define AJAX module
- */
-
-
-(function(global){
-
-    /**
-     * Default AJAX settings
-     */
-	var noop = function(){}, 
-		ajaxDefaults = {
-		cache: true,
-		data: {},
-		error: function(){},
-		defError: function(e){
-			Ti.API.error(['xhr', this.opts]);
-			var a = Ti.UI.createAlertDialog({
-				buttonNames: ['Försök igen','Avbryt'],
-				cancel: 1,
-				title: 'Kommunikationsfel',
-				message: "Kunde ej nå server. \nKolla din uppkoppling och försök igen!"
-			});
-			var xhr = this;
-			a.addEventListener('click', function(e){
-				if(e.index == 0){
-					K.ajax(xhr.inOpts);
-				}
-			});
-			a.show();
-		},
-		appcacheAge: 360000000,
-		appcache: false, // TODO - set this to false!!
-		timeout: 30000,
-		success: noop,
-		type: 'GET',
-		dataType: 'json'
-		};
-
-	/**
-	 * Simplified ajax
-	 *
-	 * @param {Object} inOpts containing
-	 * * type
-	 * * dataType
-	 * * data
-	 * * success
-	 * * error
-	 * * timeout
-	 * @returns {Ti.Network.HTTPClient} The resulting HTTPClient
-	 */
-	K.ajax = function(inOpts){
-		var opts = K.extend(K.extend({}, ajaxDefaults), inOpts), 
-			xhr = Ti.Network.createHTTPClient(opts), 
-			data = K.extend(opts.data, opts.extendData || {}),
-			loader = { _hide: function(){} },
-			hash;
-	
-		if(opts.loader){
-		
-			//Ti.API.log('optsloader', K.stringify(opts.loader));
-			var parent = (opts.loader._type ? opts.loader : K.currentWindow||Ti.UI.currentWindow);
-			loader = parent._loader||K.createActivityIndicator({ className: 'loader' });
-		
-			if(!parent._loader){
-			
-				parent.add(loader);
-				loader._show = function(){ loader.opacity = 0; loader.show(); loader.animate({ opacity: 0.7, duration: 300 }); }
-				loader._hide = function(){ loader.animate({ opacity: 0, duration: 300 }, function(){ loader.hide(); }); }
-				parent._loader = loader;
-			}
-			loader._show();
-			Ti.API.log('showing loader');
-		}
-		xhr.inOpts = inOpts;
-	
-		if(!opts.url){
-			loader._hide();
-			return false;
-		}
-		 
-		xhr.onload = function(){
-			try {
-				var text = typeof opts.preprocess === 'function' ? opts.preprocess(this.responseText) : this.responseText,
-					response;
-					
-				switch (opts.dataType) {
-					case 'json':
-						try {
-							response = JSON.parse(text);
-						}
-						catch(e){
-							Ti.API.error(e);
-							Ti.API.error(text);
-							throw "WTF?!"+e;
-						}
-						break;
-					
-					default:
-						response = text;
-						break;
-				}
-
-			
-				opts.success && opts.success.call(opts.context || xhr, response, xhr.status, xhr);
-				loader._hide();
-				
-				opts.complete && opts.complete(xhr, ({200:'success',304:'notmodified'})[xhr.status]||'error');
-			} 
-			catch (e) {
-				Ti.API.error(['onload error', e]);
-			}
-			opts.anyway && opts.anyway();
-		};
-		xhr.opts = opts;
-		if (!opts.silent){
-			xhr.onerror = function(e){
-				opts.anyway && opts.anyway();
-				loader._hide();
-				if( (opts.error && opts.error(e) !== false) || !opts.error){ xhr.defError(e); }
-			};
-		}
-		xhr.requestedAt = new Date().getTime();
-		xhr.open(opts.type, opts.url + (!opts.cache ? '?' + new Date().getTime() : ''));
-	
-		opts.beforeSend && opts.beforeSend(xhr);
-		opts.contentType && xhr.setRequestHeader('Content-Type', opts.contentType);
-		var name;
-		if(opts.headers){
-			for(name in opts.headers){
-				xhr.setRequestHeader(name, opts.headers[name]);
-			}
-		}
-		xhr.send(data);
-		return xhr;
-	};
-
-	/**
-	 * Change default AJAX settings
-	 *
-	 * @param {Object} opts containing any or all of
-	 * * type
-	 * * dataType
-	 * * data
-	 * * success
-	 * * error
-	 * * timeout
-	 */
-	K.ajaxSetup = function(opts){ K.merge(ajaxDefaults, opts); };
-
-	/**
-	 * YQL service path
-	 */
-	var yqlStart = 'http://query.yahooapis.com/v1/public/yql',
-		yqlEnd = '&format=json&callback=';
-	
-	/**
-	 * YQL interface
-	 *
-	 * @param {Object} opts containing
-	 * * q
-	 * * params
-	 * * success
-	 * * error
-	 * * timeout
-	 * @returns {Ti.Network.HTTPClient} The resulting HTTPClient
-	 */	
-	
-	K.yql = function(opts){
-		opts.url = yqlStart;
-		opts.data = ('format=json&callback=&diagnostics=true&q=' + opts.q).esc(opts.params, encodeURIComponent).toString();
-		opts.type = 'POST';
-		opts.headers = {
-			"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-		};
-		return K.ajax(opts);
-	};
-
-})(this);
-
-/*** LIVE ***/
-/**
- * Define live module
- */
-
-(function(global) {
-
-	K.reset = function() {
-		K.elsByClassName = {};
-		K.elsById = {};
-		K.elsByName = {};
-		uuid = win._uuid = 1;
-	};
-	K.reset();
-
-	function cleanse(s) {
-		return (s || '').replace(/[<>&]/g, function(m) {
-			return {
-				'&': '&amp;',
-				'>': '&gt;',
-				'<': '&lt;'
-			} [m];
-		});
-	}
-
-	var Framer = function(delimiter) {
-		this.delimiter = delimiter ? delimiter : "\0";
-		this.buffer = [];
-	};
-
-	Framer.prototype.next = function(data) {
-		var frames = data.split(this.delimiter, -1);
-		this.buffer.push(frames.shift());
-		if (frames.length > 0) {
-			frames.unshift(this.buffer.join(''));
-			this.buffer.length = 0;
-			this.buffer.push(frames.pop());
-		}
-		return frames;
-	};
-
-	var framer = new Framer("ZOMG" + "KRAWALLERROCKS");
-
-	/**
-	 * Start watching for file changes to be piped from nodejs server
-	 * @param host Host for server
-	 * @param port Port for server. Default is 8128
-	 * @param win Window to add 'close' listener to for cleaning up socket
-	 */
-	Ti.App.Properties.setBool('_watching', false);
-	K.watch = function(host, port) {
-		K.log('starting livetanium');
-		// Only open one connection, preferrably from app.js
-		if (Ti.App.Properties.getBool('_watching')) {
-			return false;
-		}
-		Ti.App.Properties.setBool('_watching', true);
-
-		var watchers = {},
-			Watcher = {
-			watch: function(file, callback, e) {
-				if (!watchers[file]) {
-					socket.write(JSON.stringify({
-						action: 'watch',
-						file: file
-					}));
-					watchers[file] = e.source;
-				}
-			}
-		};
-
-		var socket = Titanium.Network.createTCPSocket({
-			hostName: host,
-			port: port,
-			mode: Titanium.Network.READ_WRITE_MODE
-		});
-
-		function parseFrame(frame) {
-			try {
-				var o = JSON.parse(frame);
-
-				switch (o.action) {
-					case 'cmd':
-						var res;
-						try {
-							res = eval('(' + o.cmd + ')');
-						} catch(e) {
-							res = e;
-						}
-						socket.write(JSON.stringify({
-							action: 'res',
-							res: cleanse(K.stringify(res)).replace(/[\u007F-\uFFFF]/g, function(a){ return '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4) })
-						}));
-						break;
-
-					case 'filechange':
-						// Upon filechange, call all applicable listening contexts
-						Ti.App.fireEvent('filechange', { name: o.file });
-						try {
-							var name = o.file.replace(/^\.?\//, function($0) {
-								return '';
-							}).replace(/\//g, '-'),
-								path = Ti.Filesystem.tempDirectory.replace(/\/$/, ''),
-								h = Ti.Filesystem.getFile(path, name);
-
-							h.write(o.content);
-						} catch(e) {
-							Ti.API.error(e);
-						}
-
-						var m = o.file.match(/[^.]+$/); // Get file extension
-						switch (m && m[0]) {
-							case 'kss':
-							case 'jss':
-								K.log('Applying live styles from: "' + o.file + '"');
-								
-								K.style(null, o.content, true);
-								
-								/*var tree = K.buildSelectorTree(o.content);
-								tree.forEach(function(rule) {
-									//Ti.API.log('procel', [rule.selector, K(rule.selector)]);
-									K(rule.selector).each(function() {
-										var el = this;
-										//Ti.API.log('el', el); 
-										rule.properties.forEach(function(o) {
-											el[o.property] = o.value;
-										});
-									});
-								});*/
-								break;
-
-							case 'js':
-								if (/kui\//.test(o.file)) {
-									var req = eval('try { var exports = {}; ' + o.content + '; exports.Class; } catch(e){ Ti.API.error(e); }'),
-										type;
-									
-									K.log('Trying to live update "'+o.file+'". If this explodes, run "kranium watch --nolivejs" instead')
-									if (req && (type = (o.file.match(/([^\/]+)\.js$/) || [false, false])[1])) {
-										var klass = K.classes[type] = K.loadClass(type, req);
-										K('.' + type).each(function() {
-											//Ti.API.log('oldprops', this._props);
-											
-											var old = this,
-												index,
-												n = new klass(old._props).el;
-
-											if (n._type == 'window') {
-												K(old.children).each(function() {
-													K(this).remove();
-												});
-
-												/*if ((index = K.elsByName[old._type].indexOf(old)) != -1) {
-													K.elsByName[old._type].splice(index, 1);
-												}*/
-
-												var $old = K(old);
-												K(n.children).each(function() {
-													$old.append(this);
-												});
-												//Ti.API.log('children', n.children);
-											} else {
-												var parent = old.getParent();
-												K(old).remove();
-												
-												/*if ((index = K.elsByName[old._type].indexOf(old)) != -1) {
-													K.elsByName[old._type].splice(index, 1);
-												}*/
-
-												K(parent).append(n);
-											}
-											//Ti.API.log('n', n);
-										});
-									}
-								}
-							break;
-						}
-						break;
-
-					case 'files':
-						// Write all files to app tmp directory on startup
-						Ti.API.info('Socket connected - receiving files');
-						o.files.forEach(function(f, i) {
-							var name = f.name.replace(/\.\//, function($0) {
-								return '';
-							}).replace(/\//g, '-'),
-								path = Ti.Filesystem.tempDirectory.replace(/\/$/, ''),
-								h = Ti.Filesystem.getFile(path, name);
-
-							h.write(f.content);
-						});
-						break;
-
-					case 'message':
-						Ti.API.info('Socket message', o.message);
-						break;
-				}
-			} catch(e) {
-				Ti.API.error(e);
-			}
-		}
-
-		socket.addEventListener('read', function(e) {
-			//Ti.API.log('inserting into frame', e.data.text);
-			framer.next(e.data.text).forEach(parseFrame);
-		});
-		
-		socket.addEventListener('close', function(e) {
-			K.log('socket closed');
-		});
-
-		Ti.App.addEventListener('close', function(e) {
-			if (socket.isValid) {
-				Ti.API.log('close socket');
-				socket.close();
-			}
-		});
-
-		socket.connect();
-		socket.write(JSON.stringify({
-			action: 'echo',
-			message: 'Socket connected'
-		}));
-		
-		global.socketwrite = function(msg, type){ socket.write(JSON.stringify({ action: type, msg: msg })); };
-		global.customsocketwrite = function(o){ if(!o.action){ return; } socket.write(JSON.stringify(o)); };
-		
-		var log = K.log;
-		K.log = function(){
-			var args = Array.prototype.slice.call(arguments);
-			log.apply(log, args);
-			try {
-				socket.write(JSON.stringify({
-					action: 'res',
-					res: cleanse(K.stringify(args.length === 1 ? args[0] : args))
-				}));
-			} catch(e){ Ti.API.error(e); }
-		};
-	};
-
-})(this);
-
-
-/*** STRINGIFY ***/
-/**
- * Define stringify module
- * 
- * TiObject stringifier based heavily on code from @rem's JSConsole
- */
-
-(function(global){
-	var reTiObject = /^\[object Ti/;
-	function sortci(a, b) {
-	  return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
-	}
-
-	function stringify(o, simple) {
-	  var json = '', i, type = ({}).toString.call(o), parts = [], names = [], ownType = o && o.toString && o.toString();
-  
-	  if (type == '[object String]') {
-	    json = '"' + o.replace(/"/g, '\\"') + '"';
-	  } else if (type == '[object Array]') {
-	    json = '[';
-	    for (i = 0; i < o.length; i++) {
-	      parts.push(stringify(o[i], simple));
-	    }
-	    json += parts.join(', ') + ']';
-	    json;
-	  } else if (o === null) {
-	    json = 'null';
-	  } else if (o === undefined) {
-	    json = 'undefined';
-	  } else if (ownType && reTiObject.test(ownType)) {
-		json += [
-			'"',
-			"<",
-			(o._type||'unknown'),
-			(o._id ? " id='"+o._id+"'" : ""),
-			o.className ? " class='"+o.className+"'" : "",
-			">",
-			((tmp = (o.text||o.title||""))? tmp :''),
-			"</" + (o._type||'unknown') + ">",
-			'"'
-		].join("");
-	  } else if (type == '[object Object]') {
-	    json = '{';
-	    for (i in o) {
-	      names.push(i);
-	    }
-	    names.sort(sortci);
-	    for (i = 0; i < names.length; i++) {
-	      parts.push(stringify(names[i]) + ': ' + stringify(o[names[i] ], simple));
-	    }
-	    json += parts.join(', ') + '}';
-	  } else if (type == '[object Number]') {
-	    json = o+'';
-	  } else if (type == '[object Boolean]') {
-	    json = o ? 'true' : 'false';
-	  } else if (type == '[object Function]') {
-	    json = o.toString();
-	  } else if (simple == undefined) {
-	    json = type + '{\n';
-	    for (i in o) {
-	      names.push(i);
-	    }
-	    names.sort(sortci);
-	    for (i = 0; i < names.length; i++) {
-	      parts.push(names[i] + ': ' + stringify(o[names[i]], true)); // safety from max stack
-	    }
-	    json += parts.join(',\n') + '\n}';
-	  } else {
-	    try {
-	      json = o+''; // should look like an object      
-	    } catch (e) {}
-	  }
-	  return json;
-	}
-	K.stringify = stringify;
-
-})(this);
-
-/*** END ***/
-/**
- * Define end module
- */
-
-(function(global){
-	Ti.include('/kranium/kranium-generated-bootstrap.js');
-})(this);
-
-
-/*** TESTER ***/
-/**
- * Define tester module
- * Jasmine tester
- */
-
-(function(global){
-	if(global.TEST){
-		K.log('Testing activated! :-O');
-		Ti.App.addEventListener('filechange', test);
-
-		Ti.include('/kranium/lib/test/jasmine-1.0.2.js');
-		Ti.include('/kranium/lib/test/jasmine-titanium-node.js');
-
-		function test(){
-			jasmine.currentEnv_ = null;
-			jasmine.getEnv().addReporter(new jasmine.TitaniumNodeReporter());
-
-			win = Ti.UI.createWindow({ width: 100, height: 100, backgroundColor: '#ccc', left: -200, opacity: 0.8 });
-			win.open();
-			Ti.App.addEventListener('filechange', function(){ win.close(); });
-
-			q = function(str){
-				return (Array.prototype.slice.call(arguments).join(", ")).split(/\s+,\s+/g).map(function(id){ return getElementById(id); });
-			};
-
-			// Include all the test files
-			//Ti.include('/test/demo.js');
-			
-			var testDir = Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory, 'test');
-			testDir.getDirectoryListing().forEach(function(file){
-				if(file !== 'lib'){
-					Ti.include('/test/' + file);
-				}
-			});
-			
-			
-			jasmine.getEnv().execute();
-		}
-		test();
-	}
-})(this);
-
-/*** JADE-LOADER ***/
-/**
- * Define Jade loader
- * Only load Jade when needed, and then only do it once.
- */
-(function(){
-	K.jade = function(jadeStr, o){
-		Ti.include('/kranium/lib/kranium-jade.js');
-		if(K.jade.isLoader){
-			throw 'something went wrong while loading jade';
-		}
-		return K.jade(jadeStr, o);
-	};
-	K.jade.isLoader = true;
-})();
 
 /*** ANDROIDSHIM ***/
 (function(){
