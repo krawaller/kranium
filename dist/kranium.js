@@ -703,7 +703,9 @@ var reTiObject = /^\[object Ti/,
 	 */
 	$.is = {
 		android: platform === 'android',
-		ios: platform === 'iphone'
+		iphone: platform === 'iphone',
+		ipad: platform === 'ipad',
+		ios: platform === 'iphone' || platform === 'ipad'
 	};
 	
 })(this);
@@ -1680,10 +1682,8 @@ $.qsa = $$ = (function(document, global){
 		NULL = null,
 		UNDEFINED = undefined;
 
-		var psuedoMatchers = {
-			android: Ti.Platform.osname === 'android',
-			ios: Ti.Platform.osname === 'iphone'
-		};
+		var psuedoMatchers = K.is;
+		
 		K.buildSelectorTree = function(text) {
 			var rules = [], ruletext, rule,
 				match, selector, psuedo, pidx, proptext, splitprop, properties, sidx, prop, val;
