@@ -1,4 +1,5 @@
 var fs = require('fs'),
+	path = require('path'),
 	_ = require('nimble'),
 	flag = './.monitor',
 	uglify = require('uglify-js'),
@@ -55,6 +56,9 @@ function watch(fn, params){
 
 desc('Create K-library from parts');
 task('build', [], function(params) {
+	fs.renameSync('dist', 'dist-' + Date.now());
+	fs.mkdirSync('dist', 0777);
+	
 	watch(function(params, done){
 		_.map(parts, function(part, callback){ fs.readFile('lib/kranium-src/' + part + '.js', callback); }, function(err, res){
 			var contents = res.map(function(b, i){ return ('/*** ' + parts[i].toUpperCase() + ' ***/\n') + b.toString() }).join("\n\n");
@@ -65,6 +69,7 @@ task('build', [], function(params) {
 			
 				
 			fs.writeFileSync('dist/kranium.js', contents);
+			
 			
 			/*var ast = uglify.parser.parse(contents);
 			ast = uglify.uglify.ast_mangle(ast);
@@ -77,6 +82,10 @@ task('build', [], function(params) {
 	}, params);
 	
 	fs.writeFileSync('dist/kranium-jade.js', fs.readFileSync('lib/kranium-src/jade.js'));
+	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/kss', 'dist/kss']);
+	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/images', 'dist/images']);
+	//require('child_process').spawn('cp', ['-r', 'lib/kranium-src/backbone', 'dist/backbone']);
+	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/test', 'dist/test']);
 });
 
 desc('Create annotated source docs');
