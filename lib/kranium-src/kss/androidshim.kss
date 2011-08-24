@@ -30,7 +30,7 @@
 	background-selected-image: kranium/lib/images/android-navbar-button-pressed.png;
 }
 
-.navButtonSeparator {
+.navBarSeparator {
 	top: 0;
 	width: 2;
 	height: 44dp;
