@@ -26,6 +26,15 @@
 	background-image: false;
 	color: #fff;
 	font-size: 13dp;
+	background-image: kranium/lib/images/android-navbar-button.png;
+	background-selected-image: kranium/lib/images/android-navbar-button-pressed.png;
+}
+
+.navButtonSeparator {
+	top: 0;
+	width: 2;
+	height: 44dp;
+	background-image: kranium/lib/images/android-navbar-separator.png;
 }
 
 .rightNavButton {
