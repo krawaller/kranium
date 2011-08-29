@@ -1,4 +1,51 @@
+/*** LICENSE ***/
+/*!
+ * Kranium
+ * Copyright (c) 2011 Jacob Waller <jacob@krawaller.se>
+ * MIT Licensed
+ * 
+ * Portions of the copyright belongs to the following entities
+ * Simple JavaScript Inheritance (c) 2008 John Resig 
+ * "mini" Selector Engine (c) 2009 James Padolsey
+ * Jade (c) 2009-2010 TJ Holowaychuk <tj@vision-media.ca>
+ * Jasmine (c) 2008-2011 Pivotal Labs
+ * Zepto (c) 2010, 2011 Thomas Fuchs
+ * JSConsole (c) 2010 Remy Sharp, http://jsconsole.com
+ * selectivizr v1.0.0 - (c) Keith Clark
+ * Flexie (c) 2010 Richard Herrera
+ * changeColor (c) 2010 eyelidlessness
+ * TitaniumReporter (c) 2011 Guilherme Chapiewski
+ */
+
+
+
 /*** CORE ***/
+/*!
+The core module of Kranium is heavily based on Zepto, which has the following license:
+
+Copyright (c) 2010, 2011 Thomas Fuchs
+http://zeptojs.com/
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 /**
  * Define core module
  */
@@ -758,7 +805,10 @@ K.pad = function(num, totalChars) {
     return num;
 };
 
-// Ratio is between 0 and 1
+
+/*!
+ * changeColor (c) 2010 eyelidlessness
+ */
 K.changeColor = function(color, ratio, darker) {
     // Trim trailing/leading whitespace
     color = color.replace(/^\s*|\s*$/, '');
@@ -826,19 +876,21 @@ K.changeColor = function(color, ratio, darker) {
 
 var androidIndicator;
 K.loadify = function(el, fn, msg, modal){
-	var p = el._p||el||GLOBAL.win||Ti.UI.currentWindow,
-		done;
+	var done;
 		
-	if(!p){ return; } 
-	
 	if(K.is.ios){
+		var p = (el && el._p) || el || GLOBAL.win || Ti.UI.currentWindow;
+		
+		if(!p){ return; }
+		
 		if(modal){
 			p = el._p = K('tabgroup').get(0);
 		} 
 	
 		if(p && !p._loader){
 			p._loader = K.createActivityIndicator({
-				className: modal ? 'modalLoader' : 'loader'
+				className: modal ? 'modalLoader' : 'loader',
+				message: ''
 			});
 
 			p.add(p._loader);
@@ -846,6 +898,7 @@ K.loadify = function(el, fn, msg, modal){
 		
 		p._loader.message = msg || null;
 		p._loader.show();
+		p._loader.message = msg || null;
 		
 	} else {
 		androidIndicator = androidIndicator || Titanium.UI.createActivityIndicator();
@@ -862,8 +915,8 @@ K.loadify = function(el, fn, msg, modal){
 };
 
 K.doneify = function(el){
-	var p = el._p||el||GLOBAL.win||Ti.UI.currentWindow;
 	if(K.is.ios){
+		var p = (el && el._p) || el || GLOBAL.win || Ti.UI.currentWindow;
 		p && p._loader && setTimeout(p._loader.hide, 500);
 	} else {
 		androidIndicator.hide();
@@ -949,7 +1002,7 @@ K.parseJSON = JSON.parse;
 			hint = null;
 		}
 	
-		return (cache = (Titanium.Locale.getString(key, hint)||'').replace(/(^|[^\w\d])@([A-Za-z_\-]+)\b/g, function($0, $1, name){
+		return (cache = (Titanium.Locale.getString(key, hint || '')||'').replace(/(^|[^\w\d])@([A-Za-z_\-]+)\b/g, function($0, $1, name){
 			return ($1||'')+modifier(obj && typeof obj[name] !== 'undefined' ? obj[name] : Titanium.Locale.getString(name));
 		}));
 	};
@@ -960,6 +1013,7 @@ K.parseJSON = JSON.parse;
 
 function singleExtend(destination, source){
 	var property;
+	if(!destination){ return source; }
 	for (property in source) { destination[property] = source[property]; }
 	return destination;
 }
@@ -1161,7 +1215,7 @@ String.prototype.esc = function(obj, func, matcher){
 //})(this);
 
 /*** QSA ***/
-/**
+/*!
  * "mini" Selector Engine
  * Copyright (c) 2009 James Padolsey
  * -------------------------------------------------------
@@ -1653,6 +1707,15 @@ $.qsa = $$ = (function(document, global){
 		}
 	};
 
+
+	/*!
+	 * jQuery JavaScript Library v1.4.3
+	 * http://jquery.com/
+	 *
+	 * Copyright 2010, John Resig
+	 * Dual licensed under the MIT or GPL Version 2 licenses.
+	 * http://jquery.org/license 
+	 */
 	function forEach(object, callback, reverse) {
 		var name, i = 0, value,
 			length = object.length,
@@ -1673,7 +1736,43 @@ $.qsa = $$ = (function(document, global){
 		}
 	}
 
-	// Code from... ?
+	/*!
+	
+	The following code comes from Flexie and Selectivizr, which has the following licenses:
+	
+	
+	Flexie
+	
+	The MIT License
+	
+	Copyright (c) 2010 Richard Herrera
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	THE SOFTWARE.
+	
+	
+	
+    selectivizr v1.0.0 - (c) Keith Clark, freely distributable under the terms 
+    of the MIT license.
+
+    selectivizr.com
+		    
+	*/
 	var WHITESPACE_CHARACTERS = /\t|\n|\r/g,
 		EMPTY_STRING = "",
 		PLACEHOLDER_STRING = "$1",
@@ -2272,7 +2371,6 @@ $.qsa = $$ = (function(document, global){
  * Define AJAX module
  */
 
-
 (function(global){
 
     /**
@@ -2282,22 +2380,18 @@ $.qsa = $$ = (function(document, global){
 		ajaxDefaults = {
 		cache: true,
 		data: {},
-		error: function(){},
-		defError: function(e){
-			Ti.API.error(['xhr', this.opts]);
-			var a = Ti.UI.createAlertDialog({
-				buttonNames: ['Försök igen','Avbryt'],
+		error: function(e, opts){
+			K.createAlertDialog({
+				buttonNames: [K.l('try_again'), K.l('cancel')],
 				cancel: 1,
-				title: 'Kommunikationsfel',
-				message: "Kunde ej nå server. \nKolla din uppkoppling och försök igen!"
-			});
-			var xhr = this;
-			a.addEventListener('click', function(e){
-				if(e.index == 0){
-					K.ajax(xhr.inOpts);
+				title: K.l('communication_error'),
+				message: K.l('communication_error_description'),
+				click: function(e){
+					if(e.index == 0){
+						K.ajax(opts);
+					}
 				}
-			});
-			a.show();
+			}).show();
 		},
 		appcacheAge: 360000000,
 		appcache: false, // TODO - set this to false!!
@@ -2320,29 +2414,23 @@ $.qsa = $$ = (function(document, global){
 	 * @returns {Ti.Network.HTTPClient} The resulting HTTPClient
 	 */
 	K.ajax = function(inOpts){
-		var opts = K.extend(K.extend({}, ajaxDefaults), inOpts), 
-			xhr = Ti.Network.createHTTPClient(opts), 
+		var opts = K.extend(K.extend({}, ajaxDefaults), inOpts);
+		
+		var _error = opts.error;
+		opts.error = function(e){
+			_error.call(this, e, opts);
+		};
+		
+		var	xhr = Ti.Network.createHTTPClient(opts), 
 			data = K.extend(opts.data, opts.extendData || {}),
-			loader = { _hide: function(){} },
+			loader = { _hide: function(){ K.doneify(opts.loader); }, _show: function(){ K.loadify(opts.loader, null, (K.is.android ? K.l('loading') : '') ); } },
 			hash;
 	
 		if(opts.loader){
-		
-			//Ti.API.log('optsloader', K.stringify(opts.loader));
-			var parent = (opts.loader._type ? opts.loader : K.currentWindow||Ti.UI.currentWindow);
-			loader = parent._loader||K.createActivityIndicator({ className: 'loader' });
-		
-			if(!parent._loader){
-			
-				parent.add(loader);
-				loader._show = function(){ loader.opacity = 0; loader.show(); loader.animate({ opacity: 0.7, duration: 300 }); }
-				loader._hide = function(){ loader.animate({ opacity: 0, duration: 300 }, function(){ loader.hide(); }); }
-				parent._loader = loader;
-			}
 			loader._show();
-			Ti.API.log('showing loader');
 		}
 		xhr.inOpts = inOpts;
+		K.log('setting inopts', xhr.inOpts);
 	
 		if(!opts.url){
 			loader._hide();
@@ -2351,31 +2439,35 @@ $.qsa = $$ = (function(document, global){
 		 
 		xhr.onload = function(){
 			try {
-				var text = typeof opts.preprocess === 'function' ? opts.preprocess(this.responseText) : this.responseText,
-					response;
-					
-				switch (opts.dataType) {
-					case 'json':
-						try {
-							response = JSON.parse(text);
-						}
-						catch(e){
-							Ti.API.error(e);
-							Ti.API.error(text);
-							throw "WTF?!"+e;
-						}
-						break;
-					
-					default:
-						response = text;
-						break;
+				if(Number(xhr.status.toString()[0]) > 3){
+					this.error && this.error.call(xhr, null);
+				} else {
+					var text = typeof opts.preprocess === 'function' ? opts.preprocess(this.responseText) : this.responseText,
+						response;
+
+					switch (opts.dataType) {
+						case 'json':
+							try {
+								response = JSON.parse(text);
+							}
+							catch(e){
+								Ti.API.error(e);
+								Ti.API.error(text);
+								throw "WTF?!"+e;
+							}
+							break;
+
+						default:
+							response = text;
+							break;
+					}
+
+
+					opts.success && opts.success.call(opts.context || xhr, response, xhr.status, xhr);
+					opts.complete && opts.complete(xhr, ({200:'success',304:'notmodified'})[xhr.status]||'error');
 				}
 
-			
-				opts.success && opts.success.call(opts.context || xhr, response, xhr.status, xhr);
 				loader._hide();
-				
-				opts.complete && opts.complete(xhr, ({200:'success',304:'notmodified'})[xhr.status]||'error');
 			} 
 			catch (e) {
 				Ti.API.error(['onload error', e]);
@@ -2693,9 +2785,31 @@ $.qsa = $$ = (function(document, global){
 /*** STRINGIFY ***/
 /**
  * Define stringify module
- * 
- * TiObject stringifier based heavily on code from @rem's JSConsole
  */
+
+/*!
+TiObject stringifier is based heavily on code from @rem's JSConsole, which has the following license
+
+Copyright (c) 2010 Remy Sharp, http://jsconsole.com
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 
 (function(global){
 	var reTiObject = /^\[object Ti/;
@@ -2984,7 +3098,6 @@ if(K.is.android){
 				separatorName = navButtonName + 'Separator';
 				
 			navButtonOptions.className = (navButtonOptions.className||"") + " " + navButtonClass + " navButton";
-			K.log('r', navButtonOptions);
 			
 			if(this[navButtonName]){
 				this._navBar.remove(this[navButtonName]);
@@ -2994,18 +3107,13 @@ if(K.is.android){
 			
 			if(!this[separatorName]){
 				this[separatorName] = K.createView({
-					top: 0,
-					width: 2,
-					height: '44dp',
-					backgroundImage: 'images/android-navbar-separator.png'
+					className: 'navBarSeparator'
 				});
 				this._navBar.add(this[separatorName]);
 			}
 			this[separatorName][rightLeft||'right'] = this[navButtonName].width;
 			
 			this._navBar.add(this[navButtonName]);
-			//K.alert(1);
-			K.log(' ================================== setnavbutton');
 		},
 		
 		setRightNavButton: function(navButton){
@@ -3079,6 +3187,21 @@ if(K.is.android){
 		return toolbar;
 	};
 
+
+	function dipToPx(str){
+		var parts = String(str).match(/^([\d\.]+)(\w*)$/),
+			value;
+		
+		if(parts){
+			value = parts[2] == 'dp' || parts[2] == 'dip' ? 
+				Math.round(Ti.Platform.displayCaps.dpi / 160 * parts[1]) : 
+				Number(parts[1]);
+		} else {
+			value = 0;
+		}
+
+		return value;
+	}
 
 	// Custom tabGroup
 	
@@ -3210,18 +3333,23 @@ if(K.is.android){
 
 		this._tabButtonContainer = K.create({
 			type: 'view',
-			className: 'tabButtonContainer'
+			className: 'tabButtonContainer',
+			//visible: false
 		});
 
 		this._container = K.createWindow({
 			className: 'tabGroupWindow',
 			navBarHidden: true,
 			exitOnClose: true,
+			windowSoftInputMode: Ti.UI.Android.SOFT_INPUT_ADJUST_PAN,
 			children: [this._tabButtonContainer],
 			events: {
 				open: function(e){
 					me.setActiveTab(opts.index || 0);
 					Ti.Gesture.addEventListener('orientationchange', me._onOrientationChange.bind(me));
+					
+					//me.repaint();
+					//me._tabButtonContainer.show();
 				}
 			}
 		});
@@ -3237,8 +3365,8 @@ if(K.is.android){
 			tabStyle = K.getStyle({ type: 'tab' });
 		
 		this.setBackgroundColor(windowStyle.barColor || tabGroupStyle.backgroundColor || tabStyle.backgroundColor || '#aaa');
-		
 		this.repaint();
+		
 		(K.elsByName['tabgroup']||(K.elsByName['tabgroup'] = [])).push(this);
 	}
 	TabGroup.prototype.open = function(){
@@ -3259,8 +3387,16 @@ if(K.is.android){
 	};
 	
 	TabGroup.prototype.repaint = function(){
-		var width = this._getTabWidth();
+		/*if(!this._statusBarHeight){
+			var winHeight = this._container.height,
+				height = Ti.Platform.displayCaps.platformHeight;
+				
+			this._statusBarHeight = (height - winHeight) || 0;			
+		}
 		
+		this._tabButtonContainer.top = Ti.Platform.displayCaps.platformHeight - this._statusBarHeight - dipToPx(this._tabButtonContainer.height);*/
+		
+		var width = this._getTabWidth();
 		this.tabs.forEach(function(tab, i){
 			tab._tabButton.width = width;
 			tab._tabButton.left = width * i;

@@ -16,6 +16,8 @@
 .navBarLabel {
 	height: 44dp;
 	color: #fff;
+	font-size: 15dp;
+	font-weight: bold;
 }
 
 .navButton {
@@ -23,6 +25,16 @@
 	width: 80dp;
 	background-image: false;
 	color: #fff;
+	font-size: 13dp;
+	background-image: kranium/lib/images/android-navbar-button.png;
+	background-selected-image: kranium/lib/images/android-navbar-button-pressed.png;
+}
+
+.navBarSeparator {
+	top: 0;
+	width: 2;
+	height: 44dp;
+	background-image: kranium/lib/images/android-navbar-separator.png;
 }
 
 .rightNavButton {
