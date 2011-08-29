@@ -8,6 +8,7 @@ var fs = require('fs'),
 	exec = require('child_process').exec;
 	
 	parts = [
+		"license",
 		"core",
 		"settings",
 		"utils",
