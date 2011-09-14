@@ -1,0 +1,54 @@
+.pullToRefreshHeader {
+	background-color: #e2e7ed;
+	width: 320;
+	height: 60;
+}
+
+
+.pullToRefreshArrow {
+	background-image: kranium/lib/kranium/images/pull-to-refresh-arrow.png;
+	width: 23;
+	height: 60;
+	bottom: 10;
+	left: 20;
+}
+
+.pullToRefreshBorder {
+	background-color: #798eab;
+	height: 1;
+	bottom: 0;
+}
+
+.pullToRefreshStatusLabel {
+	left: 55;
+	width: 230;
+	bottom: 31;
+	height: auto;
+	color: #576c89;
+	text-align: center;
+	font-size: 14;
+	font-weight: bold;
+	shadow-color: #fff;
+	shadow-offset-x: 0;
+	shadow-offset-y: 1;
+}
+
+.pullToRefreshLastUpdatedLabel {
+	left: 55;
+	width: 230;
+	bottom: 12;
+	height: auto;
+	color: #576c89;
+	text-align: center;
+	font-size: 13;
+	shadow-color: #fff;
+	shadow-offset-x: 0;
+	shadow-offset-y: 1;
+}
+
+.pullToRefreshActivityIndicator {
+	left: 20;
+	bottom: 13;
+	width: 30;
+	height: 30
+}
