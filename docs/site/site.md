@@ -18,7 +18,7 @@ Kranium isn't super tiny. The core library currently weighs in at 31 kb uglified
 Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do [tell us](mailto://kraniumjs@krawaller.se). 
 
 
-__Latest version:__ [0.1.0](http://dev.krawaller.se/kraniumjs/build/kraniumjs-0.1.0.zip).
+__Latest version:__ [0.1.1](http://dev.krawaller.se/kraniumjs/build/kraniumjs-0.1.1.zip).
 <del>Or check out the [source code](http://github.com/krawaller/kranium).</del>
 
 #Overview
@@ -394,7 +394,7 @@ The development of Kranium is sponsored by [Logica](http://www.logica.com/)
 
 #Change Log
 
-__0.1.0:__ 2011-08-01 - first public release  
+__0.1.1:__ 2011-09-18 - first public release  
 
 <script type="text/javascript" charset="utf-8">
   jQuery(function($){
