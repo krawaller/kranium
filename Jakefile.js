@@ -10,6 +10,7 @@ var fs = require('fs'),
 	parts = [
 		"license",
 		"core",
+		"event",
 		"settings",
 		"utils",
 		"qsa", 
