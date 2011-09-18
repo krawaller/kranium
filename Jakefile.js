@@ -22,7 +22,7 @@ var fs = require('fs'),
 		"live", 
 		"stringify",
 		//"libs",
-		//"backboneintegration",
+		"backboneintegration",
 		"end",
 		"tester",
 		"jade-loader",
@@ -86,7 +86,7 @@ task('build', [], function(params) {
 	fs.writeFileSync('dist/kranium-jade.js', fs.readFileSync('lib/kranium-src/jade.js'));
 	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/kss', 'dist/kss']);
 	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/images', 'dist/images']);
-	//require('child_process').spawn('cp', ['-r', 'lib/kranium-src/backbone', 'dist/backbone']);
+	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/backbone', 'dist/backbone']);
 	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/test', 'dist/test']);
 });
 
