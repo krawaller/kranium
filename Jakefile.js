@@ -62,8 +62,15 @@ task('build', [], function(params) {
 	fs.mkdirSync('dist', 0777);
 	
 	watch(function(params, done){
-		_.map(parts, function(part, callback){ fs.readFile('lib/kranium-src/' + part + '.js', callback); }, function(err, res){
-			var contents = res.map(function(b, i){ return ('/*** ' + parts[i].toUpperCase() + ' ***/\n') + b.toString() }).join("\n\n");
+		var contents = parts.map(function(part, i){
+			return ('/*** ' + parts[i].toUpperCase() + ' ***/\n') + fs.readFileSync('lib/kranium-src/' + part + '.js').toString();
+		}).join("\n\n");
+		
+		fs.writeFileSync('dist/kranium.js', contents);
+		
+		done && done();
+		/*_.map(parts, function(part, callback){ fs.readFile('lib/kranium-src/' + part + '.js', callback); }, function(err, res){
+			var contents = res.map(function(b, i){ return (' ' + parts[i].toUpperCase() + ' \n') + b.toString() }).join("\n\n");
 			console.log('updating!');
 			
 			// Inject version automagically!
@@ -73,14 +80,14 @@ task('build', [], function(params) {
 			fs.writeFileSync('dist/kranium.js', contents);
 			
 			
-			/*var ast = uglify.parser.parse(contents);
-			ast = uglify.uglify.ast_mangle(ast);
-			ast = uglify.uglify.ast_squeeze(ast);
+			//var ast = uglify.parser.parse(contents);
+			//ast = uglify.uglify.ast_mangle(ast);
+			//ast = uglify.uglify.ast_squeeze(ast);
 			
-			fs.writeFileSync('../k2.min.js', uglify.uglify.gen_code(ast));*/
+			//fs.writeFileSync('../k2.min.js', uglify.uglify.gen_code(ast));
 			
 			done && done();
-		});
+		});*/
 	}, params);
 	
 	fs.writeFileSync('dist/kranium-jade.js', fs.readFileSync('lib/kranium-src/jade.js'));
