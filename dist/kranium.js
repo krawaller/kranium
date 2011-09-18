@@ -3143,11 +3143,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 					changed = model.changedAttributes();
 
 				if(el){
-					for(key in changed){
+					/*for(key in changed){
 						if(typeof el[key] === 'undefined'){
 							recreate = true;
 						}
-					}
+					}*/
 
 					if(!recreate){
 						for(key in changed){
@@ -3486,11 +3486,11 @@ if(K.is.android){
 			} else {
 				var itemWidth = o.width || K.getStyle({
 					type: o.type,
-					className: (o.className||o.cls||'') + ' toolbarItem'
+					className: 'toolbarItem ' + (o.className||o.cls||'')
 				}).width;
 				
 				if(itemWidth){
-					widthSum += itemWidth;
+					widthSum += dipToPx(itemWidth);
 				} else {
 					numSpacers++;
 				}
@@ -3508,18 +3508,18 @@ if(K.is.android){
 				if(typeof o === 'string'){
 					o = { type: 'label', text: o, width: spacerWidth };
 				}
-				o.className = (o.className||'') + ' toolbarItem';
+				o.className = 'toolbarItem ' + (o.className||'');
 
 				o.left = left;
 				o.width = o.width || K.getStyle({
 					type: o.type,
-					className: (o.className||o.cls||'') + ' toolbarItem'
+					className: 'toolbarItem ' + (o.className||o.cls||'')
 				}).width || spacerWidth;
 				
 				var el = K.create(o);
 
-				left += el.width||0;
-				
+				left += dipToPx(el.width||0);
+								
 				items.push(el);
 			}
 		});
@@ -3688,7 +3688,7 @@ if(K.is.android){
 			className: 'tabGroupWindow',
 			navBarHidden: true,
 			exitOnClose: true,
-			windowSoftInputMode: Ti.UI.Android.SOFT_INPUT_ADJUST_PAN,
+			windowSoftInputMode: Ti.UI.Android && Ti.UI.Android.SOFT_INPUT_ADJUST_PAN,
 			children: [this._tabButtonContainer],
 			events: {
 				open: function(e){
