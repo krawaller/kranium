@@ -2,7 +2,7 @@
 	"author": "Jacob Waller <jacob@krawaller.se> (http://blog.krawaller.se)",
 	"name": "kranium",
 	"description": "Brains for Titanium",
-	"version": "0.0.1",
+	"version": "0.1.1",
 	"homepage": "http://www.kraniumjs.com",
 	"repository": {
 		"type": "git",
@@ -29,7 +29,6 @@
 		"growl": ">= 1.1.0",
 		"nimble": ">= 0.0.2",
 		"colors": ">= 0.5.0",
-		"jake": ">= 0.1.12",
 		"uglify-js": ">= 1.0.1"
 	},
 	"devDependencies": {},
