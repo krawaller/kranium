@@ -1,0 +1,2 @@
+#!/bin/bash
+git checkout master docs && rm -rf site && mv docs/* . && mv docs.html index.html && rm -rf docs
