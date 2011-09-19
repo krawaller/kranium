@@ -2686,12 +2686,12 @@ $.qsa = $$ = (function(document, global){
 	};
 	
 	// From Zepto
-	$.get = function(url, success) {
+	/*$.get = function(url, success) {
 		$.ajax({
 			url: url,
 			success: success
 		})
-	};
+	};*/
 	$.post = function(url, data, success, dataType) {
 		if ($.isFunction(data)) dataType = dataType || success,
 		success = data,
