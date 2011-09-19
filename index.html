@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<title>Kranium</title>
+<meta name="description" content="Spine is a lightweight MVC framework for building JavaScript applications.">
+<meta name="keywords" content="spine,javascript,mvc,framework,backbone,node,web,app">
+<link rel="stylesheet" href="site/site.css" type="text/css" charset="utf-8">
+<link rel="stylesheet" href="site/highlight.css" type="text/css" charset="utf-8">
+<script src="site/jquery.js" type="text/javascript" charset="utf-8"></script>      
+<script src="spine.js" type="text/javascript" charset="utf-8"></script>      
+<script src="site/highlight.pack.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" charset="utf-8">
+hljs.initHighlightingOnLoad();
+</script>
+</head>
+<body>
+<div id="container"><h1>Kranium</h1>
+
+<p><strong>Kranium has enough brains to let your brain focus on the crucial stuff while developing Titanium Mobile apps.</strong> Kranium transfers some well known practices and techniques from web development to Titanium Mobile development. It's both spiritually and physically the lovechild of the following great web tech:</p>
+
+<ul>
+<li><a href="http://www.jquery.com">jQuery</a> / <a href="http://zeptojs.com">Zepto</a></li>
+<li><a href="http://documentcloud.github.com/backbone/">Backbone</a></li>
+<li><a href="http://www.jade-lang.com">Jade</a></li>
+<li><a href="http://blog.krawaller.se/livetanium">Livetanium</a> / <a href="http://livereload.com/">Livereload</a></li>
+<li><a href="http://sizzlejs.com/">Sizzle</a> / <a href="https://github.com/jamespadolsey/mini">mini.js</a></li>
+<li><a href="http://pivotal.github.com/jasmine/">Jasmine</a></li>
+<li><a href="http://wiki.appcelerator.org/display/guides/Designing+the+User+Interface#DesigningtheUserInterface-CrossplatformlayoutusingJSS">JSS</a> / <a href="http://learnboost.github.com/stylus/">Stylus</a> / <a href="http://sass-lang.com/">Sass</a> / <a href="http://lesscss.org/">LESS</a></li>
+<li><a href="http://jsconsole.com/">JSConsole</a> / <a href="http://phonegap.github.com/weinre/">Weinre</a></li>
+</ul>
+
+<p>Kranium tries to abstract the hell out of everything painful in the standard Titanium API:s. Kranium believes these main pains to be <strong>UI creation</strong>, <strong>low-level API:s</strong>, <strong>styling</strong> and <strong>code structuring</strong>. Kranium helps you with your <strong>KISS</strong>:ing and keeps you <strong>DRY</strong>. </p>
+
+<p>Kranium isn't super tiny. The core library currently weighs in at 31 kb uglified. It also lazy loads other libraries when needed. For example a variant of Jade is bundled containing a compiler outputting Kranium-friendly templates. This file 19 kb uglified, but only loaded if needed.</p>
+
+<p>Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do <a href="mailto://<a href='mailto:kraniumjs@krawaller.se'>kraniumjs@krawaller.se</a>">tell us</a>. </p>
+
+<p><strong>Latest version:</strong> <a href="http://dev.krawaller.se/kraniumjs/build/kraniumjs-0.1.1.zip">0.1.1</a>.<br /><del>Or check out the <a href="http://github.com/krawaller/kranium">source code</a>.</del></p>
+
+<h1>Overview</h1>
+
+<p>So, what does Kranium give you?</p>
+
+<ul>
+<li>Simple UI creation</li>
+<li>Extendable UI modules </li>
+<li>Live updating of UI modules</li>
+<li>Jade templates</li>
+<li>CSS-like stylesheets</li>
+<li>Live updating of styles</li>
+<li>Live compiling of Stylus/SASS/Less</li>
+<li>Simple selector engine</li>
+<li>jQuery-like manipulation library</li>
+<li>jQuery-like Ajax API</li>
+<li>Realtime Jasmine testing</li>
+<li>Beautiful two-way console</li>
+<li>Peace in your heart</li>
+</ul>
+
+<p>But don't take my word for it. Take a look at the source of the example applications below, and decide for yourself. </p>
+
+<h1>Installation</h1>
+
+<p><del>Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running <code>npm install kranium -g</code> in your terminal.</del></p>
+
+<p><del>If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found <a href="https://github.com/joyent/node/wiki/Installation">here</a> before following the previous paragraph.</del></p>
+
+<p>Installing Kranium will be very straightforward once public. For now, you'll have to download a snapshot of the repo and install it manually. This is how:</p>
+
+<ul>
+<li>Install <a href="https://github.com/joyent/node/wiki/Installation">NodeJS and NPM</a></li>
+<li>Download the <a href="http://dev.krawaller.se/kraniumjs/build/kraniumjs-0.1.0.zip">latest build</a></li>
+<li>Unzip somewhere safe and <code>cd</code> into the extracted folder</li>
+<li>Run <code>npm install</code></li>
+<li>Run <code>npm link</code></li>
+<li>Run <code>kranium --version</code> to see if it's there</li>
+</ul>
+
+<h1>Using Kranium</h1>
+
+<p>When you've installed it as above, you're good to go. Open your terminal and <code>cd</code> somewhere into your Titanium project folder and run <code>kranium init</code>. This will make Kranium setup the folder structure in your project, copy all dependencies and even inject a <code>Ti.include</code>-clause into app.js.</p>
+
+<p><img src="site/images/folderstructure.png" alt="Kranium folder structure" title="" /></p>
+
+<p>So what's what here? Let's walk through the generated folders from the top:</p>
+
+<ul>
+<li><p><strong>jade</strong> is a folder containing your jade templates (surprise!). These can be pulled in and rendered using for example <code>J(filename, { options: "here" }).appendTo("window")</code>.</p></li>
+<li><p><strong>kranium</strong> contains the actual Kranium libraries and the bootstrapper. Most often you don't have to touch anything here.</p></li>
+<li><p><strong>kss</strong> hosts your CSS-like stylesheets. Any <code>stylus</code>, <code>SASS</code> or <code>Less</code> files will be automatically compiled to <code>kss</code> if you have <code>kranium init</code> or <code>kranium watch</code> running in the terminal. The styles in <code>app.kss</code> will be autoloaded when the app starts and affects the global styling. Any other <code>kss</code> files will be autoloaded and applied to modules with the same name.</p></li>
+<li><p><strong>kui</strong> is the home of all your fancy Kranium UI modules. These can extend the basic types <code>window</code>, <code>label</code>, <code>view</code> etc. or any of your own modules. Styles are pulled in from the <strong>kss</strong> folder and applied accordingly.</p></li>
+<li><p><strong>test</strong> hosts all your Jasmine unit tests. If you run <code>kranium init --test</code> from the terminal, the tests will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-run whenever a test definition or source file changes. </p></li>
+</ul>
+
+<h1>Simple UI creation</h1>
+
+<p>As we mentioned in the overview, one of Kranium's main goals is to simplify everyday Titanium Mobile life by easing your UI creation burden. Lets first have a look at a classic tabgroup using vanilla Titanium Mobile API:s.</p>
+
+<h2>Example</h2>
+
+<pre><code>// Vanilla Titanium Mobile 
+var tabGroup = Ti.UI.createTabGroup(),
+
+    win1 = Ti.UI.createWindow({
+        backgroundColor: '#ccc',
+        barColor: '#00a',
+        title: 'My window'
+    }),
+
+    tab1 = Ti.UI.createTab({
+        icon: 'path/to/my/icon',
+        title: 'My tab',
+        window: win1
+    }),
+
+label1 = Ti.UI.createLabel({
+    text: 'Hello world!',
+    textAlign: 'center',
+    color: '#333',
+    shadowColor: '#fff',
+    shadowOffset: { 
+        y: -1, 
+        x: 0
+    },
+    font: {
+        fontSize: 20,
+        fontWeight: 'bold'
+    }
+});
+
+win1.add(label1);
+label1.addEventListener('click', function(e){
+    alert('You clicked me!');
+});
+
+tabGroup.addTab(tab1);
+tabGroup.open();
+</code></pre>
+
+<p>That was kinda verbose, don't you think? And you don't see the resulting UI structure straight away since you have to keep references to stuff and manually adding them to the correct parent. The same use case when using Kranium looks like this:</p>
+
+<pre><code>// Kranium
+K({
+    type: 'tabgroup',
+    tabs: [{
+        cls: 'myTab',
+        window: {
+            cls: 'myWindow',
+            children: [{
+                text: 'Hello world!',
+                cls: 'mylabel',
+                click: function(){
+                    alert('You clicked me!');
+                }
+            }]
+        }
+    }]
+}).open();
+</code></pre>
+
+<p>It's easy to visualize the resulting structure, and events can be defined on elements upon creation. But aren't we cheating here - where is all the styling? Kranium practices separation of concerns, so the styles are meant to be loaded from the <code>kss</code> folder. Therefore our <code>app.kss</code> should look like follows to correspond to the previous example:</p>
+
+<pre><code>.myTab { 
+    icon: path/to/my/icon; 
+}
+window {
+    background-color: #ccc;
+    bar-color: #00a;
+}
+.myLabel {
+    text-align: center;
+    color: #333;
+    shadow-color: #fff;
+    shadow-offset-y: -1;
+    font-size: 20;
+    font-weight: bold;
+}
+</code></pre>
+
+<h2>Usage</h2>
+
+<p>Kranium provides enhanced versions of the same UI Element factory functions found in the plain Titanium Mobile API:s. These are accessible directly from the <code>K</code> object like so:</p>
+
+<pre><code>K.createLabel({ text: "Hello world! "});
+</code></pre>
+
+<p>So how does this function differ from <code>Ti.UI.createLabel</code>?. It is enhanced in two ways:</p>
+
+<ul>
+<li>Styles are applied.</li>
+<li>Children and other special properties are turned into real Ti Objects</li>
+</ul>
+
+<p>The second point means that you can do the following...</p>
+
+<pre><code>K.createView({
+    children: [{
+        type: "image",
+        image: "path/to/image",
+        click: function(){ K.alert("You clicked the image!"); }
+    },
+    {
+        type: "label",
+        "text": "howdy?"
+    }]
+});
+</code></pre>
+
+<p>...and the <code>children</code> array will be automatically turned into an array of Ti Objects and added to the parent view.</p>
+
+<p>There is also a general purpose function called <code>K.create</code> which works pretty much the same way. It can take either a single javascript <code>object</code> with a <code>type</code> property or an <code>array</code> of the same, and turns them into instantiated Ti Objects. However, there is something very special with <code>K.create</code>, detailed below. </p>
+
+<h1>Extendable UI modules</h1>
+
+<p>If <code>K.create</code> comes across a <code>type</code> which is not a standard Titanium Mobile UI type, it will look in your <code>kui</code> folder and try to autoload the module from a file with the same name. Huh?! Example time!</p>
+
+<h2>Example</h2>
+
+<pre><code>K.create({
+    type: "loginstatus"
+});
+</code></pre>
+
+<p>This will make Kranium look for the file <code>kui/loginstatus.js</code> and try to require it and create an instance of it. The code in the file would look something like:</p>
+
+<pre><code>exports.Class = Label.extend({
+    init: function(opts){
+        this.events = {
+            app: {
+                authchange: this.updateStatus.bind(this)
+            }
+        };
+
+        this.updateStatus();
+        this._super.call(this, opts);
+    },
+
+    updateStatus: function(e){
+        this.text = "Logged " + (e &amp;&amp; e.loggedIn ? "in" : "out");
+    }
+});
+</code></pre>
+
+<p>Here we extend the basic type <code>Label</code> and gives it some special abilities. The <code>init</code> function runs upon initialization. It binds an app-wide event, updates the label and calls the <code>this._super</code> function which creates the actual element. Now we can create any number of instances of this module, and they will all update whenever the <code>authchange</code> event fires. This module could then be extended again if you'd like.</p>
+
+<h2>API</h2>
+
+<p>...</p>
+
+<h1>Live updating UI modules</h1>
+
+<p>Kranium builds upon our previous work on <a href="http://blog.krawaller.se/livetanium">Livetanium</a>. This means that you'll see your changes in the <strong>simulator</strong> or on the <strong>device</strong> as soon as you save a <code>kss</code>-file (iOS only at the moment). This is a true painkiller for your styling needs. This only works if you have <code>kranium init</code> or <code>kranium watch</code> running in your terminal. This will start a script watching for changes of your project files. So whenever something changes, it will be piped to the app over a socket in realtime, and applied to all relevant elements.</p>
+
+<p>As if just live updating of your style changes weren't enough, we have experimental support for live updating of the UI modules themselves. So if we were to change the <code>updateStatus</code> function in the module definition in <code>kui/loginstatus.js</code> above to:</p>
+
+<pre><code>updateStatus: function(e){
+    this.text = "Thou are logged " + (e &amp;&amp; e.loggedIn ? "in" : "out");
+}
+</code></pre>
+
+<p>all instances of the module would be updated with this new behaviour. <strong>Caveat</strong> behind the scenes a new instance of the updated module is created with the same options as its predecessor and the new instance then takes its place in the view hierarchy. This might, quite frankly, fuck things up, so if you don't want to risk anything you can turn it off.</p>
+
+<h1>Jade templates</h1>
+
+<p>Kranium lets you use <a href="http://www.jade-lang.com">Jade</a> to create elements. You can do this through the function</p>
+
+<pre><code>K.jade(jadeString || jadeFilename, [opts])
+</code></pre>
+
+<p>As you see, this function can either take a plain string of Jade goodness, or a filename (ending in .jade) which will then be pulled in from the <code>jade</code> folder and executed. The second parameter is the options object which will be used to populate the data in the Jade template. There is also an equivalent of the <code>K</code> function which takes Jade strings or filenames, and it is of course called <code>J</code>. </p>
+
+<pre><code>J(jadeString || filename, { options: "here" }).appendTo("window");
+</code></pre>
+
+<p>This is actually only a shortcut for <code>K(K.jade(jadeString, opts))</code> but quite convenient nonetheless.</p>
+
+<p>However, the Jade integration is deeper than that. If <code>K.create</code> comes across a plain string where it normally expects a <code>Ti Object</code> or a <code>{ type: ... }</code> declaration, it will treat it as a Jade template and try to instantiate it. In practice, this means you can do the following:</p>
+
+<pre><code>K.create("label.myLabel hello!");
+
+K.createView({
+    children: [
+        "image.myImage",
+        "label Cool!"
+    ]
+});
+</code></pre>
+
+<h1>CSS-like stylesheets</h1>
+
+<p>When Appcelerator announced JSS support, we were truly stoked. However, we soon found out that the implementation was somewhat lacking in speed, stability and power. Instead of just braking down and cry, we decided to roll our own stylesheet engine. This is the reason we can do live style updates, and also the reason we can make it so damn pleasant to use.</p>
+
+<p>You place your stylesheets in the <code>kss</code> folder. The <code>app.kss</code> file is the global stylesheet which is autoloaded when the app starts. Whenever you load a custom module for the first time, Kranium looks for a stylesheet with a corresponding name in the <code>kss</code> folder.</p>
+
+<h1>Live compiling</h1>
+
+<p>The command line tool also compiles <code>CoffeeScript</code>, <code>Stylus</code>, <code>SASS</code> and <code>Less</code> on the fly. This means you can use these techniques seamlessly. For now, this means your source and style folders will contain both the original and the compiled files. We might want to refactor this behaviour to output the generated files into another folder. Maybe you can help us with a pull request?!</p>
+
+<h1>Simple selector engine</h1>
+
+<p>Kranium also bundles a variant of James Padolsey's excellent mini.js selector engine. It's not as powerful as <code>Sizzle</code> or <code>document.querySelectorAll</code>, but it hopefully fulfills your basic needs. It supports the following selectors (and variations):</p>
+
+<ul>
+<li>view</li>
+<li>.example</li>
+<li>view label</li>
+<li>view, label</li>
+<li>view, label, .example</li>
+<li>view > label</li>
+<li>view.example</li>
+<li>view .example</li>
+<li>#title</li>
+<li>label#title</li>
+<li>view #title</li>
+</ul>
+
+<p>If you only want the selector engine, it's available through <code>$$(selector, context)</code>:</p>
+
+<pre><code>$$("label")[0].text = "nice!";
+</code></pre>
+
+<p>But stay tuned, because the real beauty comes in the next section.</p>
+
+<h1>jQuery-like manipulation library</h1>
+
+<p>Kranium tries to take the immense success and simplicity of jQuery and apply it to Titanium Mobile development. The following is not only valid jQuery, but also valid Kranium.</p>
+
+<pre><code>$('.content &gt; .label, .hello').text('hello!');
+</code></pre>
+
+<p>Kranium's manipulation library is a port of the beautiful Zepto library, and tries to give the user the beauty of jQuery without the hefty weight. This functionality is available through the <code>K</code> function and also aliased to <code>$</code>. It gives you access to powerful collections with lots of utility functions. These are pretty much the same as Zeptos:</p>
+
+<pre><code>get(): return array of all elements found
+get(0): return first element found
+size(): the number of elements in collection
+each(callback): iterate over collection, calling callback for every element
+index('selector'): the position of element matching 'selector' in the current collection
+first(): new collection containing only the first matched element
+last(): new collection containing only the last matched element
+add(): merges collections of elements
+
+find('selector'): find all children/grandchildren that match the given selector
+closest('selector'): find the first matching element by going upwards starting from the current element
+parents(['selector']): get all ancestors of elements in collection, optionally filtered by a selector
+parent(): immediate parent node of each element in collection
+children('selector'): immediate children of each element in collection, optionally filtered by a selector
+siblings('selector'): elements that share the same immediate parent (siblings) of each element in collection, optionally filtered by a selector
+next(): next siblings
+prev(): previous siblings
+filter('selector'): reduce the current set of elements to match the given selector
+is('selector'): returns true/false if first element matches the selector
+not('selector'): remove elements matching 'selector' from the current collection
+not(function(index){return true / false;}): remove elements from current collection if the callback method returns `true`
+
+remove(): remove element
+
+text(): get first element's .text||.title
+text('new text'): set the text contents of the element(s)
+append(), prepend(): like html(), but add html (or a DOM Element or a Zepto object) to element contents
+appendTo(), prependTo(): reverse appending/prepending
+show(): forces elements to be displayed
+hide(): removes a elements from layout
+
+height(): get first elements height in px
+width(): get first elements width in px
+
+attr('attribute'): get element attribute
+attr('attribute', 'value'): set element attribute
+removeAttr('attribute'): removes an attribute
+
+css('css property', 'value'): set a CSS property
+css({ property1: value1, property2: value2 }): set multiple CSS properties
+css('css property'): get this CSS property of the first element
+
+addClass('classname'): adds a CSS class name
+removeClass('classname'): removes a CSS class name
+hasClass('classname'): returns true of first element has a classname set
+toggleClass('classname'[, switch]): adds/removes class, or adds/removes it when switch == true/false
+
+bind(type, function): add an event listener (see below)
+one(type, function): add an event listener that only fires once
+unbind([type [, function]]): remove event listeners
+die([, type[, function]]): remove live listener
+trigger(type): triggers an event
+
+val(): returns the value of the form element
+val('value'): sets the value of the form element
+</code></pre>
+
+<h1>jQuery-like Ajax API</h1>
+
+<pre><code>$.ajax({
+    type: 'POST', // defaults to 'GET'
+    url: '/foo', // no default
+    data: {name: 'Zepto'}, // can be a string or object (objects are automatically serialized to JSON)
+    dataType: 'json', // what response type you accept from the server ('json', 'xml', 'html', or 'text')
+    success: function(body) { ... }, // body is a string (or if dataType is 'json', a parsed JSON object)
+    error: function(xhr, type) { ... } // type is a string ('error' for HTTP errors, 'parsererror' for invalid JSON)
+})
+</code></pre>
+
+<h1>Realtime Jasmine testing</h1>
+
+<p>Kranium also plays nice with the <a href="http://pivotal.github.com/jasmine/">Jasmine BDD framework</a>. If you run</p>
+
+<pre><code>kranium init --test
+</code></pre>
+
+<p>from the terminal, the tests in your <code>test</code> folder will run when the app starts and the results will be reported to the terminal. If wanted, tests can also be automatically re-run whenever a test definition or source file changes.</p>
+
+<p><img src="site/images/jasmine.png" alt="Kranium folder structure" title="" /></p>
+
+<h1>Beautiful two-way console</h1>
+
+<p>Kranium integrates <a href="http://remysharp.com/">Remy Sharp</a>'s excellent JSConsole. This is a simple REPL which lets you do some quick testing. It can be found at <a href='http://localhost:3333'>http://localhost:3333</a> if you have the <code>kranium</code> tool running in your terminal.</p>
+
+<p><img src="site/images/console.png" alt="Kranium folder structure" title="" /></p>
+
+<h1>Sponsors</h1>
+
+<p>The development of Kranium is sponsored by <a href="http://www.logica.com/">Logica</a></p>
+
+<h1>FAQ</h1>
+
+<ul>
+<li><p><em>Uhm... what questions are frequently asked?</em><br />We don't know yet. Please <a href="mailto://<a href='mailto:kraniumjs@krawaller.se'>kraniumjs@krawaller.se</a>">let us know</a>! :-)</p></li>
+<li><p><em>Do you like raptors?</em><br />No, we quite like being alive.</p></li>
+</ul>
+
+<h1>Change Log</h1>
+
+<p><strong>0.1.1:</strong> 2011-09-18 - first public release  </p>
+
+<script type="text/javascript" charset="utf-8">
+  jQuery(function($){
+    function dasherize(str) {
+      return str.replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+                .replace(/([a-z\d])([A-Z])/g, '$1-$2')
+                .replace(/\s/g, '-')
+                .toLowerCase();
+    }
+
+    var sidebar = $("<div />").attr("id", "sidebar");
+
+    $("h1").each(function(){
+      var name = $(this).text();
+      $(this).attr("id", "h-" + dasherize(name));
+
+      sidebar.append(
+        $("<a />").attr("href", "#" + $(this).attr("id")).text(name)
+      )
+
+      var subs = $(this).nextUntil("h1").filter("h2");
+
+      if( subs.length > 0 ) {
+        var list = $("<ul />");
+        subs.each(function(){
+          var subName = $(this).text();
+          $(this).attr("id", "s-" + dasherize(name) + '-' + dasherize(subName));
+
+          list.append(
+            $("<li />").append(
+              $("<a />").text(subName).attr("href", "#" + $(this).attr("id"))
+            )
+          )
+        });
+
+        sidebar.append(list);
+      }
+    });
+
+    $("body").prepend(sidebar);
+  });
+</script></div>
+</body>
+</html>
