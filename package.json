@@ -2,7 +2,7 @@
 	"author": "Jacob Waller <jacob@krawaller.se> (http://blog.krawaller.se)",
 	"name": "kranium",
 	"preferGlobal": "true",
-	"description": "Brains for Titanium",
+	"description": "Bigger brains for Titanium Mobile",
 	"version": "0.1.3",
 	"homepage": "http://www.kraniumjs.com",
 	"repository": {
