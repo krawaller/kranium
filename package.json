@@ -2,41 +2,42 @@
 	"author": "Jacob Waller <jacob@krawaller.se> (http://blog.krawaller.se)",
 	"name": "kranium",
 	"description": "Brains for Titanium",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"homepage": "http://www.kraniumjs.com",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/krawaller/kraniumjs.git"
+		"url": "git://github.com/krawaller/kranium.git"
 	},
 	"main": "kranium",
 	"bin": {
 		"kranium": "./kranium.js"
 	},
 	"scripts": {
-		"test": "kraniumtest"
+
 	},
 	"engines": {
 		"node" : "0.4 || 0.5", "npm" : "1"
 	},
 	"dependencies": {
-		"nomnom": ">= 0.4.1",
-		"connect": ">= 1.4.0",
-		"socket.io": ">= 0.6.17",
+		"nomnom": "0.4.1",
+		"connect": "1.4.0",
+		"socket.io": "0.6.17",
 		"stylus": ">= 0.12.2",
 		"less": ">= 1.0.41",
 		"coffee-script": ">= 1.1.0",
-		"async": ">= 0.1.9",
+		"async": "0.1.9",
 		"growl": ">= 1.1.0",
 		"nimble": ">= 0.0.2",
 		"colors": ">= 0.5.0",
-		"uglify-js": ">= 1.0.1"
+		"uglify-js": ">= 1.0.1",
+		"underscore": ">= 1.1.7"
 	},
 	"devDependencies": {},
 	"bugs": {
-		"web": "http://github.com/krawaller/kraniumjs/issues"
+		"web": "http://github.com/krawaller/kranium/issues"
 	},
 	"licenses": [{
 		"type": "MIT",
-		"url": "http://github.com/krawaller/kraniumjs/raw/master/LICENSE"
+		"url": "http://github.com/krawaller/kranium/raw/master/LICENSE"
 	}]
 }
