@@ -398,6 +398,8 @@ The development of Kranium is sponsored by [Logica](http://www.logica.com/)
 
 __0.1.3:__ 2011-09-19 - first public release  
 
+<a href="http://github.com/krawaller/kranium"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 50" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+
 <script type="text/javascript" charset="utf-8">
   jQuery(function($){
     function dasherize(str) {
