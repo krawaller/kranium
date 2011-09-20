@@ -15,11 +15,11 @@ Kranium tries to abstract the hell out of everything painful in the standard Tit
 
 Kranium isn't super tiny. The core library currently weighs in at 31 kb uglified. It also lazy loads other libraries when needed. For example a variant of Jade is bundled containing a compiler outputting Kranium-friendly templates. This file 19 kb uglified, but only loaded if needed.
 
-Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do [tell us](mailto://kraniumjs@krawaller.se). 
+Our very first priority is to simplify Titanium Mobile development, and doing so without sacrificing perceived performance. If you find a case where this is not the case, do [tell us](mailto://kranium@krawaller.se). 
 
 
-__Latest version:__ [0.1.1](http://dev.krawaller.se/kraniumjs/build/kraniumjs-0.1.1.zip).
-<del>Or check out the [source code](http://github.com/krawaller/kranium).</del>
+__Latest version:__ [0.1.3](https://github.com/krawaller/kranium/zipball/0.1.3).
+Or check out the [source code](http://github.com/krawaller/kranium).
 
 #Overview
 
@@ -44,18 +44,20 @@ But don't take my word for it. Take a look at the source of the example applicat
  
 #Installation
 
-<del>Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running `npm install kranium -g` in your terminal.</del>
+Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running `npm install kranium -g` in your terminal.
 
-<del>If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found [here](https://github.com/joyent/node/wiki/Installation) before following the previous paragraph.</del>
-
-Installing Kranium will be very straightforward once public. For now, you'll have to download a snapshot of the repo and install it manually. This is how:
+If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found [here](https://github.com/joyent/node/wiki/Installation) before following the previous paragraph.
 
 * Install [NodeJS and NPM](https://github.com/joyent/node/wiki/Installation)
-* Download the [latest build](http://dev.krawaller.se/kraniumjs/build/kraniumjs-0.1.0.zip)
-* Unzip somewhere safe and `cd` into the extracted folder
-* Run `npm install`
-* Run `npm link`
+* Run `npm install kranium -g`
 * Run `kranium --version` to see if it's there
+
+
+#Demo
+
+There is a demo app which can be found [here](http://github.com/krawaller/kranium-demo)
+
+![Kranium folder structure](site/images/kranium-demo.png)
 
 
 #Using Kranium
@@ -387,14 +389,14 @@ The development of Kranium is sponsored by [Logica](http://www.logica.com/)
 #FAQ
 
 * *Uhm... what questions are frequently asked?*
-  We don't know yet. Please [let us know](mailto://kraniumjs@krawaller.se)! :-)
+  We don't know yet. Please [let us know](mailto://kranium@krawaller.se)! :-)
   
 * *Do you like raptors?*
   No, we quite like being alive.
 
 #Change Log
 
-__0.1.1:__ 2011-09-18 - first public release  
+__0.1.3:__ 2011-09-19 - first public release  
 
 <script type="text/javascript" charset="utf-8">
   jQuery(function($){
