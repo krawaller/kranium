@@ -44,12 +44,12 @@ But don't take my word for it. Take a look at the source of the example applicat
  
 #Installation
 
-Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running `npm install kranium -g` in your terminal.
+Installing Kranium is very straightforward if you have NodeJS and its package manager NPM installed. If you do, install the Kranium command line tool by running `sudo npm install kranium -g` in your terminal.
 
 If you don't, you'll first have to install NodeJS and NPM using any of the installation instructions found [here](https://github.com/joyent/node/wiki/Installation) before following the previous paragraph.
 
 * Install [NodeJS and NPM](https://github.com/joyent/node/wiki/Installation)
-* Run `npm install kranium -g`
+* Run `sudo npm install kranium -g`
 * Run `kranium --version` to see if it's there
 
 
