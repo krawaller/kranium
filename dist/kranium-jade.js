@@ -2193,7 +2193,7 @@ require.register("utils.js", function(module, exports, require){
  */
 
 var interpolate = exports.interpolate = function(str){
-  return str.replace(/(\\)?([#!]){(.*?)}/g, function(str, escape, flag, code){
+  return str.replace(/(\\)?([#!])\{(.*?)\}/g, function(str, escape, flag, code){
     return escape
       ? str
       : "' + "
