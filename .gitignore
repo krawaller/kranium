@@ -1,3 +1,5 @@
 node_modules
 .monitor
 tmp.html
+.DS_Store
+dist-*
