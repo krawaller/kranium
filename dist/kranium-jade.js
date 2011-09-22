@@ -145,6 +145,7 @@ valueAttrByTagName = {
 	label: 'text',
 	textfield: 'value',
 	button: 'title',
+	row: 'title',
 	def: 'text'
 };
 function getValueAttr(tagName){
@@ -320,7 +321,7 @@ Compiler.prototype = {
 
 	var hasChildren = tag.block && tag.block.nodes && tag.block.nodes.length;
 	if(hasChildren){
-		this.buf.push(', children: (function(){ var __els = []; ');
+		this.buf.push(', ' + (name == 'tableview' ? 'data' : 'children')  + ': (function(){ var __els = []; ');
 	}
 
     this.visit(tag.block, tag);
@@ -431,14 +432,8 @@ Compiler.prototype = {
     } else {*/
 	//console.log('codely: ' + tagName, code);
 	
-	valueAttrByTagName = {
-		label: 'text',
-		textfield: 'value',
-		button: 'title',
-		def: 'text'
-	};
 	if(tagName){
-		this.buf.push(", " + (valueAttrByTagName[tagName]||valueAttrByTagName.def) + ": (" + code.val.trim() + ")");
+		this.buf.push(", " + getValueAttr(tagName) + ": (" + code.val.trim() + ")");
 	} else {
 		this.buf.push(code.val);
 	}
