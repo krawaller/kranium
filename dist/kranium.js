@@ -20,6 +20,9 @@
 
 
 
+/*** VERSION ***/
+KRANIUM_VERSION = "0.1.3";
+
 /*** CORE ***/
 /*!
 The core module of Kranium is heavily based on Zepto, which has the following license:
@@ -1721,12 +1724,17 @@ $.qsa = $$ = (function(document, global){
 	 * @param type String type of object
 	 * @return Object of calculated style 
 	 */
-	var getStyle = K.getStyle = function(opts, type){
-		var i;
+	var getStyle = K.getStyle = function(opts, type, elType){
 		if(typeof opts === 'string'){ opts = { className: opts }; }
-		var elStyle, c, hash = type+(opts && opts.cls+opts.className);
+		var hash = (type === elType ? type : type + '-' + elType)+(opts && opts.cls+opts.className),
+			elStyle, c, i;
+
 		if (!(elStyle = styleCache[hash])) {
-			elStyle = styles[type] ? extend({}, styles[type]) : {};
+			if(type !== elType && styles[elType]){
+				elStyle = extend({}, styles[elType]);
+			}
+			elStyle = styles[type] ? extend(elStyle || {}, styles[type]) : {};
+
 			if (opts && (c = (opts.className || opts.cls))) {
 				var parts = c.split(" "), len = parts.length;
 				for (i = 0; i < len; i++) {
@@ -1993,10 +2001,6 @@ $.qsa = $$ = (function(document, global){
 })(this);
 
 /*** CREATE ***/
-/**
- * Define create module
- */
-
 (function(global){
 	
 	
@@ -2154,6 +2158,7 @@ $.qsa = $$ = (function(document, global){
 	]
 	.forEach(function(t){
 		var type = t.toLowerCase(),
+			elType = type,
 			module = moduleByType[type]||Ti.UI,
 			factoryString = 'create' + (factoryModifier[type]||t),
 			extra,
@@ -2169,10 +2174,18 @@ $.qsa = $$ = (function(document, global){
 		 */
 		K[factoryString] = K.creators[type] = function(opts){
 			opts = opts||{};
-			if(opts._type){ return opts; }
+			
+			if(opts._type){
+				if(typeof opts.toString === 'function' && /^\[object Ti/.test(opts.toString())){
+					return opts;
+				} else {
+					type = opts._type
+				}
+			}
+			
 			if(opts.silent === true){ _silent = true; }
 			
-			var o = extend(K.getStyle(opts, type), opts), 
+			var o = extend(K.getStyle(opts, type, elType), opts), 
 				silent = (silent||o.silent), 
 				children, 
 				cls, 
@@ -2209,8 +2222,8 @@ $.qsa = $$ = (function(document, global){
 					//o.data = K.create(o.data||[]);
 					o.data = o.data ? K.create(o.data, { type: 'row' }) : [];
 					
-					if(o.footerView){ o.footerView = K.createView(o.footerView); }
-					if(o.headerView){ o.headerView = K.createView(o.headerView); }
+					if(o.footerView){ o.footerView = K.create(o.footerView); }
+					if(o.headerView){ o.headerView = K.create(o.headerView); }
 					if(o.search){ o.search = K.createSearchBar(o.search); }
 					break;
 
@@ -2440,21 +2453,24 @@ $.qsa = $$ = (function(document, global){
 		instances = {};
 		
 	K._wrapCustomCreator = function(creator, type){
-		return function(o){		
-			delete o.type;
-			o._inst = instanceCounter;
+		return function(o){
 			
+			o._type = type;
+			delete o.type;
+			
+			var inst = ++instanceCounter;
+			o._inst = inst;
+
 			var obj = new creator(o),
 				el = obj.el;
-
+			
 			if(!el._type){
 				el = K.creators[(el.type||'view')](el);
 			};
 			(K.elsByName[type]||(K.elsByName[type] = [])).push(el);
 			el.inst = obj;
-			
-			instances[instanceCounter] = obj;
-			instanceCounter++;
+
+			instances[inst] = obj;
 			return el;
 		}
 	}
@@ -3604,7 +3620,7 @@ if(K.is.android){
 		this.tabGroup = tabGroup;
 		this.tabGroup._tabButtonContainer.add(this._tabButton);
 		
-		this.opts = opts;
+		this.opts = opts || {};
 		this.setState('inactive');
 		
 		(K.elsByName['tab']||(K.elsByName['tab'] = [])).push(this);
@@ -3612,11 +3628,17 @@ if(K.is.android){
 	
 	Tab.prototype.activate = function(){
 		if(!this.window){
-			var fromBottom = K.getStyle({ type: 'tab' }).height || K.getStyle({ type: 'tabBar' }).height || '50dp';
+			var fromBottom = (this.opts.tabBarHidden || (this.opts.window && this.opts.window.tabBarHidden)) ? 0 : K.getStyle({ type: 'tab' }).height || K.getStyle({ type: 'tabBar' }).height || '50dp';
 				defaults = { left: 0, right: 0, top: 0, bottom: fromBottom, zIndex: ++zIndexCounter },
 				opts = K.extend(this.opts.window, defaults);
 				
-			this.window = K.create(opts, { type: 'view' });
+			this.window = K.create(opts, { type: 'view' });			
+			var tabBarHidden = !!this.window.tabBarHidden;
+						
+			if(tabBarHidden){
+				this.window.bottom = 0;
+			}
+			
 			if(this.window._type === 'window'){
 				var view = K.createView(opts),
 					children = this.window.children,
@@ -3630,6 +3652,12 @@ if(K.is.android){
 				this.window = view;
 			}
 			this.tabGroup._container.add(this.window);
+		}
+				
+		if(tabBarHidden){
+			this.tabGroup._tabButtonContainer.hide();
+		} else {
+			this.tabGroup._tabButtonContainer.show();
 		}
 		
 		if(this !== this.tabGroup.activeTab){
@@ -3739,14 +3767,6 @@ if(K.is.android){
 	};
 	
 	TabGroup.prototype.repaint = function(){
-		/*if(!this._statusBarHeight){
-			var winHeight = this._container.height,
-				height = Ti.Platform.displayCaps.platformHeight;
-				
-			this._statusBarHeight = (height - winHeight) || 0;			
-		}
-		
-		this._tabButtonContainer.top = Ti.Platform.displayCaps.platformHeight - this._statusBarHeight - dipToPx(this._tabButtonContainer.height);*/
 		
 		var width = this._getTabWidth();
 		this.tabs.forEach(function(tab, i){
