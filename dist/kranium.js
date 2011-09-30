@@ -1724,16 +1724,16 @@ $.qsa = $$ = (function(document, global){
 	 * @param type String type of object
 	 * @return Object of calculated style 
 	 */
-	var getStyle = K.getStyle = function(opts, type, elType){
+	var getStyle = K.getStyle = function(opts, type, customType){
 		if(typeof opts === 'string'){ opts = { className: opts }; }
-		var hash = (type === elType ? type : type + '-' + elType)+(opts && opts.cls+opts.className),
+		var hash = type + (customType || '') + (opts && opts.cls+opts.className),
 			elStyle, c, i;
 
 		if (!(elStyle = styleCache[hash])) {
-			if(type !== elType && styles[elType]){
-				elStyle = extend({}, styles[elType]);
+			elStyle = styles[type] ? extend({}, styles[type]) : {};
+			if(customType){
+				elStyle = extend(elStyle, styles[customType]);
 			}
-			elStyle = styles[type] ? extend(elStyle || {}, styles[type]) : {};
 
 			if (opts && (c = (opts.className || opts.cls))) {
 				var parts = c.split(" "), len = parts.length;
@@ -2173,19 +2173,20 @@ $.qsa = $$ = (function(document, global){
 		 * Expose and define creators
 		 */
 		K[factoryString] = K.creators[type] = function(opts){
-			opts = opts||{};
+			var customType;
+			opts = opts || {};
 			
 			if(opts._type){
 				if(typeof opts.toString === 'function' && /^\[object Ti/.test(opts.toString())){
 					return opts;
 				} else {
-					type = opts._type
+					customType = opts._type;
 				}
 			}
 			
 			if(opts.silent === true){ _silent = true; }
 			
-			var o = extend(K.getStyle(opts, type, elType), opts), 
+			var o = extend(K.getStyle(opts, type, customType), opts), 
 				silent = (silent||o.silent), 
 				children, 
 				cls, 
@@ -2294,6 +2295,9 @@ $.qsa = $$ = (function(document, global){
 			var el = module[factoryString](o);
 			el._uuid = ++uuid;
 			el._type = type;
+			if(customType){
+				el._customType = customType;
+			}
 			el._opts = opts;
 			el._id = id;
 
