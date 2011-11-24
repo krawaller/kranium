@@ -37,7 +37,7 @@
 	},
 	"devDependencies": {},
 	"bugs": {
-		"web": "http://github.com/krawaller/kranium/issues"
+		"url": "http://github.com/krawaller/kranium/issues"
 	},
 	"licenses": [{
 		"type": "MIT",
