@@ -1735,6 +1735,14 @@ $.qsa = $$ = (function(document, global){
 		if(global.DEBUG || liveKlass || !(klass = K.classes[name])){
 			if(!liveKlass){ K.loadStyle(name); }
 			//klass = liveKlass||(exports = {}, Ti.include('kui/' + name + '.js'), exports.Class);
+			
+			/*
+			klass = liveKlass || ((exp = require('kui/' + name)) && (typeof exp === 'object' && (typeof exp.Class === 'function' ? exp.Class(K) : exp.Class)) || (typeof exp === 'function' && exp(K)));
+			if(typeof klass.extend !== 'function'){
+				klass = K.classes[klass['extends'] || klass.ext].extend(klass);
+			}
+			*/
+			
 			klass = liveKlass || (require('kui/' + name)).Class;
 			cls = klass.prototype.className;
 			klass.prototype.className = cls ? cls + ' ' + name : name;
