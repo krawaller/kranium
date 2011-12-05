@@ -111,7 +111,7 @@ var reTiObject = /^(\[object Ti|\[Ti\.)/,
 	 * @param {Object} o
 	 * @returns {Array} If input was array, return it, otherwise wrap input in new array
 	 */
-	function arrayify(o){ return Array.isArray(o) ? o : [o]; }
+	function arrayify(o){ return o == null ? [] : (Array.isArray(o) ? o : [o]); }
 
 	/**
 	 * Kranium object constructory-thingy
@@ -626,34 +626,38 @@ var reTiObject = /^(\[object Ti|\[Ti\.)/,
 		 */
 		open: function(parent, o){
 			var el = this[0];
+
+			if(typeof parent === 'string'){
+				parent = $$(parent)[0] || null;
+			}
+
 			if(el){
 				switch(el._type){
 					case 'window':
 						if(parent == 'tab'){
 							if(block){ return; } else { block = true; }
-							
+
 							el.addEventListener('open', function(){ block = false; });
 							K.currentWindow = el;
-							
+
 							var tab = (
 								(tmp = ((o&&o.tab)||o)) &&
 								(typeof tmp === 'string') ? $$(tmp)[0] : tmp
 							) || (
 								(tmp = $$('tabgroup')) && tmp[0] && tmp[0].activeTab
 							);
-							
+
 							(tab||Ti.UI.currentTab).open(el, o||{});
-						} else if(
-								parent && 
-								(parent && parent._type ? parent : (parent = $$(parent)[0])) && 
-								['navigationgroup', 'tabgroup'].indexOf(parent._type) !== -1
-							) {
+						} else if(parent && parent._type && ['navigationgroup', 'tabgroup', 'tab'].indexOf(parent._type) !== -1) {
+							if(parent._type === 'tabgroup'){
+								parent = parent.activeTab;
+							}	
 							parent.open(el, o||{});
 						} else {
 							el.open();
 						}
 						break;
-						
+
 					default:
 						el.open && el.open(parent && K.create(parent, { type: 'window' }), o);
 						break;
@@ -779,6 +783,14 @@ var reTiObject = /^(\[object Ti|\[Ti\.)/,
 		ipad: platform === 'ipad',
 		ios: platform === 'iphone' || platform === 'ipad'
 	};
+	
+	/*
+	 * Expose core utility functions
+	 */
+	K.compact = compact;
+	K.flatten = flatten;
+	K.camelize = camelize;
+	K.arrayify = arrayify;
 	
 })(this);
 
@@ -920,8 +932,8 @@ var reTiObject = /^(\[object Ti|\[Ti\.)/,
 
 K.isFunc = function(obj){ return toString.call(obj) === "[object Function]"; };
 
-K.get = function(str){ return JSON.parse(Ti.App.Properties.getString(str)); };
-K.set = function(str, val){ return Ti.App.Properties.setString(str, JSON.stringify(val)); };
+K.get = function(key){ var str = Ti.App.Properties.getString(key); return str != null ? JSON.parse(str) : null; };
+K.set = function(key, val){ return Ti.App.Properties.setString(key, JSON.stringify(val)); };
 
 K.alert = function(message, title){
 	Ti.UI.createAlertDialog({
@@ -1017,35 +1029,38 @@ K.changeColor = function(color, ratio, darker) {
 var androidIndicator;
 K.loadify = function(el, fn, msg, modal){
 	var done;
-		
 	if(K.is.ios){
 		var p = (el && el._p) || el || GLOBAL.win || Ti.UI.currentWindow;
-		
+
 		if(!p){ return; }
-		
+
 		if(modal){
-			p = el._p = K('tabgroup').get(0);
+			p = el._p = K.isTiObject(el) ? el : K(typeof el === 'string' ? el : 'tabgroup').get(0);
 		} 
-	
+
 		if(p && !p._loader){
 			p._loader = K.createActivityIndicator({
-				className: modal ? 'modalLoader' : 'loader',
-				message: modal ? msg : ''
+				className: (modal ? 'modalLoader' : 'loader') + ' ' + (modal ? 'modalLoader' : 'loader') + (p._type === 'tabgroup' ? 'TabGroup' : 'Window'),
+				//message: modal ? msg : '',
+				//width: 'auto'
 			});
 
-			p.add(p._loader);
+			p && p.add(p._loader);
+			p._loader.message = msg;
+	        p._loader.show();
+	        p._loader.message = null;
+	        p._loader.hide();
 		}
-		
+
 		p._loader.message = msg || null;
 		p._loader.show();
-		p._loader.message = msg || null;
-		
+
 	} else {
 		androidIndicator = androidIndicator || Titanium.UI.createActivityIndicator();
 		androidIndicator.message = msg;
 		androidIndicator.show();
 	}
-	
+
 	if(fn){ // Test if func
 		done = function(){ K.doneify(el); };
 		if(typeof fn(done) !== 'undefined'){
@@ -1056,7 +1071,7 @@ K.loadify = function(el, fn, msg, modal){
 
 K.doneify = function(el){
 	if(K.is.ios){
-		var p = (el && el._p) || el || GLOBAL.win || Ti.UI.currentWindow;
+		var p = (el && el._p) || (el && el._type && el) || (K(typeof el === 'string' ? el : 'tabgroup').get(0)) || GLOBAL.win || Ti.UI.currentWindow;
 		p && p._loader && setTimeout(p._loader.hide, 500);
 	} else {
 		androidIndicator.hide();
@@ -1359,6 +1374,142 @@ String.prototype.esc = function(obj, func, matcher){
         return typeof obj[$1] != "undefined" ? (func ? func(obj[$1]) : obj[$1]) : (func ? func($1)||$0 : $0);
     });
 };
+
+
+(function(){
+	
+	var hasOwn = Object.prototype.hasOwnProperty,
+
+		// [[Class]] -> type pairs
+		class2type = {};
+		
+	"Boolean Number String Function Array Date RegExp Object".split(" ").forEach(function(name, i) {
+		class2type[ "[object " + name + "]" ] = name.toLowerCase();
+	});
+	
+	var jQuery = {
+		
+		fn: {},
+		isWindow: function( obj ) {
+			return obj && typeof obj === "object" && "setInterval" in obj;
+		},
+		
+		isFunction: function( obj ) {
+			return jQuery.type(obj) === "function";
+		},
+
+		isArray: Array.isArray || function( obj ) {
+			return jQuery.type(obj) === "array";
+		},
+		
+		type: function( obj ) {
+			return obj == null ?
+				String( obj ) :
+				class2type[ toString.call(obj) ] || "object";
+		},
+		
+		isPlainObject: function( obj ) {
+			// Must be an Object.
+			// Because of IE, we also have to check the presence of the constructor property.
+			// Make sure that DOM nodes and window objects don't pass through, as well
+			if ( !obj || jQuery.type(obj) !== "object" || obj.nodeType || jQuery.isWindow( obj ) ) {
+				return false;
+			}
+
+			try {
+				// Not own constructor property must be Object
+				if ( obj.constructor &&
+					!hasOwn.call(obj, "constructor") &&
+					!hasOwn.call(obj.constructor.prototype, "isPrototypeOf") ) {
+					return false;
+				}
+			} catch ( e ) {
+				// IE8,9 Will throw exceptions on certain host objects #9897
+				return false;
+			}
+
+			// Own properties are enumerated firstly, so to speed up,
+			// if last one is own, then all properties are own.
+
+			var key;
+			for ( key in obj ) {}
+
+			return key === undefined || hasOwn.call( obj, key );
+		}
+	};
+	
+	jQuery.extend = jQuery.fn.extend = function() {
+		var options, name, src, copy, copyIsArray, clone,
+			target = arguments[0] || {},
+			i = 1,
+			length = arguments.length,
+			deep = false;
+
+		// Handle a deep copy situation
+		if ( typeof target === "boolean" ) {
+			deep = target;
+			target = arguments[1] || {};
+			// skip the boolean and the target
+			i = 2;
+		}
+
+		// Handle case when target is a string or something (possible in deep copy)
+		if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
+			target = {};
+		}
+
+		// extend jQuery itself if only one argument is passed
+		if ( length === i ) {
+			target = this;
+			--i;
+		}
+
+		for ( ; i < length; i++ ) {
+			// Only deal with non-null/undefined values
+			if ( (options = arguments[ i ]) != null ) {
+				// Extend the base object
+				for ( name in options ) {
+					src = target[ name ];
+					copy = options[ name ];
+
+					// Prevent never-ending loop
+					if ( target === copy ) {
+						continue;
+					}
+
+					// Recurse if we're merging plain objects or arrays
+					if ( deep && copy && ( jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)) ) ) {
+						if ( copyIsArray ) {
+							copyIsArray = false;
+							clone = src && jQuery.isArray(src) ? src : [];
+
+						} else {
+							clone = src && jQuery.isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[ name ] = jQuery.extend( deep, clone, copy );
+
+					// Don't bring in undefined values
+					} else if ( copy !== undefined ) {
+						target[ name ] = copy;
+					}
+				}
+			}
+		}
+
+		// Return the modified object
+		return target;
+	};
+	
+	var reTiObject = /^(\[object Ti|\[Ti\.)/;
+	
+	jQuery.isTiObject = function( obj ){
+		return reTiObject.test(obj && obj.toString && obj.toString());
+	};
+	
+	jQuery.extend(K, jQuery);
+})();
 
 //})(this);
 
@@ -2230,6 +2381,10 @@ $.qsa = $$ = (function(document, global){
 
 				case 'tableviewsection':
 					if(K.isFunc(o.rows)){ o.rows = o.rows(); }
+					
+					if(o.footerView){ o.footerView = K.create(o.footerView); }
+					if(o.headerView){ o.headerView = K.create(o.headerView); }
+					
 	 				if(o.headerTitle){ o.headerView = K.createView({ className: 'headerView', children: [{ type: 'label', text: o.headerTitle, className: 'headerLabel' }, { type: 'view', className: 'headerBack' }] }); }
 					delete o.headerTitle;
 					if(o.headerPlain){ o.headerTitle = o.headerPlain; }
@@ -2591,7 +2746,21 @@ $.qsa = $$ = (function(document, global){
 		
 		var	xhr = Ti.Network.createHTTPClient(opts), 
 			data = typeof opts.data === 'object' ? K.extend(opts.data, opts.extendData || {}) : opts.data,
-			loader = { _hide: function(){ K.doneify(opts.loader); }, _show: function(){ K.loadify(opts.loader, null, (K.is.android ? K.l('loading') : '') ); } },
+			loader = { 
+				_hide: function(){
+					K.doneify(opts.loader);
+				}, 
+				_show: function(){
+					K.loadify(opts.loader, null, opts.loaderMessage || (K.is.android ? K.l('loading') : ''), !!(opts.loaderModal || opts.loaderMessage), function(){ 
+						
+						K.doneify(opts.loader);
+						K.notify(opts.cancelMessage);
+						xhr._aborted = true;
+						xhr.abort();
+						
+					});
+				} 
+			},
 			hash;
 	
 		if(opts.loader){
@@ -3418,9 +3587,9 @@ if(K.is.android){
 	K['createButtonBar'] = K.creators['buttonbar'] = createSegmentedCreator('buttonbar');
 	
 	// Shim the window module with pretty navbars with left- and rightNavButtons.
-	Window = Window.extend({
+	Window = K.classes['window'] = Window.extend({
 		init: function(o){
-			if(!this.navBarHidden && K.settings.useCustomAndroidNavBar !== false && (this.title || this.leftNavButton || this.rightNavButton)){
+			if(!this.navBarHidden && this.useCustomAndroidNavBar !== false && K.settings.useCustomAndroidNavBar !== false && (this.title || this.leftNavButton || this.rightNavButton)){
 				this.navBarHidden = true;
 
 				var barColor = K.getStyle(null, 'window').barColor;
@@ -3452,9 +3621,9 @@ if(K.is.android){
 				if(this.rightNavButton){
 					this.setRightNavButton(this.rightNavButton);
 				}
-				if(this.rightNavButton){
+				if(this.leftNavButton){
 					this.setLeftNavButton(this.leftNavButton);
-				}				
+				}
 			}
 
 			this._super(o);
@@ -3581,8 +3750,9 @@ if(K.is.android){
 	
 	function Tab(opts, tabGroup){
 		var me = this,
-			i = tabGroup.tabs.length - 1,
+			i = tabGroup.tabs.length,
 			isLast = tabGroup.getNumberOfTabs() === i,
+			isFirst = i === 0,
 			width = tabGroup._getTabWidth();
 
 		this.tabIndex = i;
@@ -3596,7 +3766,7 @@ if(K.is.android){
 				className: 'tabButtonLabel tabButtonLabel' + (opts.icon ? 'With' : 'Without') + 'Icon',
 				text: opts.title || (opts.title + 'i'),
 			}]
-			.concat(!isLast ? [(this._tabSeparator = K.createView({
+			.concat(!isFirst ? [(this._tabSeparator = K.createView({
 				className: 'tabButtonSeparator'
 			}))] : [])
 			.concat(opts.icon ? [{
@@ -3624,7 +3794,7 @@ if(K.is.android){
 		this.tabGroup = tabGroup;
 		this.tabGroup._tabButtonContainer.add(this._tabButton);
 		
-		this.opts = opts || {};
+		this.opts = opts;
 		this.setState('inactive');
 		
 		(K.elsByName['tab']||(K.elsByName['tab'] = [])).push(this);
@@ -3632,17 +3802,11 @@ if(K.is.android){
 	
 	Tab.prototype.activate = function(){
 		if(!this.window){
-			var fromBottom = (this.opts.tabBarHidden || (this.opts.window && this.opts.window.tabBarHidden)) ? 0 : K.getStyle({ type: 'tab' }).height || K.getStyle({ type: 'tabBar' }).height || '50dp';
+			var fromBottom = K.getStyle({ type: 'tab' }).height || K.getStyle({ type: 'tabBar' }).height || '50dp';
 				defaults = { left: 0, right: 0, top: 0, bottom: fromBottom, zIndex: ++zIndexCounter },
 				opts = K.extend(this.opts.window, defaults);
 				
-			this.window = K.create(opts, { type: 'view' });			
-			var tabBarHidden = !!this.window.tabBarHidden;
-						
-			if(tabBarHidden){
-				this.window.bottom = 0;
-			}
-			
+			this.window = K.create(opts, { type: 'view' });
 			if(this.window._type === 'window'){
 				var view = K.createView(opts),
 					children = this.window.children,
@@ -3657,13 +3821,8 @@ if(K.is.android){
 			}
 			this.tabGroup._container.add(this.window);
 		}
-				
-		if(tabBarHidden){
-			this.tabGroup._tabButtonContainer.hide();
-		} else {
-			this.tabGroup._tabButtonContainer.show();
-		}
 		
+		this.tabGroup.index = this.tabIndex;
 		if(this !== this.tabGroup.activeTab){
 			this.window.left = 0;
 			if(this.tabGroup.activeTab){ 
@@ -3710,7 +3869,12 @@ if(K.is.android){
 	
 	
 	function TabGroup(opts){
-		var me = this;
+		var me = this,
+			pauseListener = opts && opts.events && opts.events.pause,
+			resumeListener = opts && opts.events && opts.events.resume,
+			resumedListener = opts && opts.events && opts.events.resumed,
+			openListener = opts && opts.events && opts.events.open,
+			destroyListener = opts && opts.events && opts.events.destroy;
 
 		this.onOpenCallbacks = [];
 		this.tabs = [];
@@ -3721,23 +3885,55 @@ if(K.is.android){
 			//visible: false
 		});
 
+		var stopCounter = 0,
+			resumeCounter = 0;
 		this._container = K.createWindow({
 			className: 'tabGroupWindow',
 			navBarHidden: true,
 			exitOnClose: true,
 			windowSoftInputMode: Ti.UI.Android && Ti.UI.Android.SOFT_INPUT_ADJUST_PAN,
 			children: [this._tabButtonContainer],
+			setActiveTab: this.setActiveTab.bind(this),
+			getActiveTabIndex: this.getActiveTabIndex.bind(this),
 			events: {
 				open: function(e){
+					
 					me.setActiveTab(opts.index || 0);
 					Ti.Gesture.addEventListener('orientationchange', me._onOrientationChange.bind(me));
+										
+					Ti.Android.currentActivity.addEventListener('stop', function(e){
+						if(typeof pauseListener === 'function'){
+							pauseListener.call(me._container);
+						}
+						me._container.fireEvent('pause');
+					});
 					
-					//me.repaint();
-					//me._tabButtonContainer.show();
+					Ti.Android.currentActivity.addEventListener('resume', function(e){
+						if(typeof resumeListener === 'function'){
+							resumeListener.call(me._container);
+						}
+						if(typeof resumedListener === 'function'){
+							resumedListener.call(me._container);
+						}
+						me._container.fireEvent('resume');
+						me._container.fireEvent('resumed');
+					});
+					
+					Ti.Android.currentActivity.addEventListener('destroy', function(e){
+						me._container.fireEvent('destroy');
+						if(typeof destroyListener === 'function'){
+							destroyListener.call(me._container);
+						}
+					});
+
+					if(typeof openListener === 'function'){
+						openListener.call(me._container);
+					}
+					
 				}
 			}
 		});
-
+		
 		this._tabs = opts.tabs;
 		
 		opts.tabs.forEach(function(o, i, arr){
@@ -3753,9 +3949,15 @@ if(K.is.android){
 		
 		(K.elsByName['tabgroup']||(K.elsByName['tabgroup'] = [])).push(this);
 	}
+	
 	TabGroup.prototype.open = function(){
 		var me = this;
 		this._container.open();
+	};
+	
+	TabGroup.prototype.close = function(){
+		var me = this;
+		this._container.close();
 	};
 	
 	TabGroup.prototype.getNumberOfTabs = function(){
@@ -3763,14 +3965,29 @@ if(K.is.android){
 	};
 	
 	TabGroup.prototype.setActiveTab = function(n){
+		K.log(' ==== setactivetab', n);
 		this.tabs[n] && this.tabs[n].activate();
+		this.index = this._container.index = n;
 	};
+	
+	TabGroup.prototype.getActiveTabIndex = function(n){
+		return this.index;
+	};
+
 	
 	TabGroup.prototype._getTabWidth = function(){
 		return Math.ceil(Ti.Platform.displayCaps.platformWidth / this.getNumberOfTabs());
 	};
 	
 	TabGroup.prototype.repaint = function(){
+		/*if(!this._statusBarHeight){
+			var winHeight = this._container.height,
+				height = Ti.Platform.displayCaps.platformHeight;
+				
+			this._statusBarHeight = (height - winHeight) || 0;			
+		}
+		
+		this._tabButtonContainer.top = Ti.Platform.displayCaps.platformHeight - this._statusBarHeight - dipToPx(this._tabButtonContainer.height);*/
 		
 		var width = this._getTabWidth();
 		this.tabs.forEach(function(tab, i){
