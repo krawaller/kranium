@@ -113,6 +113,15 @@ var reTiObject = /^(\[object Ti|\[Ti\.)/,
 	 */
 	function arrayify(o){ return o == null ? [] : (Array.isArray(o) ? o : [o]); }
 
+	function refreshStyle(el){
+		var _opts = el._opts,
+			styles = K.getStyle(el, _opts && _opts.type, _opts && _opts._type);
+			
+		for(var prop in styles){
+			el[prop] = styles[prop];
+		}
+	}
+
 	/**
 	 * Kranium object constructory-thingy
 	 *
@@ -488,9 +497,12 @@ var reTiObject = /^(\[object Ti|\[Ti\.)/,
 		 * @returns {Boolean}
 		 */
 		addClass: function(name){
-			return this.each(function(){
-				!$(this).hasClass(name) && (this.className += (this.className ? ' ' : '') + name);
-			});
+			if(typeof name === 'string'){
+				return this.each(function(){
+					!$(this).hasClass(name) && (this.className += (this.className ? ' ' : '') + name);
+					refreshStyle(this);
+				});
+			}
 		},
 		
 		/**
@@ -500,9 +512,12 @@ var reTiObject = /^(\[object Ti|\[Ti\.)/,
 		 * @returns {Boolean}
 		 */
 		removeClass: function(name){
-			return this.each(function(){
-				this.className = this.className.replace(classRE(name), ' ').trim();
-			});
+			if(typeof name === 'string'){
+				return this.each(function(){
+					this.className = this.className.replace(classRE(name), ' ').trim();
+					refreshStyle(this);
+				});
+			}
 		},
 		
 		/**
@@ -513,10 +528,14 @@ var reTiObject = /^(\[object Ti|\[Ti\.)/,
 		 * @returns {Boolean}
 		 */
 		toggleClass: function(name, when){
-			return this.each(function(){
-			 	((when !== undefined && !when) || $(this).hasClass(name)) ?
-			 	$(this).removeClass(name) : $(this).addClass(name);
-			});
+			if(typeof name === 'string'){
+				return this.each(function(){
+				 	((when !== undefined && !when) || $(this).hasClass(name)) ?
+				 	$(this).removeClass(name) : $(this).addClass(name);
+				
+					refreshStyle(this);
+				});
+			}
 		},
 		
 		/**
