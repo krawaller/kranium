@@ -104,7 +104,7 @@ task('annotate-source', [], function(params) {
 		return 'lib/kranium-src/' + p + '.js';
 	}).join(" ") + ' > docs/annotated-source.html';
 	
-	//console.log(cmd);
+	console.log(cmd);
 	
 	exec(cmd, function(error, stdout, stderr){
 		sys.puts(stderr); //console.log(error, stdout, stderr);
