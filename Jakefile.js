@@ -11,9 +11,11 @@ var fs = require('fs'),
 		"license",
 		"version",
 		"core",
-		"event",
-		"settings",
-		"utils",
+		getAutoloaders,
+		
+		//"event",
+		"Settings",
+		"Utils",
 		"qsa", 
 		"klass",
 		"file",
@@ -57,6 +59,10 @@ function watch(fn, params){
 	});
 }
 
+function getAutoloaders(parts){
+	return '';
+}
+
 desc('Create K-library from parts');
 task('build', [], function(params) {
 	fs.renameSync('dist', 'dist-' + Date.now());
@@ -64,7 +70,14 @@ task('build', [], function(params) {
 	
 	watch(function(params, done){
 		var contents = parts.map(function(part, i){
-			return ('/*** ' + parts[i].toUpperCase() + ' ***/\n') + fs.readFileSync('lib/kranium-src/' + part + '.js').toString();
+			
+			if(typeof part === 'string'){
+				return ('/*** ' + parts[i].toUpperCase() + ' ***/\n') + fs.readFileSync('lib/kranium-src/' + part + '.js').toString();
+			} else if(typeof part === 'function'){
+				return part(parts);
+			}
+			
+			
 		}).join("\n\n");
 		
 		fs.writeFileSync('dist/kranium.js', contents);
