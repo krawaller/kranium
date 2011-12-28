@@ -29,10 +29,6 @@ var nomnom = require('nomnom'),
 		return cwd !== '/';
 	}
 
-	if(!cwdToTiRoot()){
-		return "No Titanium project found, KTHXBAI".err(); 
-	}
-
 	parser.globalOpts({
 		version: {
 			string: '-v, --version',
@@ -72,7 +68,13 @@ var nomnom = require('nomnom'),
 			help: 'port to bind to',
 			"default": defaults.port
 		},
-	}).callback(autoload('./lib/command/init'));
+	}).callback(function(opts){
+		if(!cwdToTiRoot()){
+			return "No Titanium project found, KTHXBAI".err(); 
+		} else {
+			autoload('./lib/command/init')(opts);
+		}
+	});
 
 	parser.command('watch').opts({
 		debug: {
@@ -91,7 +93,13 @@ var nomnom = require('nomnom'),
 			help: 'port to bind to',
 			"default": defaults.port
 		},
-	}).callback(autoload('./lib/command/watch'));
+	}).callback(function(opts){
+		if(!cwdToTiRoot()){
+			return "No Titanium project found, KTHXBAI".err(); 
+		} else {
+			autoload('./lib/command/watch')(opts);
+		}
+	});
 
 	parser.parseArgs();
 

@@ -62,7 +62,7 @@ task('build', [], function(params) {
 			
 		}).join("\n\n");
 		
-		fs.writeFileSync('dist/kranium.js', contents);
+		fs.writeFileSync('dist/init.js', contents);
 		
 		done && done();
 		/*_.map(parts, function(part, callback){ fs.readFile('lib/kranium-src/' + part + '.js', callback); }, function(err, res){
@@ -86,11 +86,9 @@ task('build', [], function(params) {
 		});*/
 	}, params);
 	
-	fs.writeFileSync('dist/kranium-jade.js', fs.readFileSync('lib/kranium-src/jade.js'));
-	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/kss', 'dist/kss']);
-	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/images', 'dist/images']);
-	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/backbone', 'dist/backbone']);
-	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/test', 'dist/test']);
+	//fs.writeFileSync('dist/kranium-jade.js', fs.readFileSync('lib/kranium-src/jade.js'));
+	
+	require('child_process').spawn('cp', ['-r', 'lib/kranium-src/lib', 'dist/']);
 });
 
 desc('Create annotated source docs');

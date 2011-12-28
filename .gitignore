@@ -4,3 +4,4 @@ tmp.html
 .DS_Store
 dist-*
 tmp
+dist/lib
