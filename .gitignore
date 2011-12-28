@@ -3,3 +3,4 @@ node_modules
 tmp.html
 .DS_Store
 dist-*
+tmp

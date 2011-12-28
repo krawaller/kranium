@@ -10,31 +10,8 @@ var fs = require('fs'),
 	parts = [
 		"License",
 		"Version",
-		"Core",
-		getAutoloaders,
+		"Init",
 		"End"
-		
-		
-		//"event",
-		"Settings",
-		"Utils",
-		"SelectorEngine", 
-		"Class",
-		"File",
-		"Style", 
-		
-		"Create",
-		"Ajax",
-		
-		//"live", 
-				
-		//"libs",
-		
-		/*"backboneintegration",
-
-		"tester",
-		"jade-loader",
-		"androidshim"*/
 	];
 
 var fileTypes = "js md".split(" "),
