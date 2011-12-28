@@ -8,28 +8,33 @@ var fs = require('fs'),
 	exec = require('child_process').exec;
 	
 	parts = [
-		"license",
-		"version",
-		"core",
+		"License",
+		"Version",
+		"Core",
 		getAutoloaders,
+		"End"
+		
 		
 		//"event",
 		"Settings",
 		"Utils",
-		"qsa", 
-		"klass",
-		"file",
-		"style", 
-		"create",
-		"ajax", 
-		"live", 
-		"stringify",
+		"SelectorEngine", 
+		"Class",
+		"File",
+		"Style", 
+		
+		"Create",
+		"Ajax",
+		
+		//"live", 
+				
 		//"libs",
-		"backboneintegration",
-		"end",
+		
+		/*"backboneintegration",
+
 		"tester",
 		"jade-loader",
-		"androidshim"
+		"androidshim"*/
 	];
 
 var fileTypes = "js md".split(" "),
