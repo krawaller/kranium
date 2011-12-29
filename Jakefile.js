@@ -9,9 +9,16 @@ var fs = require('fs'),
 	
 	parts = [
 		"License",
-		"Version",
-		"Init",
-		"End"
+		//"Version",
+		function(){
+			var version = 'UNKNOWN';
+			try {
+				version = JSON.parse(fs.readFileSync(__dirname + '/package.json')).version;
+			} catch(e){}
+			
+			return '/*!\n * Kranium Version ' + version + '\n */\nKRANIUM_VERSION = "' + version + '";';
+		},
+		"Init"
 	];
 
 var fileTypes = "js md".split(" "),
