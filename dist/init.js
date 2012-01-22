@@ -31,18 +31,14 @@ var global = this,
 	defaults = {
 		autoload: true,
 		expose: true,
-		queryable: false,
-		
 		modules: {
 			Core: true,
 			Settings: true,
 			ExtendNatives: true,
 			Utils: true,
-			SelectorEngine: true,
 			Class: true,
 			Style: true,
-			UI: true,
-			AndroidShim: false
+			UI: true
 		}
 	},
 	autoLoadingPropertiesByModule = {
@@ -57,15 +53,9 @@ var global = this,
 	        loadClass: "load",
 	        classes: "classes"
 	    },
-		Color: {
-			changeColor: "change"
-		},
 	    File: {
 	        file: "read"
 	    },
-		Jade: {
-			"jade": "render"
-		},
 	    SelectorEngine: {
 	        qsa: "__alias",
 	        "$$": "__alias",
@@ -99,20 +89,12 @@ var global = this,
 	        notify: "notify",
 	        l: "l",
 	        stringify: "stringify"
-	    },
-	
-		Settings: {
-			settings: '__alias'
-		}
+	    }
 	};
 
 
 var K;
 exports.init = function(userOptions, global){
-	if(K){
-		return K;
-	}
-	
 	var $ = loadModule('Extend'),
 		opts = $.extend(true, defaults, userOptions);
 	
@@ -126,17 +108,15 @@ exports.init = function(userOptions, global){
 	K.options = opts;
 	$.extend(K, $);
 
-	var autoLoadTotal = 0;
 	[
-		"Settings", "ExtendNatives", "Utils", "Color", "SelectorEngine", "Class", 
+		"ExtendNatives", "Utils", "SelectorEngine", "Class", 
 		"File", "Style", "UI", "Ajax", "Live", 
-		"BackboneIntegration", "Tester", "AndroidShim", "Jade"
+		"BackboneIntegration", "Tester", "AndroidShim"
 	].forEach(function(moduleName, i, arr){
 		if(opts.modules[moduleName]){
 			loadModule(K, moduleName, global);
 		} else {
 			if(K.options.autoload){
-				var before = Date.now();
 				autoLoad(K, moduleName);
 
 				var autoLoadingProperties;
@@ -145,16 +125,9 @@ exports.init = function(userOptions, global){
 						autoLoad(K, moduleName, global, property, autoLoadingProperties[property]);
 					}
 				}
-				
-				autoLoadTotal += Date.now() - before;
 			}
 		}
 	});
-	
-	exports.K = K;
-	K.Settings = K.extend(K.Settings, opts);
-	
-	K.log(' ===== Binding auto loaders took: ' + autoLoadTotal + 'ms');
 
 	//TODO: idea, inject user options object in injected require clause
 	//K.BootstrapOptions = require('kranium/BootstrapOptions').BootstrapOptions;
@@ -223,7 +196,6 @@ function loadModule(K, moduleName, global){
 		sourceValue;
 
 	if(expose && K && K.options.expose){
-		//Ti.API.log(' ================== expose', expose);
 		for(var destinationProperty in expose){
 			if(typeof K[destinationProperty] != null){
 				delete K[destinationProperty];
@@ -232,7 +204,7 @@ function loadModule(K, moduleName, global){
 			if(sourceProperty === '__alias'){
 				sourceValue = module;
 			} else {
-				sourceValue = (typeof sourceProperty === 'string' && module[sourceProperty]) || sourceProperty;
+				sourceValue = module[sourceProperty];
 			}
 			K[destinationProperty] = sourceValue;
 		}
