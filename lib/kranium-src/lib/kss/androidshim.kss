@@ -27,15 +27,15 @@
 	background-image: false;
 	color: #fff;
 	font-size: 13dp;
-	background-image: kranium/lib/images/android-navbar-button.png;
-	background-selected-image: kranium/lib/images/android-navbar-button-pressed.png;
+	background-image: /kranium/lib/images/android-navbar-button.png;
+	background-selected-image: /kranium/lib/images/android-navbar-button-pressed.png;
 }
 
 .navBarSeparator {
 	top: 0;
 	width: 2;
 	height: 44dp;
-	background-image: kranium/lib/images/android-navbar-separator.png;
+	background-image: /kranium/lib/images/android-navbar-separator.png;
 }
 
 .rightNavButton {
@@ -108,6 +108,6 @@
 	background-color: #000;
 }
 
-.tabButtonActive { background-image: kranium/lib/images/tab-active.png; }
-.tabButtonInactive { background-image: kranium/lib/images/tab-inactive.png; }
-.tabButtonPressed { background-image: kranium/lib/images/tab-pressed.png; }
+.tabButtonActive { background-image: /kranium/lib/images/tab-active.png; }
+.tabButtonInactive { background-image: /kranium/lib/images/tab-inactive.png; }
+.tabButtonPressed { background-image: /kranium/lib/images/tab-pressed.png; }
