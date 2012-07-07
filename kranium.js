@@ -25,7 +25,7 @@ var nomnom = require('nomnom'),
 
 	function cwdToTiRoot(){
 		var cwd, found = false;
-		while(!path.existsSync(process.cwd() + '/tiapp.xml') && (process.chdir('../'), (cwd = process.cwd()) !== '/'));
+		while(!fs.existsSync(process.cwd() + '/tiapp.xml') && (process.chdir('../'), (cwd = process.cwd()) !== '/'));
 		return cwd !== '/';
 	}
 
