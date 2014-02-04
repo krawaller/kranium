@@ -3,7 +3,7 @@ var fs = require('fs'),
 	_ = require('nimble'),
 	flag = './.monitor',
 	uglify = require('uglify-js'),
-	sys = require('sys'),
+	util = require('util'),
 	ghm = require("github-flavored-markdown"),
 	exec = require('child_process').exec;
 	
@@ -107,7 +107,7 @@ task('annotate-source', [], function(params) {
 	console.log(cmd);
 	
 	exec(cmd, function(error, stdout, stderr){
-		sys.puts(stderr); //console.log(error, stdout, stderr);
+		util.puts(stderr); //console.log(error, stdout, stderr);
 	});
 });
 
